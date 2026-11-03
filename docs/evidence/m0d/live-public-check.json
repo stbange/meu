@@ -1,0 +1,13 @@
+{
+  "base": "https://stbange.github.io/meu/",
+  "revision": "bd4f5d960007a7da6666d7ee7884cd7e8d722f2b",
+  "checkedAt": "2026-11-03T17:38:05.605Z",
+  "wasmBytes": 814739,
+  "checks": [
+    "touch settings before Begin; closing stays paused; diagnostics absent",
+    "touch helm acquisition, drive and Park while throttle held",
+    "settings releases helm; reset defaults; rotation clears input and requires resume"
+  ],
+  "errors": [],
+  "result": "PASS"
+}

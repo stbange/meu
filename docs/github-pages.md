@@ -14,7 +14,7 @@ After deployment, a live verification job checks revision.txt against the source
 
 ## Play and update
 
-Select Begin exploration. M0c adds physical bridge piloting to the connected 240 m home. Approach the central console and use E or the touch prompt. At the helm W/S drives, A/D turns, Space brakes, P parks and E releases control. Mouse/arrow/touch look does not steer. Releasing drive brakes; leaving the helm requests a parked stop. Touch controls adapt to drive/turn with Brake, Park and Release helm buttons. The bridge reports speed, heading, braking distance and any structure/support rejection.
+Select Begin exploration. M0d adds complete touch contexts, session settings and explicit pause/resume to the connected 240 m home and M0c physical bridge piloting. Approach the central console and use E or the touch prompt. At the helm W/S drives, A/D turns, Space brakes, P parks and E releases control. Mouse/arrow/touch look does not steer. Releasing drive brakes; leaving the helm requests a parked stop. Touch controls adapt to drive/turn with Brake, Park and Release helm buttons. The bridge reports speed, heading, braking distance and any structure/support rejection.
 
 On foot, WASD or touch buttons walk through the bridge, quarters, engineering hall and lift. The lift is behind the start position: walk into its centre, choose 1/2/3 or tap a deck, then walk forward out after arrival. E or a contextual button uses nearby home objects. Settings or F1 opens sensitivity, vertical drag inversion, separate walking bob/machine sway (both initially off) and sound volume. Close settings, then explicitly resume. Focus/background loss and screen changes pause and discard old gestures. Preferences last for this session; durable saves/settings remain M0e.
 
@@ -30,8 +30,8 @@ The base URL must include its final slash. The tests retain that path and do not
 
 ## Verified publication
 
-Published on 3 November 2026 from [M0c source commit 02eb7c8](https://github.com/stbange/meu/commit/02eb7c8c51885b5b8a3787f7f33f539e97f0a712). The [publishing workflow](https://github.com/stbange/meu/actions/runs/41672789694) passed all six jobs: specifications, Windows, Linux, web, deployment and live verification. Runtime identity is 0.0.3, scene m0c-travel-v1, content version 3.
+Published on 3 November 2026 from [M0d source commit bd4f5d9](https://github.com/stbange/meu/commit/bd4f5d960007a7da6666d7ee7884cd7e8d722f2b). The [publishing workflow](https://github.com/stbange/meu/actions/runs/41684388321) passed all six jobs: specifications, Windows, Linux, web, deployment and live verification. Runtime identity is 0.0.4, scene m0d-controls-v1, content version 4.
 
-The public site passed all three launch checks: desktop, portrait phone and landscape phone. An independent HTTP check confirmed the exact published revision, M0c shell/helm controls, the updated input adapter and an application/wasm response with a valid WebAssembly header. See [M0c evidence and captures](evidence/m0c-piloting.md). User acceptance and physical-phone performance remain pending.
+The public site passed all five launch configurations: desktop/portrait/landscape Chromium and portrait/landscape WebKit. Touch settings/start/pause/resume work in WebKit, and test diagnostics are absent. A separate public touch check confirmed settings and mute before Begin, driving and parking, settings releasing helm control, reset defaults, and rotation with explicit resume. It also confirmed the exact published revision and a valid application/wasm response/header. See [M0d evidence, report and captures](evidence/m0d-controls.md). Physical-phone checks, performance and user acceptance remain pending.
 
-The [M0b publication](https://github.com/stbange/meu/actions/runs/41655285514) remains recorded in its evidence. Documentation-only commits after the M0c source revision do not rebuild the runtime.
+The earlier [M0c publication](https://github.com/stbange/meu/actions/runs/41672789694) and [M0b publication](https://github.com/stbange/meu/actions/runs/41655285514) remain recorded in their evidence. Documentation-only commits after the M0d source revision do not rebuild the runtime.

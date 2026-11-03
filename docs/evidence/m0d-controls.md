@@ -16,7 +16,7 @@ The settings dialog respects safe areas, scrolls its fields on short screens, an
 
 ## Build and scene identity
 
-Working branch: `codex/m0d-touch-settings`, based on `bb1b666e197df04396bc7c6c78cf1b159085e749`. Local development captures and reports identify the M0d working tree as `0.0.4-bb1b666-dirty`, scene `m0d-controls-v1`, content version 4. The clean published source revision will be recorded after CI/deployment.
+Working branch: `codex/m0d-touch-settings`, based on `bb1b666e197df04396bc7c6c78cf1b159085e749`. Local development captures and reports identify the M0d working tree as `0.0.4-bb1b666-dirty`, scene `m0d-controls-v1`, content version 4. Implementation source: [bd4f5d960007a7da6666d7ee7884cd7e8d722f2b](https://github.com/stbange/meu/commit/bd4f5d960007a7da6666d7ee7884cd7e8d722f2b). That exact source is published and verified; later documentation-only commits do not alter the runtime revision.
 
 Tools: C17, CMake 3.31.6, Ninja 1.12.1, GCC 14.2.0 from w64devkit 2.1.0, SDL 3.4.18, Emscripten 6.0.10 from SDK manifest `d7b4130688bfa348392b921ab04015aa15c4f154`, Node 24.18.0, Python 3.14.3, Playwright 1.64.1 and OpenSpec 1.14.3. Local browser engines: Chromium 156 and WebKit 27.2 (Playwright revision 2370). Browser rendering uses software graphics. Native Windows captures use OpenGL 3.3 on AMD Radeon(TM) Graphics, driver string `22.20.14.220712`.
 
@@ -31,7 +31,8 @@ Tools: C17, CMake 3.31.6, Ninja 1.12.1, GCC 14.2.0 from w64devkit 2.1.0, SDL 3.4
 | Full Chromium/WebKit browser suite | 34 cases passed, 4 platform-inapplicable variants skipped; no retries |
 | Optimized WebAssembly tests and launch | All 9 compiled groups and all 5 Chromium/WebKit launch cases passed; diagnostics absent |
 | Strict OpenSpec validation | Passed |
-| Clean Windows/Linux CI, sanitizers and Pages | Pending publication |
+| Clean Windows/Linux CI | Both passed all 9 CTest groups; Linux also passed all three Mesa/Xvfb SDL replays and all 9 ASan/UBSan groups |
+| Remote web and Pages | Debug/release WebAssembly tests, 34 browser cases, 5 optimized launches, deployment and all 5 live launch/settings cases passed |
 
 Commands from a prepared MEU checkout:
 
@@ -64,7 +65,15 @@ WebKit tests load the real WebGL client in both phone layouts and use touch to c
 
 ## Publication and pending review
 
-M0d has not yet been recorded as published. The existing Pages prototype remains at [play MEU](https://stbange.github.io/meu/); publication evidence will identify the exact source and workflow after checks pass.
+[Play the published M0d build](https://stbange.github.io/meu/). Exact runtime source: [bd4f5d960007a7da6666d7ee7884cd7e8d722f2b](https://github.com/stbange/meu/commit/bd4f5d960007a7da6666d7ee7884cd7e8d722f2b). All six jobs in the [main publishing workflow](https://github.com/stbange/meu/actions/runs/41684388321) passed: specifications, Windows, Linux, web, deployment and live verification. The [working-branch run](https://github.com/stbange/meu/actions/runs/41684349496) independently passed all four applicable jobs; publishing jobs are skipped on that branch.
+
+Linux GCC 14.2.0 in the pinned Bookworm container passed all nine native groups, the interior/piloting/lifecycle replays with Mesa 22.3.6/llvmpipe and all nine AddressSanitizer/UndefinedBehaviorSanitizer groups. Windows passed all nine native groups. Clean web CI passed all nine debug and all nine optimized WebAssembly groups, 34 browser cases (four platform-inapplicable variants skipped), and five optimized launch cases. The public page passed all five Chromium/WebKit launch configurations with test diagnostics absent.
+
+A separate [public touch report](m0d/live-public-check.json) confirms the exact published revision and the `application/wasm` response/header (814,739 bytes), settings and mute before Begin, explicit resume, physical helm acquisition, drive/Park while throttle is held, settings releasing the helm, reset defaults and portrait-to-landscape interruption. It used only normal touch paths and public UI observations, with no diagnostic export or browser errors. The live capture below shows the first fields of the scrollable landscape dialog; Close/Reset remain fixed while the remaining options can be scrolled into view.
+
+![Published landscape settings after reset](m0d/live-settings-landscape.png)
+
+[Publishing details](../github-pages.md) describe the runtime package and revision checks. Documentation-only follow-up commits do not rebuild or change this runtime.
 
 Physical Android Chrome and iPhone Safari interaction, browser chrome/safe areas on actual hardware, interruption by the OS, audio behavior and measured performance remain pending. No attached physical phone is available in this development session. M0f owns reference-device selection and the integrated performance/comfort review. Durable saves/settings remain M0e; this step does not complete the full foundation or archive the OpenSpec change.
 
