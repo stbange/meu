@@ -44,7 +44,9 @@ int main(void)
     CHECK(meu_sim_use_target(&s)==MEU_USE_CALL);
     CHECK(meu_sim_action(&s,MEU_INTERACT,true)); frames(&s,420);
     CHECK(NEAR(s.lift_y,156,.001) && !meu_sim_lift_moving(&s));
-    s.x=0; s.z=-1.8f; CHECK(!meu_sim_request_lift(&s,2));
+    s.x=0; s.z=-1.8f; CHECK(!meu_sim_lift_ready(&s) && !meu_sim_request_lift(&s,2));
+    s.z=0; s.x=1.75f; CHECK(meu_sim_on_lift(&s) && !meu_sim_lift_ready(&s));
+    s.x=0; CHECK(meu_sim_lift_ready(&s));
     /* Ramp ascent and descent stay smooth, without floor penetration. */
     s.x=0; s.z=-10; s.y=113.7f;
     for (int i=0;i<300;++i) {

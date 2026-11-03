@@ -209,7 +209,9 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height)
     if (s->paused) {
         meu_mesh_text("ENTER TO EXPLORE",left,top-25,0,size,1,.94f,.76f,.43f);
     } else if (meu_sim_on_lift(s)) {
-        meu_mesh_text(meu_sim_lift_moving(s)?"IN TRANSIT - GATES LOCKED":"1 BRIDGE   2 QUARTERS   3 ENGINEERING",left,top-25,0,size,1,.94f,.76f,.43f);
+        const char *lift=meu_sim_lift_moving(s)?"IN TRANSIT - GATES LOCKED":
+            meu_sim_lift_ready(s)?"1 BRIDGE   2 QUARTERS   3 ENGINEERING":"STEP INTO CENTRE TO CHOOSE A DECK";
+        meu_mesh_text(lift,left,top-25,0,size,1,.94f,.76f,.43f);
     } else {
         MeuUse use=meu_sim_use_target(s);
         if (use) { snprintf(line,sizeof(line),"E - %s",meu_sim_use_name(use)); meu_mesh_text(line,left,top-25,0,size,1,.94f,.76f,.43f); }

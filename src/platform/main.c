@@ -241,10 +241,10 @@ static void frame(void)
 #ifdef __EMSCRIPTEN__
     if (app.frames%6==0) {
         char hud[240];
-        snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.hud(%d,%.1f,%d,%d,%d,%d,%d,%d);",
+        snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.hud(%d,%.1f,%d,%d,%d,%d,%d,%d,%d);",
             meu_sim_room(&app.simulation),app.simulation.y-MEU_EYE_HEIGHT,
             meu_sim_on_lift(&app.simulation),meu_sim_lift_moving(&app.simulation),
-            app.simulation.lift_current,app.simulation.lift_target,meu_sim_use_target(&app.simulation),app.simulation.info_open);
+            app.simulation.lift_current,app.simulation.lift_target,meu_sim_use_target(&app.simulation),app.simulation.info_open,meu_sim_lift_ready(&app.simulation));
         emscripten_run_script(hud);
     }
 #endif

@@ -32,6 +32,7 @@ void meu_sim_look(MeuSimulation *state,float yaw_delta,float pitch_delta);
 unsigned meu_sim_advance(MeuSimulation *state,double elapsed_seconds);
 bool meu_sim_on_lift(const MeuSimulation *state);
 bool meu_sim_lift_moving(const MeuSimulation *state);
+bool meu_sim_lift_ready(const MeuSimulation *state);
 bool meu_sim_request_lift(MeuSimulation *state,int deck);
 MeuUse meu_sim_use_target(const MeuSimulation *state);
 const char *meu_sim_use_name(MeuUse use);

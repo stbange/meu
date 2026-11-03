@@ -34,10 +34,14 @@ int meu_sim_room(const MeuSimulation *s)
     if (meu_sim_on_lift(s) || (s->z>-4 && fabsf(s->x)<2.5f)) return MEU_LIFT;
     return s->y>180 ? MEU_BRIDGE : s->y>145 ? MEU_QUARTERS : MEU_ENGINEERING;
 }
+bool meu_sim_lift_ready(const MeuSimulation *s)
+{
+    return s->started && !s->paused && meu_sim_on_lift(s) && fabsf(s->x)<=1.6f &&
+        fabsf(s->z)<=1.6f && !meu_sim_lift_moving(s);
+}
 bool meu_sim_request_lift(MeuSimulation *s,int deck)
 {
-    if (s->paused || !s->started || deck<0 || deck>2 || !meu_sim_on_lift(s) ||
-        fabsf(s->x)>1.6f || fabsf(s->z)>1.6f || meu_sim_lift_moving(s)) return false;
+    if (deck<0 || deck>2 || !meu_sim_lift_ready(s)) return false;
     s->lift_target=deck; return true;
 }
 MeuUse meu_sim_use_target(const MeuSimulation *s)

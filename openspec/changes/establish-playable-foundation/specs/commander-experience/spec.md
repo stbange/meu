@@ -16,6 +16,10 @@ The game SHALL present movement, piloting, and interactions from the sole human 
 - **WHEN** the Commander faces an unobstructed home object within reach and uses it
 - **THEN** a dimensions plaque opens readable unit dimensions, a reading lamp changes the residence light, or an inspection console changes the engineering light
 
+#### Scenario: Boarding at the cab edge
+- **WHEN** the Commander stands too close to the lift's edge to depart safely
+- **THEN** destination controls are unavailable and the display asks the Commander to step into the centre
+
 #### Scenario: Use the bridge
 - **WHEN** the Commander takes or releases helm control
 - **THEN** the viewpoint remains at the Commander's physical position and exterior architecture remains visible through the bridge

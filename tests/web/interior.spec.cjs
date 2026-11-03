@@ -2,6 +2,28 @@ const { test, expect } = require('@playwright/test');
 const release = process.env.MEU_RELEASE === '1';
 const state = page => page.evaluate(() => window.MEU.readState());
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__MEU_INTERIOR_INPUTS__ = [];
+    for (const type of ['keydown','keyup','pointerdown','pointerup','pointercancel']) {
+      window.addEventListener(type, event => {
+        window.__MEU_INTERIOR_INPUTS__.push({
+          type, code: event.code, target: event.target?.getAttribute?.('aria-label') || event.target?.id,
+          time: performance.now(), state: window.MEU?.readState?.()
+        });
+      }, true);
+    }
+  });
+});
+test.afterEach(async ({ page }, info) => {
+  if (release) return;
+  const report = await page.evaluate(() => ({
+    state: window.MEU?.readState?.(), inputs: window.__MEU_INTERIOR_INPUTS__,
+    viewport: { width: innerWidth, height: innerHeight, ratio: devicePixelRatio }
+  }));
+  await info.attach('interior-state-and-inputs', { body: JSON.stringify(report,null,2), contentType: 'application/json' });
+});
+
 test('walks the connected decks using the real keyboard or touch lift controls', async ({ page, isMobile }, info) => {
   test.skip(release, 'The full route observes read-only C diagnostics.');
   test.setTimeout(100000);
@@ -67,8 +89,22 @@ test('walks the connected decks using the real keyboard or touch lift controls',
     await look(0,.34);
     await page.screenshot({ path: info.outputPath('alien-doorway.png') });
     await look(0,-.08);
+    await move(false, s => s.z > -21);
+    await page.keyboard.down('KeyA');
+    await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeLessThan(.05);
+    await page.keyboard.up('KeyA');
   }
   await move(false, s => s.z > -.65);
+  if (!isMobile) {
+    await page.keyboard.down('KeyD');
+    await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeGreaterThan(1.67);
+    await page.keyboard.up('KeyD');
+    await expect(page.locator('#lift-status')).toHaveText('Step into the centre to choose a deck');
+    await expect(page.getByRole('button', { name: 'Lift to living quarters', exact: true })).toBeDisabled();
+    await page.keyboard.down('KeyA');
+    await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeLessThan(.2);
+    await page.keyboard.up('KeyA');
+  }
   await choose(1);
   await press(page.getByRole('button', { name: 'Pause', exact: true }));
   const stopped = await state(page);

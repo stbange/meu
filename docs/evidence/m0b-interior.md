@@ -14,7 +14,7 @@ WASD/mouse drag/arrows and the touch movement/look controls share the C simulati
 ## Implementation
 
 - Shared interior geometry supplies visible furniture/structure and collision boundaries. Swept movement, footprint support and the engineering ramp prevent tunnelling, unsupported edge traversal and abrupt floor-height changes.
-- The lift closes its gates before motion, rejects retargeting in transit, requires the whole Commander to be aboard for departure and blocks empty landings. Landing call panels can summon the car. Pause freezes both the car and rider.
+- The lift closes its gates before motion, rejects retargeting in transit, requires the whole Commander to be aboard for departure and blocks empty landings. Landing call panels can summon the car. Destination controls share the C boarding-readiness check and ask the Commander to step into the centre when too close to an edge. Pause freezes both the car and rider.
 - Player pose and collision stay robot-local. Exterior rendering applies the inverse robot pose exactly once; the motion driver can be replaced by M0c steering. Player and cab use the same render interpolation.
 - Static interior and exterior meshes plus a small dynamic lift mesh use direct OpenGL 3.3/WebGL 2. Bitmap lettering, flat materials and the existing sound placeholder keep the retro direction.
 
@@ -28,7 +28,7 @@ Scene: `m0b-unit-v1`; content version: 2; application version: 0.0.2.
 | --- | --- |
 | `python tools/build.py native --test --tour` | Four CTest checks and the SDL/OpenGL tour passed |
 | Core unit tests | 31 assertions passed: timing, pause/input cleanup, movement and camera math |
-| Interior unit tests | 11,126 assertions passed: lift safety, pause, calls, collision, interaction, ramp continuity, transforms and interpolation |
+| Interior unit tests | 11,128 assertions passed: lift safety, pause, calls, collision, interaction, ramp continuity, transforms and interpolation |
 | Standing motion fixture | 3,600 ticks / 60 seconds; measured robot-local drift 0.000000000 m, below the 0.02 m limit; no loss of floor support |
 | Scripted interior tour | Production actions/update loop, 6,960 ticks; all four spaces visited, lift/ramp traversal and return to bridge passed |
 | Rendered native tour | SDL keyboard events through the normal handler during robot translation/turn/acceleration/braking; four captures; no ejection or floor penetration |
@@ -39,7 +39,7 @@ Scene: `m0b-unit-v1`; content version: 2; application version: 0.0.2.
 | Release browser launch checks | Desktop and both phone layouts; diagnostic export absent |
 | `npm run spec:validate` | Strict OpenSpec validation passed |
 
-The browser route uses keyboard input on desktop and browser-dispatched touch events on phones, including destination taps, mid-ride pause/resume and inspection-console use. It observes read-only C state and never teleports or writes simulation state. The committed replay fixture is [m0b-tour.txt](../../tests/fixtures/m0b-tour.txt). CI retains per-input reports, screenshots, failure traces, CTest results, binaries and source/build identity.
+The desktop route also checks disabled destinations and the centring prompt at the cab edge. State and input history are attached even if a route fails. The browser route uses keyboard input on desktop and browser-dispatched touch events on phones, including destination taps, mid-ride pause/resume and inspection-console use. It observes read-only C state and never teleports or writes simulation state. The committed replay fixture is [m0b-tour.txt](../../tests/fixtures/m0b-tour.txt). CI retains per-input reports, screenshots, failure traces, CTest results, binaries and source/build identity.
 
 Initial local captures use the development working tree based on `d06e459`. Clean source revision, cross-platform CI and live publication are recorded after deployment below.
 

@@ -38,16 +38,17 @@
         this.readState = () => JSON.parse(Module.ccall('meu_state_json', 'string', [], []));
       }
     },
-    hud(room, height, aboard, moving, current, target, use, info) {
+    hud(room, height, aboard, moving, current, target, use, info, liftReady) {
       const names = ['Bridge', 'Living quarters', 'Engineering hall', 'Service lift'];
       const uses = ['', 'Read unit dimensions', 'Toggle reading lamp', 'Toggle inspection lights', 'Call service lift'];
       document.querySelector('#room').textContent = names[room];
       document.querySelector('#altitude').textContent = (room === 3 ? 'Lift ' : 'Deck ') + Math.round(height) + ' m · Unit height 240 m';
       const panel = document.querySelector('#lift-panel');
       panel.hidden = !aboard;
-      document.querySelector('#lift-status').textContent = moving ? 'Travelling to ' + names[target] + '… Gates locked.' : 'Choose a deck · walk forward to leave';
+      document.querySelector('#lift-status').textContent = moving ? 'Travelling to ' + names[target] + '… Gates locked.' :
+        liftReady ? 'Choose a deck · walk forward to leave' : 'Step into the centre to choose a deck';
       panel.querySelectorAll('button').forEach((button, i) => {
-        button.disabled = !!moving || i === current;
+        button.disabled = !liftReady || i === current;
         button.setAttribute('aria-current', String(!moving && i === current));
       });
       const useButton = document.querySelector('#use');
