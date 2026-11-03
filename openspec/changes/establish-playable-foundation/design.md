@@ -1,6 +1,6 @@
 ## Scope
 
-Implement M0 as described in the [game design draft](../../../docs/game-design-draft.md) and [implementation plan](../../../docs/implementation-plan.md). M0a–M0d implement the initial native/web platform, connected interior, supported travel, session settings and lifecycle behavior. Durable saves and integrated real-device acceptance remain pending. See [M0a evidence](../../../docs/evidence/m0a-foundation.md) and [build instructions](../../../docs/build-and-test.md).
+Implement M0 as described in the [game design draft](../../../docs/game-design-draft.md) and [implementation plan](../../../docs/implementation-plan.md). M0a–M0e implement the initial native/web platform, connected interior, supported travel, session settings and lifecycle behavior. Durable saves now have native/IndexedDB verification; integrated real-device and user acceptance remain pending. See [M0a evidence](../../../docs/evidence/m0a-foundation.md) and [build instructions](../../../docs/build-and-test.md).
 
 ## Platform and state boundaries
 
@@ -34,7 +34,7 @@ Keep a first-person viewport visible behind station interactions. Test 360 by 64
 
 The pure C simulation owns the foot, helm, station panel, pause and settings contexts, plus an input generation. Context-changing commands clear held actions and advance that generation. The platform synchronously reports changes to the DOM adapter; it discards old key/pointer owners before releasing capture. Look has a single pointer owner, and multiple sources of the same action are reference-counted by ownership rather than releasing each other. Brake removes prior drive owners while retaining the brake gesture; Park, helm changes, lift destination selection and panels quarantine the previous gestures. New gameplay input requires a fresh press.
 
-Settings contain bounded sensitivity (0.25–3), inverted vertical pointer drag, separate walking bob and machine sway, and bounded volume (0–1). Both camera effects default off. Their small cosmetic offsets affect only the rendered eye, never collision, player-local coordinates, robot heading or footing; there is no camera roll. Preferences remain in memory until M0e implements durable snapshots.
+Settings contain bounded sensitivity (0.25–3), inverted vertical pointer drag, separate walking bob and machine sway, and bounded volume (0–1). Both camera effects default off. Their small cosmetic offsets affect only the rendered eye, never collision, player-local coordinates, robot heading or footing; there is no camera roll. Preferences apply in memory and M0e includes them in explicit durable journey snapshots.
 
 The web uses semantic DOM buttons/ranges/checkboxes over the first-person view, a scrollable settings body, fixed dialog actions and CSS safe-area insets. Native F1 opens the same C settings with keyboard selection. Settings pause, release the helm and request parking; closing the dialog stays paused. Only explicit Begin/Resume initializes or resumes audio, after applying volume.
 
@@ -45,6 +45,16 @@ The browser adapter owns all web keyboard input; SDL keyboard binding is disable
 Store a schema version, snapshot generation, robot world pose, player-local pose, current interior location, parked state, and settings. Load into a staging state and validate before replacing the live state. Preserve a prior complete snapshot during publication. Reject unsupported or malformed data without deleting it or changing the running state. No legacy migration is needed until a later schema exists.
 
 Desktop storage uses platform-appropriate user data locations and recoverable publication. Browser storage uses IndexedDB-backed persistence with an explicit completion/error signal, not a successful in-memory write alone. Coordinate asynchronous synchronization with the game lifecycle, retain a previous confirmed generation, and expose export/import. Resume a loaded journey parked after collision and required geometry are ready.
+
+### M0e implementation
+
+The portable C snapshot codec uses a 128-byte schema-1 binary record with explicit little-endian IEEE 754 numbers, a separate authored-world compatibility ID, local generation, simulation ticks, player/robot poses, lift landing, room identity, lights/visited flags and settings. A checksum detects accidental damage. Validation separately rejects non-finite/out-of-range settings, malformed metadata, unsupported versions/content, unsupported player footing, solid intersections and invalid hull/foot support. Decoder output and live state remain untouched on failure. Loading constructs a staged stopped/default-world state and applies it only after validation and geometry readiness, preserving the active journeys menu while clearing inputs/helm/timers.
+
+Saving is explicit and requires a parked supported unit and a settled lift. Opening the menu pauses and clears input; it does not advance an unfinished stop/ride. A valid latest save restores automatically into pause at startup. Damaged/missing latest data offers previous recovery without rewriting or deleting the source. Import replaces only the paused live journey; local publication requires a separate Save action.
+
+Native publication takes an inter-process journal lock, keeps the last complete snapshot, writes/syncs a pending file, atomically replaces each slot and confirms directory/write-through completion. A crash may leave duplicate complete generations; pending files never load. Damaged slots are retained separately before a later explicit repair save. The browser stores the same codec as bounded hex in its own IndexedDB object store. One strict-durability read/write transaction validates existing generations, rotates previous, retains damaged records and publishes latest, serializing concurrent tabs. Only transaction completion produces Saved; put success, export and import do not.
+
+Native file pickers deliver selected paths back to the main SDL thread through a queued event. Browser import validates a bounded file and supports export even when IndexedDB is denied. Busy browser operations keep gameplay paused and keep menu focus until completion. No save is silently attempted on background or exit. [Format/protocol details](../../../docs/save-format.md) define fields, error cases and the retained diagnostic slots.
 
 ## Verification and budgets
 

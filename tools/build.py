@@ -20,6 +20,7 @@ def main():
     parser.add_argument("--tour", action="store_true", help="render a full SDL interior input replay and motion fixture")
     parser.add_argument("--pilot", action="store_true", help="render an SDL bridge-piloting and collision replay")
     parser.add_argument("--lifecycle", action="store_true", help="render the settings/focus/resize/resume SDL replay")
+    parser.add_argument("--persistence", action="store_true", help="run separate native write/load/export/import processes")
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--release", action="store_true", help="omit the read-only browser test bridge")
     parser.add_argument("--sanitizers", action="store_true", help="native ASan/UBSan (Linux)")
@@ -75,9 +76,9 @@ def main():
     subprocess.run([str(cmake), "--build", str(build), "--parallel", "4"], cwd=ROOT, env=env, check=True)
     if args.test:
         subprocess.run([str(ctest), "--test-dir", str(build), "--output-on-failure"], cwd=ROOT, env=env, check=True)
-    if args.smoke or args.tour or args.pilot or args.lifecycle or args.run:
+    if args.smoke or args.tour or args.pilot or args.lifecycle or args.persistence or args.run:
         if args.target != "native":
-            raise SystemExit("--smoke/--tour/--pilot/--lifecycle/--run are native-only; serve the web build with tools/serve.py.")
+            raise SystemExit("--smoke/--tour/--pilot/--lifecycle/--persistence/--run are native-only; serve the web build with tools/serve.py.")
         captures = ROOT / "test-results"
         captures.mkdir(exist_ok=True)
         executable = str(build / "bin" / ("meu" + suffix))
@@ -85,6 +86,14 @@ def main():
             subprocess.run([executable,"--smoke-test","--capture",str(captures/"native-room.bmp")],cwd=ROOT,env=env,check=True,timeout=30)
         for enabled,flag in ((args.tour,"--tour-test"),(args.pilot,"--pilot-test"),(args.lifecycle,"--lifecycle-test")):
             if enabled: subprocess.run([executable,flag],cwd=ROOT,env=env,check=True,timeout=90)
+        if args.persistence:
+            directory = (build / "persistence-replay").resolve()
+            if not directory.is_relative_to(build.resolve()):
+                raise SystemExit("Persistence test directory must stay inside its build tree.")
+            directory.mkdir(exist_ok=True)
+            for phase in ("write", "read"):
+                subprocess.run([executable,"--persistence-test",phase,"--save-dir",str(directory)],
+                               cwd=ROOT,env=env,check=True,timeout=90)
         if args.run: subprocess.run([executable],cwd=ROOT,env=env,check=True)
 
 

@@ -20,8 +20,10 @@
     <h2>Your machine. Your home.</h2>
     <p>Pilot a 240-metre machine through the silent city. Explore the home inside it.</p>
     <button id="begin" disabled>Loading…</button>
+    <button id="journeys" disabled>Saved journeys</button>
+    <p id="save-note" class="hint"></p>
     <p id="status" role="status">Preparing the exploration unit…</p>
-    <p class="hint">Use the arrows to walk and drag LOOK to turn your view. The central console is the helm; the lift is behind you.<br>Keyboard: WASD · E use · Space brake · P park · F1 settings.</p>
+    <p class="hint">Use the arrows to walk and drag LOOK to turn your view. The central console is the helm; the lift is behind you.<br>Keyboard: WASD · E use · Space brake · P park · F1 settings · F2 saved journeys.</p>
   </section>
   <section id="settings-panel" class="card" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
     <h2 id="settings-title" tabindex="-1">Settings</h2>
@@ -36,8 +38,24 @@
         <input id="volume" data-setting="4" type="range" min="0" max="1" step="0.05" value="0.6">
       </label>
     </div>
-    <p class="hint">Changes apply immediately for this session. Close settings, then resume when ready.</p>
+    <p class="hint">Changes apply now. Save a journey to keep your settings. Close, then resume when ready.</p>
     <div class="dialog-actions"><button id="reset-settings">Reset defaults</button><button id="close-settings">Close settings</button></div>
+  </section>
+  <section id="journeys-panel" class="card" role="dialog" aria-modal="true" aria-labelledby="journeys-title" hidden>
+    <h2 id="journeys-title" tabindex="-1">Saved journeys</h2>
+    <div id="journey-content">
+      <p id="save-status" role="status">Checking local saves…</p>
+      <p id="save-details" class="hint"></p>
+      <div id="journey-actions">
+        <button id="save-journey">Save journey</button><button id="load-journey" disabled>Load latest</button>
+        <button id="recover-journey" disabled>Recover previous</button><button id="export-journey">Export journey</button>
+        <button id="import-journey">Import journey</button><button id="export-damaged" hidden>Export damaged save</button>
+      </div>
+      <p class="hint">Park the unit and finish the lift ride before saving. Saves include your settings. Imported journeys stay unsaved until you Save here.</p>
+      <p class="hint">Local to this device and browser. Export a backup to keep a separate copy.</p>
+    </div>
+    <div class="dialog-actions"><button id="close-journeys">Close journeys</button></div>
+    <input id="import-file" type="file" accept=".meu,application/octet-stream" hidden>
   </section>
   <section id="navigation" class="station" aria-label="Robot navigation">
     <div id="telemetry"><span id="speed">0.0 m/s</span><span id="heading">Heading 000°</span><span id="stopping">Stop 0 m</span></div>
@@ -82,6 +100,7 @@
     };
   </script>
   <script src="input.js"></script>
+  <script src="storage.js"></script>
   {{{ SCRIPT }}}
 </body>
 </html>

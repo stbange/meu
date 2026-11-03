@@ -1,6 +1,6 @@
 # MEU Verification Strategy
 
-M0a–M0d provide C unit/command scenarios, native interior/piloting/lifecycle replays, and actual WebAssembly desktop/touch checks. Commands are in [build and test](build-and-test.md), and current results/limits are in [M0d evidence](evidence/m0d-controls.md). The broader strategy below grows with later milestones; generation, durable save tests, real-phone verification and performance acceptance remain pending.
+M0a–M0e provide C unit/command scenarios, native interior/piloting/lifecycle replays, and actual WebAssembly desktop/touch checks. Commands are in [build and test](build-and-test.md), and current results/limits are in [M0e evidence](evidence/m0e-saves.md). The broader strategy below grows with later milestones; generation, physical-phone verification and performance acceptance remain pending.
 
 ## Test boundaries
 
@@ -46,7 +46,7 @@ Streaming tests cover collision readiness, dirty-state publication before evicti
 
 ## CI and performance gates
 
-M0a supplies the build/test commands and Windows/Linux/web/specification workflow. Each code change must build affected targets and run relevant unit/scenario tests. Cross-platform compile/core checks and initial browser input/launch checks run from the foundation. Add the full interior/save browser suite as those behaviors land. Specification validation remains a separate check. Documentation-only commits do not rerun the runtime workflow.
+M0a supplies the build/test commands and Windows/Linux/web/specification workflow. Each code change must build affected targets and run relevant unit/scenario tests. Cross-platform compile/core checks and initial browser input/launch checks run from the foundation. The full interior/save browser suite now covers production-loop save/reload, real IndexedDB transactions, failure recovery and portable imports. Optimized and public-page checks also exercise saved journeys with diagnostics absent. Specification validation remains a separate check. Documentation-only commits do not rerun the runtime workflow.
 
 Larger seed sweeps, sanitizers, fuzzing, and long soaks run nightly or for release candidates as their systems exist. Compiler/sanitizer configurations must match supported native environments; software-rendered CI does not establish real GPU or phone performance.
 

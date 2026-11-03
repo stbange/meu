@@ -6,24 +6,24 @@ Live prototype: [play Mechanized Exploration Unit](https://stbange.github.io/meu
 
 The MEU checks and Pages workflow publishes pushes to main after all four foundation jobs pass: specifications, Windows, Linux, and web. Working branches and pull requests run checks without publishing. The workflow can also be started manually for main.
 
-The web job builds the optimized C/WebAssembly/WebGL 2 client, runs compiled core/scenario tests, and checks browser launches at desktop, portrait-phone, and landscape-phone sizes in Chromium, plus both phone sizes in WebKit. The published package contains only index.html, index.js, index.wasm, input.js, style.css, the no-Jekyll marker, and revision.txt. Core-test binaries and test diagnostics are excluded.
+The web job builds the optimized C/WebAssembly/WebGL 2 client, runs compiled core/scenario tests, and checks browser launches and durable saved-journey/export/import operation at desktop, portrait-phone, and landscape-phone sizes in Chromium, plus both phone sizes in WebKit. The published package contains only index.html, index.js, index.wasm, input.js, storage.js, style.css, the no-Jekyll marker, and revision.txt. Core-test binaries and test diagnostics are excluded.
 
 The deployment job uses GitHub's Pages artifact service and its github-pages environment. Only that job receives Pages and identity-token write permissions. The website stays at the repository path /meu/; assets use relative URLs.
 
-After deployment, a live verification job checks revision.txt against the source commit and launches the public page in all five browser/layout configurations. Reports and screenshots are retained as the live-pages-checks artifact. A deployment or successful check does not mark gameplay as user-accepted.
+After deployment, a live verification job checks revision.txt against the source commit and launches the public page and verifies saved journeys in all five browser/layout configurations. Reports and screenshots are retained as the live-pages-checks artifact. A deployment or successful check does not mark gameplay as user-accepted.
 
 ## Play and update
 
 Select Begin exploration. M0d adds complete touch contexts, session settings and explicit pause/resume to the connected 240 m home and M0c physical bridge piloting. Approach the central console and use E or the touch prompt. At the helm W/S drives, A/D turns, Space brakes, P parks and E releases control. Mouse/arrow/touch look does not steer. Releasing drive brakes; leaving the helm requests a parked stop. Touch controls adapt to drive/turn with Brake, Park and Release helm buttons. The bridge reports speed, heading, braking distance and any structure/support rejection.
 
-On foot, WASD or touch buttons walk through the bridge, quarters, engineering hall and lift. The lift is behind the start position: walk into its centre, choose 1/2/3 or tap a deck, then walk forward out after arrival. E or a contextual button uses nearby home objects. Settings or F1 opens sensitivity, vertical drag inversion, separate walking bob/machine sway (both initially off) and sound volume. Close settings, then explicitly resume. Focus/background loss and screen changes pause and discard old gestures. Preferences last for this session; durable saves/settings remain M0e.
+On foot, WASD or touch buttons walk through the bridge, quarters, engineering hall and lift. The lift is behind the start position: walk into its centre, choose 1/2/3 or tap a deck, then walk forward out after arrival. E or a contextual button uses nearby home objects. Settings or F1 opens sensitivity, vertical drag inversion, separate walking bob/machine sway (both initially off) and sound volume. Close settings, then explicitly resume. Focus/background loss and screen changes pause and discard old gestures. Pause and select Saved journeys, or press F2 on native desktop. Save after the unit is parked and the lift has finished; settings are included. A valid latest journey restores paused on the next launch. Recover previous retains damaged source data. Export/Import uses portable .meu files; Import changes the running journey and requires a separate Save to keep it locally.
 
 Future source changes pushed to main rebuild, test, and redeploy automatically. Documentation-only commits do not rebuild the runtime. Use the repository's Pages settings with GitHub Actions as the publishing source.
 
 To run the existing launch checks against the public site, set MEU_RELEASE=1 and MEU_BASE_URL=https://stbange.github.io/meu/, then run:
 
 ~~~text
-npm run test:web -- --grep "renders the C/OpenGL room"
+npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey"
 ~~~
 
 The base URL must include its final slash. The tests retain that path and do not start a local server when MEU_BASE_URL is supplied.

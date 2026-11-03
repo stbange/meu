@@ -17,6 +17,7 @@ void meu_sim_init(MeuSimulation *s)
 }
 MeuContext meu_sim_context(const MeuSimulation *s)
 {
+    if (s->journeys_open) return MEU_CONTEXT_JOURNEYS;
     if (s->settings_open) return MEU_CONTEXT_SETTINGS;
     if (s->paused) return MEU_CONTEXT_PAUSED;
     if (s->info_open) return MEU_CONTEXT_PANEL;
@@ -25,7 +26,7 @@ MeuContext meu_sim_context(const MeuSimulation *s)
 void meu_sim_clear_input(MeuSimulation *s) { s->held=0; ++s->input_epoch; }
 void meu_sim_start(MeuSimulation *s)
 {
-    if (s->settings_open) return;
+    if (s->settings_open || s->journeys_open) return;
     meu_sim_clear_input(s);
     s->started=true; s->paused=false; s->held=0; s->accumulator=0; previous(s);
 }
@@ -40,11 +41,19 @@ void meu_sim_pause(MeuSimulation *s)
 }
 void meu_sim_open_settings(MeuSimulation *s)
 {
-    meu_sim_pause(s); s->settings_open=true; meu_sim_clear_input(s);
+    meu_sim_pause(s); s->journeys_open=false; s->settings_open=true; meu_sim_clear_input(s);
 }
 void meu_sim_close_settings(MeuSimulation *s)
 {
     s->settings_open=false; meu_sim_clear_input(s);
+}
+void meu_sim_open_journeys(MeuSimulation *s)
+{
+    meu_sim_pause(s); s->settings_open=false; s->journeys_open=true; meu_sim_clear_input(s);
+}
+void meu_sim_close_journeys(MeuSimulation *s)
+{
+    s->journeys_open=false; meu_sim_clear_input(s);
 }
 bool meu_sim_setting(MeuSimulation *s,int id,float value)
 {
@@ -167,7 +176,7 @@ void meu_sim_look(MeuSimulation *s,float yaw,float pitch)
     s->yaw=remainderf(s->yaw+clampf(yaw,-6.2831853f,6.2831853f),6.2831853f);
     s->pitch=clampf(s->pitch+pitch,-1.4f,1.4f);
 }
-static bool support(MeuSimulation *s,float x,float z,float *floor)
+static bool support(const MeuSimulation *s,float x,float z,float *floor)
 {
     float feet=s->y-MEU_EYE_HEIGHT;
     if (!meu_interior_floor(x,z,feet,s->lift_y,floor)) return false;
@@ -177,6 +186,12 @@ static bool support(MeuSimulation *s,float x,float z,float *floor)
         if (!meu_interior_floor(x+offsets[i][0],z+offsets[i][1],*floor,s->lift_y,&edge) || fabsf(edge-*floor)>.16f) return false;
     }
     return !meu_interior_blocked(x,*floor,z,s->lift_y,s->lift_door);
+}
+bool meu_sim_valid_position(const MeuSimulation *s)
+{
+    float floor;
+    return isfinite(s->x) && isfinite(s->y) && isfinite(s->z) && support(s,s->x,s->z,&floor) &&
+        fabsf(floor-(s->y-MEU_EYE_HEIGHT))<.02f;
 }
 void meu_sim_move(MeuSimulation *s,float dx,float dz)
 {

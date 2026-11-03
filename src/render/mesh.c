@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 MeuVertex meu_vertices[180000];
 unsigned meu_vertex_count;
@@ -181,13 +182,24 @@ void meu_mesh_lift(const MeuSimulation *s)
         }
     }
 }
-void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection)
+void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection,const char *storage_status)
 {
     char line[120]; float size=width<700?1.5f:2;
     const float left=22,top=(float)height-35;
     snprintf(line,sizeof(line),"%s - %.0f M",meu_room_name(meu_sim_room(s)),s->y-MEU_EYE_HEIGHT);
     meu_mesh_text(line,left,top,0,size,1,.86f,.91f,.79f);
-    if (s->settings_open) {
+    if (s->journeys_open) {
+        float x=fmaxf(20,((float)width-760)*.5f),y=fmaxf(50,((float)height-440)*.5f);
+        quad(x,y,0,fminf((float)width-40,760),440,.08f,.14f,.15f);
+        meu_mesh_text("SAVED JOURNEYS",x+20,y+400,0,2,1,.91f,.81f,.54f);
+        const char *items[]={"F5 SAVE JOURNEY - INCLUDES SETTINGS","F9 LOAD LATEST - F8 RECOVER PREVIOUS","F6 EXPORT JOURNEY - F7 IMPORT JOURNEY","PARK AND FINISH THE LIFT RIDE BEFORE SAVING","F2 OR ESC CLOSE - THEN ENTER TO RESUME"};
+        for (int i=0;i<5;++i) meu_mesh_text(items[i],x+20,y+350-(float)i*45,0,1.5f,1,.81f,.85f,.74f);
+        if (storage_status) {
+            char first[61];snprintf(first,sizeof(first),"%.60s",storage_status);
+            meu_mesh_text(first,x+20,y+85,0,1.3f,1,.94f,.76f,.43f);
+            if (strlen(storage_status)>60) meu_mesh_text(storage_status+60,x+20,y+60,0,1.3f,1,.94f,.76f,.43f);
+        }
+    } else if (s->settings_open) {
         float w=fminf((float)width-40,680),h=fminf((float)height-40,430);
         float x=((float)width-w)*.5f,y=((float)height-h)*.5f;
         float font=fminf(2,(w-40)/330),row=(h-140)/5;
@@ -207,7 +219,7 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection)
         meu_mesh_text("SPACE TOGGLE - R RESET - F1 CLOSE",x+20,y+34,0,font*.7f,1,.73f,.81f,.72f);
         meu_mesh_text("SESSION SETTINGS - CLOSE THEN ENTER TO RESUME",x+20,y+14,0,font*.55f,1,.73f,.81f,.72f);
     } else if (s->paused) {
-        meu_mesh_text("ENTER EXPLORE - F1 SETTINGS",left,top-25,0,size,1,.94f,.76f,.43f);
+        meu_mesh_text("ENTER EXPLORE - F1 SETTINGS - F2 JOURNEYS",left,top-25,0,size,1,.94f,.76f,.43f);
     } else if (s->travel.helm) {
         snprintf(line,sizeof(line),"HELM - %.1f M/S - HEADING %.0f",s->travel.speed,s->robot.yaw*57.295779513);
         meu_mesh_text(line,left,top-25,0,size,1,.94f,.76f,.43f);
@@ -226,7 +238,7 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection)
         meu_mesh_text("UNIT HEIGHT 240 M - BRIDGE 196 M",left,top-55,0,size,1,.94f,.82f,.57f);
         meu_mesh_text("QUARTERS 156 M - ENGINEERING 112 M",left,top-78,0,size,1,.94f,.82f,.57f);
     }
-    meu_mesh_text(s->travel.helm?"WS DRIVE - AD TURN - SPACE BRAKE - P PARK - E RELEASE":"WASD WALK - DRAG OR ARROWS LOOK - E USE - ESC PAUSE",left,18,0,size*.75f,1,.68f,.77f,.69f);
+    meu_mesh_text(s->travel.helm?"WS DRIVE - AD TURN - SPACE BRAKE - P PARK - E RELEASE":"WASD WALK - DRAG OR ARROWS LOOK - E USE - ESC PAUSE - F2 JOURNEYS",left,18,0,size*.75f,1,.68f,.77f,.69f);
     quad((float)width*.5f-3,(float)height*.5f-.6f,0,6,1.2f,.80f,.87f,.73f);
     quad((float)width*.5f-.6f,(float)height*.5f-3,0,1.2f,6,.80f,.87f,.73f);
 }

@@ -1,0 +1,37 @@
+# Production loop snapshot/restore; no fixture pose edits.
+settings-open
+setting 0 2
+setting 1 1
+setting 4 0
+settings-close
+start
+press forward
+frames 30
+release forward
+pause
+snapshot
+expect z -9.25 0.0001
+expect ticks 30 0
+settings-open
+setting 0 0.5
+setting 4 1
+settings-close
+start
+press backward
+frames 60
+release backward
+pause
+restore
+expect z -9.25 0.0001
+expect ticks 30 0
+expect sensitivity 2 0.00001
+expect volume 0 0
+expect held 0 0
+expect helm 0 0
+expect parked 1 0
+expect context 3 0
+frames 600
+expect ticks 30 0
+start
+frames 1
+expect held 0 0

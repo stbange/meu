@@ -26,14 +26,14 @@ test.afterEach(async ({ page }, info) => {
 
 test('walks residence to helm and engineering using real keyboard or touch controls', async ({ page, isMobile }, info) => {
   test.skip(release, 'The full route observes read-only C diagnostics.');
-  test.setTimeout(120000);
+  test.setTimeout(140000);
   const errors = [];
   page.on('pageerror', error => errors.push(String(error)));
   await page.goto('./');
   await expect(page.locator('body')).toHaveAttribute('data-ready', 'true');
   const press = async locator => isMobile ? locator.tap() : locator.click();
   await press(page.getByRole('button', { name: 'Begin exploration', exact: true }));
-  expect((await state(page)).scene).toBe('m0d-controls-v1');
+  expect((await state(page)).scene).toBe('m0e-saves-v1');
   const session = isMobile ? await page.context().newCDPSession(page) : null;
   const replay = [];
   const move = async (forward, until) => {
@@ -90,6 +90,11 @@ test('walks residence to helm and engineering using real keyboard or touch contr
   await page.waitForTimeout(200);
   expect((await state(page)).liftY).toBe(stopped.liftY);
   expect((await state(page)).held).toBe(0);
+  await press(page.getByRole('button',{name:'Saved journeys',exact:true}));
+  await press(page.getByRole('button',{name:'Save journey',exact:true}));
+  await expect(page.locator('body')).toHaveAttribute('data-save-state','error');
+  await expect(page.locator('#save-status')).toContainText('finish the lift ride');
+  await press(page.getByRole('button',{name:'Close journeys',exact:true}));
   await press(page.getByRole('button', { name: 'Resume exploration', exact: true }));
   await page.screenshot({ path: info.outputPath('service-lift.png') });
   await arrive(156);
@@ -123,6 +128,31 @@ test('walks residence to helm and engineering using real keyboard or touch contr
   await expect(page.getByRole('button', { name: 'Toggle inspection lights · E', exact: true })).toBeVisible();
   await press(page.getByRole('button', { name: 'Toggle inspection lights · E', exact: true }));
   await page.screenshot({ path: info.outputPath('reactor-catwalk.png') });
+  await press(page.getByRole('button',{name:'Pause',exact:true}));
+  await press(page.getByRole('button',{name:'Settings',exact:true}));
+  await press(page.locator('label[for="invert-y"]'));
+  await press(page.locator('label[for="machine-sway"]'));
+  const volume=page.locator('#volume');await volume.scrollIntoViewIfNeeded();
+  if(isMobile){const b=await volume.boundingBox();await volume.tap({position:{x:2,y:b.height/2}});}
+  else{await volume.focus();await volume.press('Home');}
+  await press(page.getByRole('button',{name:'Close settings',exact:true}));
+  await press(page.getByRole('button',{name:'Saved journeys',exact:true}));
+  await press(page.getByRole('button',{name:'Save journey',exact:true}));
+  await expect(page.locator('body')).toHaveAttribute('data-save-state','saved');
+  const saved=await state(page);expect(saved.volume).toBe(0);expect(saved.invertY).toBe(true);
+  replay.push({action:'durably saved in engineering',state:saved});
+  await page.screenshot({path:info.outputPath('engineering-save.png')});
+  await page.reload();
+  await expect(page.locator('body')).toHaveAttribute('data-ready','true');
+  await expect(page.locator('body')).toHaveAttribute('data-rendered','true');
+  const loaded=await state(page);
+  for(const key of ['x','y','z','yaw','pitch','robotX','robotZ','robotYaw','room','liftY','ticks','visited','volume','invertY','machineSway'])
+    expect(loaded[key],key).toBe(saved[key]);
+  expect(loaded.paused).toBe(true);expect(loaded.held).toBe(0);expect(loaded.helm).toBe(false);expect(loaded.parked).toBe(true);
+  expect(loaded.audioAttempts).toBe(0);
+  replay.push({action:'fresh-page saved journey restored',state:loaded});
+  await press(page.getByRole('button',{name:'Resume exploration',exact:true}));
+  expect((await state(page)).audioGain).toBe(0);
   await move(false, s => s.z > -.65);
   await choose(0); await arrive(196);
   await move(true, s => s.z < -8);

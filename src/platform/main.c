@@ -1,6 +1,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include "core/simulation.h"
+#include "core/snapshot.h"
+#ifndef __EMSCRIPTEN__
+#include "platform/file_storage.h"
+#endif
 #include "render/renderer.h"
 #include "meu_build_info.h"
 #include <math.h>
@@ -31,6 +35,14 @@ typedef struct {
     int variation, exit_code;
     bool running, smoke, tour, pilot, lifecycle, dragging, audio_ready;
     const char *capture;
+    char storage_status[180];
+#ifndef __EMSCRIPTEN__
+    char storage_directory[MEU_PATH_BYTES];
+    const char *save_directory_argument;
+    Uint32 file_event;
+    bool dialog_pending;
+#endif
+    int persistence_test;
 } Application;
 static Application app;
 
@@ -82,7 +94,10 @@ static void pause_game(void)
 
 static void start_game(void)
 {
-    if (app.simulation.settings_open) return;
+    if (app.simulation.settings_open || app.simulation.journeys_open) return;
+#ifndef __EMSCRIPTEN__
+    if (app.dialog_pending) return;
+#endif
     meu_sim_start(&app.simulation);
     app.previous_time = (double)SDL_GetTicksNS() / 1e9;
     if (app.audio_attempts == 0) {
@@ -135,6 +150,121 @@ WEB_EXPORT int meu_web_setting(int id,float value)
     bool accepted=meu_sim_setting(&app.simulation,id,value);
     sync_preferences(); return accepted;
 }
+
+static void restored_game(void)
+{
+    app.previous_time=(double)SDL_GetTicksNS()/1e9;
+    if (app.audio) SDL_PauseAudioStreamDevice(app.audio);
+    sync_input_context(); sync_preferences();
+#ifdef __EMSCRIPTEN__
+    emscripten_run_script("if(window.MEU)window.MEU.restored();");
+#endif
+}
+WEB_EXPORT void meu_web_journeys(int operation)
+{
+    if (operation==0) { pause_game(); meu_sim_open_journeys(&app.simulation); }
+    else if (operation==1) meu_sim_close_journeys(&app.simulation);
+    sync_input_context(); sync_preferences();
+}
+#ifdef __EMSCRIPTEN__
+WEB_EXPORT const char *meu_web_snapshot(uint32_t generation)
+{
+    static char response[340]; char hex[MEU_SAVE_HEX_BYTES]={0}; uint8_t data[MEU_SAVE_BYTES];
+    MeuSaveResult result=meu_snapshot_encode(&app.simulation,generation,data);
+    if (result==MEU_SAVE_OK) meu_snapshot_hex(data,hex);
+    snprintf(response,sizeof(response),"{\"result\":%d,\"data\":\"%s\"}",result,hex);
+    return response;
+}
+WEB_EXPORT const char *meu_web_probe(const char *hex)
+{
+    static char response[120]; uint8_t data[MEU_SAVE_BYTES];uint32_t generation=0;MeuSimulation candidate;
+    MeuSaveResult result=MEU_SAVE_MALFORMED;
+    if (meu_snapshot_unhex(hex,data)) result=meu_snapshot_decode(data,sizeof(data),&candidate,&generation);
+    snprintf(response,sizeof(response),"{\"result\":%d,\"generation\":%u,\"room\":%d}",
+        result,generation,result==MEU_SAVE_OK?meu_sim_room(&candidate):-1);
+    return response;
+}
+WEB_EXPORT int meu_web_restore(const char *hex)
+{
+    uint8_t data[MEU_SAVE_BYTES];MeuSaveResult result=MEU_SAVE_MALFORMED;
+    if (meu_snapshot_unhex(hex,data)) result=meu_snapshot_restore(&app.simulation,data,sizeof(data),NULL);
+    if (result==MEU_SAVE_OK) restored_game();
+    return result;
+}
+WEB_EXPORT const char *meu_web_save_message(int result) { return meu_save_message((MeuSaveResult)result); }
+#else
+static void storage_message(const char *message)
+{
+    snprintf(app.storage_status,sizeof(app.storage_status),"%s",message);
+    SDL_Log("%s",message);
+}
+static void storage_action(int operation,const char *path)
+{
+    MeuSaveResult result=MEU_SAVE_IO;uint32_t generation=0;
+    if (operation==0) result=meu_file_save(app.storage_directory,&app.simulation,&generation);
+    if (operation==1 || operation==2) result=meu_file_load(app.storage_directory,operation==2,&app.simulation,&generation);
+    if (operation==3) result=meu_file_export(path,&app.simulation);
+    if (operation==4) result=meu_file_import(path,&app.simulation,&generation);
+    if (result!=MEU_SAVE_OK) { storage_message(meu_save_message(result)); return; }
+    if (operation==1 || operation==2 || operation==4) restored_game();
+    char message[180];
+    if (operation==0) snprintf(message,sizeof(message),"Saved journey %u. Settings included.",generation);
+    else if (operation==1) snprintf(message,sizeof(message),"Loaded journey %u. Close, then resume.",generation);
+    else if (operation==2) snprintf(message,sizeof(message),"Recovered journey %u. Damaged source kept.",generation);
+    else snprintf(message,sizeof(message),"%s",operation==3?"Journey exported. Local save unchanged.":"Journey imported. Save here to keep it.");
+    storage_message(message);
+}
+static void SDLCALL chosen_file(void *userdata,const char * const *files,int filter)
+{
+    (void)filter;SDL_Event e={0};e.type=app.file_event;e.user.code=(Sint32)(intptr_t)userdata;
+    e.user.data1=files && files[0]?SDL_strdup(files[0]):NULL;
+    e.user.data2=(void *)(intptr_t)(files?0:1);
+    if (!SDL_PushEvent(&e)) SDL_free(e.user.data1);
+}
+static void choose_file(int operation)
+{
+    static const SDL_DialogFileFilter filter={"MEU journey","meu"};
+    if (app.dialog_pending) return;
+    if (app.persistence_test) {
+        char path[MEU_PATH_BYTES];
+        if (meu_file_path(app.storage_directory,"roundtrip.meu",path)) storage_action(operation,path);
+        return;
+    }
+    if (operation==3) {
+        uint8_t data[MEU_SAVE_BYTES];MeuSaveResult result=meu_snapshot_encode(&app.simulation,1,data);
+        if (result!=MEU_SAVE_OK) { storage_message(meu_save_message(result));return; }
+    }
+    app.dialog_pending=true;storage_message("Choose a journey file. The game remains paused.");
+    if (operation==3) SDL_ShowSaveFileDialog(chosen_file,(void *)(intptr_t)operation,app.window,&filter,1,NULL);
+    else SDL_ShowOpenFileDialog(chosen_file,(void *)(intptr_t)operation,app.window,&filter,1,NULL,false);
+}
+static void initialize_storage(void)
+{
+    if (app.smoke || app.tour || app.pilot || app.lifecycle) return;
+    if (app.save_directory_argument) {
+        if (strlen(app.save_directory_argument)>=sizeof(app.storage_directory)) { storage_message(meu_save_message(MEU_SAVE_IO));return; }
+        snprintf(app.storage_directory,sizeof(app.storage_directory),"%s",app.save_directory_argument);
+    }
+    else {
+        char *directory=SDL_GetPrefPath("MEU","MechanizedExplorationUnit");
+        if (directory) {
+            if (strlen(directory)>=sizeof(app.storage_directory)) { SDL_free(directory);storage_message(meu_save_message(MEU_SAVE_IO));return; }
+            snprintf(app.storage_directory,sizeof(app.storage_directory),"%s",directory);SDL_free(directory);
+        }
+    }
+    if (!meu_file_mkdir(app.storage_directory)) { storage_message(meu_save_message(MEU_SAVE_IO));return; }
+    SDL_Log("MEU save directory: %s",app.storage_directory);
+    if (app.persistence_test==1) { storage_message("Persistence replay ready.");return; }
+    MeuJournal journal;
+    if (!meu_file_inspect(app.storage_directory,&journal)) storage_message(meu_save_message(MEU_SAVE_IO));
+    else if (journal.latest.result==MEU_SAVE_OK) storage_action(1,NULL);
+    else if (journal.latest.present) storage_message(journal.previous.result==MEU_SAVE_OK?
+        "Latest save unavailable. F2 then F8 recovers the previous journey. Source kept.":meu_save_message(journal.latest.result));
+    else if (journal.previous.result==MEU_SAVE_OK) storage_message("Latest save missing. F2 then F8 recovers the previous journey.");
+    else if (journal.previous.present) storage_message(meu_save_message(journal.previous.result));
+    else storage_message("No saved journey yet. F2 opens saved journeys.");
+}
+#endif
 
 #if defined(__EMSCRIPTEN__) && defined(MEU_DIAGNOSTICS)
 WEB_EXPORT const char *meu_state_json(void)
@@ -213,9 +343,28 @@ static void event(const SDL_Event *input)
     if ((input->type==SDL_EVENT_WINDOW_RESIZED || input->type==SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) && app.simulation.started && !app.simulation.paused) pause_game();
     if (input->type==SDL_EVENT_WILL_ENTER_BACKGROUND || input->type==SDL_EVENT_DID_ENTER_BACKGROUND) pause_game();
 #ifndef __EMSCRIPTEN__
+    if (input->type==app.file_event) {
+        app.dialog_pending=false;
+        if (input->user.data1) storage_action(input->user.code,input->user.data1);
+        else storage_message(input->user.data2?"The file picker is unavailable.":"File selection cancelled. Journey unchanged.");
+        SDL_free(input->user.data1);
+    }
     if (input->type == SDL_EVENT_KEY_DOWN || input->type == SDL_EVENT_KEY_UP) {
         bool down = input->type == SDL_EVENT_KEY_DOWN;
-        if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_F1)
+        if (app.dialog_pending) return;
+        if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_F2)
+            meu_web_journeys(app.simulation.journeys_open?1:0);
+        else if (app.simulation.journeys_open) {
+            if (down && !input->key.repeat) {
+                SDL_Scancode key=input->key.scancode;
+                if (key==SDL_SCANCODE_ESCAPE) meu_web_journeys(1);
+                if (key==SDL_SCANCODE_F5) storage_action(0,NULL);
+                if (key==SDL_SCANCODE_F9) storage_action(1,NULL);
+                if (key==SDL_SCANCODE_F8) storage_action(2,NULL);
+                if (key==SDL_SCANCODE_F6) choose_file(3);
+                if (key==SDL_SCANCODE_F7) choose_file(4);
+            }
+        } else if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_F1)
             meu_web_settings(app.simulation.settings_open?1:0);
         else if (app.simulation.settings_open) {
             if (down && !input->key.repeat) {
@@ -408,6 +557,55 @@ static void lifecycle_check(int width,int height)
     }
     if (bad) { SDL_Log("LIFECYCLE failed frame=%u z=%.4f context=%d held=%u",f,s->z,meu_sim_context(s),s->held); app.exit_code=1;app.running=false; }
 }
+static void persistence_input(void)
+{
+    unsigned f=app.frames;SDL_Scancode key=SDL_SCANCODE_UNKNOWN;
+    if (app.persistence_test==1) {
+        switch(f) {
+            case 0:key=SDL_SCANCODE_RETURN;break;
+            case 62:case 72:key=SDL_SCANCODE_F1;break;
+            case 63:key=SDL_SCANCODE_RIGHT;break;
+            case 64:case 66:case 68:case 70:key=SDL_SCANCODE_DOWN;break;
+            case 65:case 67:case 69:key=SDL_SCANCODE_SPACE;break;
+            case 71:key=SDL_SCANCODE_LEFT;break;
+            case 73:key=SDL_SCANCODE_F2;break;
+            case 74:key=SDL_SCANCODE_F5;break;
+            default:break;
+        }
+        if (f==1) tour_key(SDL_SCANCODE_W,true);
+        if (f==61) tour_key(SDL_SCANCODE_W,false);
+    } else {
+        switch(f) {
+            case 11:case 13:case 40:case 45:case 51:key=SDL_SCANCODE_F2;break;
+            case 12:key=SDL_SCANCODE_F6;break;
+            case 14:case 46:key=SDL_SCANCODE_RETURN;break;
+            case 41:key=SDL_SCANCODE_F7;break;
+            case 50:key=SDL_SCANCODE_ESCAPE;break;
+            case 52:key=SDL_SCANCODE_F9;break;
+            default:break;
+        }
+        if (f==15) tour_key(SDL_SCANCODE_W,true);
+        if (f==39) tour_key(SDL_SCANCODE_W,false);
+    }
+    if (key!=SDL_SCANCODE_UNKNOWN) {tour_key(key,true);tour_key(key,false);}
+}
+static void persistence_check(int width,int height)
+{
+    MeuSimulation *s=&app.simulation;unsigned f=app.frames;bool bad=false;
+    if (app.persistence_test==2 && f==9) bad=!s->started || !s->paused || s->held!=0 || app.audio_attempts!=0 || fabsf(s->z+10.5f)>.01f;
+    if ((app.persistence_test==1 && f==80) || (app.persistence_test==2 && f==60)) {
+        MeuJournal journal={0};bad|=!meu_file_inspect(app.storage_directory,&journal) || journal.latest.result!=MEU_SAVE_OK;
+        bad|=!s->paused || !s->journeys_open || s->held!=0 || !s->travel.parked || s->travel.helm ||
+            fabsf(s->x)>.001f || fabsf(s->z+10.5f)>.01f || fabsf(s->settings.sensitivity-1.1f)>.001f ||
+            !s->settings.invert_y || !s->settings.walk_bob || !s->settings.machine_sway || fabsf(s->settings.volume-.5f)>.001f;
+        const char *capture=app.persistence_test==1?"test-results/native-save-menu.bmp":"test-results/native-save-restored.bmp";
+        bad|=!meu_renderer_capture(capture,width,height);
+        printf("PERSISTENCE mode=%s build=%s scene=%s generation=%u result=%s\n",app.persistence_test==1?"write":"fresh-read-export-import",
+            MEU_BUILD_ID,MEU_SCENE_ID,journal.latest.generation,bad?"FAIL":"PASS");
+        app.running=false;
+    }
+    if (bad) {SDL_Log("PERSISTENCE failed frame=%u z=%.4f status=%s",f,s->z,app.storage_status);app.exit_code=1;app.running=false;}
+}
 #endif
 
 static void frame(void)
@@ -416,11 +614,12 @@ static void frame(void)
     if (app.tour) tour_input();
     if (app.pilot) pilot_input();
     if (app.lifecycle) lifecycle_input();
+    if (app.persistence_test) persistence_input();
 #endif
     SDL_Event input;
     while (SDL_PollEvent(&input)) { event(&input); sync_input_context(); }
     double now = (double)SDL_GetTicksNS() / 1e9;
-    meu_sim_advance(&app.simulation, (app.tour || app.pilot || app.lifecycle) ? MEU_TICK_SECONDS : now - app.previous_time);
+    meu_sim_advance(&app.simulation, (app.tour || app.pilot || app.lifecycle || app.persistence_test) ? MEU_TICK_SECONDS : now - app.previous_time);
     app.previous_time = now;
     int width = 0, height = 0;
 #ifdef __EMSCRIPTEN__
@@ -430,7 +629,7 @@ static void frame(void)
 #endif
     MeuSimulation render; meu_sim_render_state(&app.simulation,&render);
     bool draw=(!app.tour && !app.pilot && !app.lifecycle) || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899 || (app.pilot && (app.frames==101 || app.frames==599 || app.frames==1599)) || (app.lifecycle && (app.frames==15 || app.frames==120));
-    if (draw && !meu_renderer_draw(&render, width, height,app.settings_selection)) {
+    if (draw && !meu_renderer_draw(&render, width, height,app.settings_selection,app.storage_status)) {
         SDL_Log("OpenGL frame failed"); app.exit_code = EXIT_FAILURE; app.running = false;
     }
 #ifdef __EMSCRIPTEN__
@@ -470,6 +669,7 @@ static void frame(void)
     if (app.tour) tour_check(width,height);
     if (app.pilot) pilot_check(width,height);
     if (app.lifecycle) lifecycle_check(width,height);
+    if (app.persistence_test) persistence_check(width,height);
 #endif
     if (draw) SDL_GL_SwapWindow(app.window);
 #ifdef __EMSCRIPTEN__
@@ -494,6 +694,13 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--lifecycle-test")) app.lifecycle=true;
         else if (!strcmp(argv[i], "--pilot-test")) app.pilot=true;
         else if (!strcmp(argv[i], "--tour-test")) { app.tour=true; app.simulation.motion_fixture=true; }
+#ifndef __EMSCRIPTEN__
+        else if (!strcmp(argv[i], "--persistence-test") && i+1<argc) {
+            const char *mode=argv[++i];app.persistence_test=!strcmp(mode,"write")?1:!strcmp(mode,"read")?2:0;
+            if (!app.persistence_test) return EXIT_FAILURE;
+        }
+        else if (!strcmp(argv[i], "--save-dir") && i+1<argc) app.save_directory_argument=argv[++i];
+#endif
         else if (!strcmp(argv[i], "--capture") && i + 1 < argc) app.capture = argv[++i];
         else { fprintf(stderr, "Unknown or incomplete argument: %s\n", argv[i]); return EXIT_FAILURE; }
     }
@@ -515,7 +722,7 @@ int main(int argc, char **argv)
     if (!app.context || !meu_renderer_init()) {
         SDL_Log("Client initialization failed: %s", SDL_GetError()); cleanup(); return EXIT_FAILURE;
     }
-    SDL_GL_SetSwapInterval((app.tour || app.pilot || app.lifecycle)?0:1);
+    SDL_GL_SetSwapInterval((app.tour || app.pilot || app.lifecycle || app.persistence_test)?0:1);
     SDL_Log("MEU build=%s scene=%s content=%d", MEU_BUILD_ID, MEU_SCENE_ID, MEU_CONTENT_VERSION);
     app.previous_time = (double)SDL_GetTicksNS() / 1e9;
     if (app.smoke) meu_sim_start(&app.simulation);
@@ -524,7 +731,9 @@ int main(int argc, char **argv)
     sync_input_context(); sync_preferences();
     emscripten_set_main_loop(frame, 0, 1);
 #else
-    while (app.running) { frame(); if (!app.tour && !app.pilot && !app.lifecycle) SDL_Delay(1); }
+    app.file_event=SDL_RegisterEvents(1);
+    initialize_storage();
+    while (app.running) { frame(); if (!app.tour && !app.pilot && !app.lifecycle && !app.persistence_test) SDL_Delay(1); }
     cleanup();
 #endif
     return app.exit_code;

@@ -1,4 +1,5 @@
 #include "core/simulation.h"
+#include "core/snapshot.h"
 #include "meu_build_info.h"
 #include <math.h>
 #include <stdio.h>
@@ -16,6 +17,7 @@ int main(int argc, char **argv)
     char line[160], command[32], key[32];
     unsigned line_number = 0;
     MeuSimulation state;
+    uint8_t snapshot[MEU_SAVE_BYTES];bool have_snapshot=false;
     const char *ci_revision = getenv("GITHUB_SHA");
     if (ci_revision && ci_revision[0] && !strstr(MEU_BUILD_ID, ci_revision)) {
         fprintf(stderr, "FAIL revision provenance: expected=%s build=%s\n", ci_revision, MEU_BUILD_ID);
@@ -43,6 +45,13 @@ int main(int argc, char **argv)
             float dx,dy;
             if (sscanf(line,"%*s %f %f",&dx,&dy)!=2 || !isfinite(dx) || !isfinite(dy)) goto fail;
             meu_sim_pointer_look(&state,dx,dy);
+        }
+        else if (!strcmp(command,"snapshot")) {
+            if (meu_snapshot_encode(&state,1,snapshot)!=MEU_SAVE_OK) goto fail;
+            have_snapshot=true;
+        }
+        else if (!strcmp(command,"restore")) {
+            if (!have_snapshot || meu_snapshot_restore(&state,snapshot,sizeof(snapshot),NULL)!=MEU_SAVE_OK) goto fail;
         }
         else if (!strcmp(command, "pause")) meu_sim_pause(&state);
         else if (!strcmp(command, "press") || !strcmp(command, "release")) {

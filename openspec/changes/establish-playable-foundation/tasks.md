@@ -5,7 +5,7 @@
 - [x] 3. M0b: Implement stable first-person locomotion, collision, interaction, touch/desktop actions, and coordinate ownership. Maps to VIEW-01 and VIEW-02.
 - [x] 4. M0c: Implement helm input, look/steer separation, controlled stop, clearance rejection, and valid parking. Maps to CMD-01 and CMD-02.
 - [x] 5. M0d: Complete touch layouts, settings, input-context cleanup, lifecycle pause, and explicit resume. Maps to VIEW-03 and PORT-02.
-- [ ] 6. M0e: Implement versioned basic saves, durable browser completion, previous-snapshot recovery, and export/import. Maps to PORT-03.
+- [x] 6. M0e: Implement versioned basic saves, durable browser completion, previous-snapshot recovery, and export/import. Maps to PORT-03.
 
 ## Automated verification
 
@@ -22,4 +22,4 @@
 - [ ] 14. User reviews steering, interior motion comfort, and readable/useful home spaces.
 - [ ] 15. User reviews real-phone touch usability and the proposed direction for M1.
 
-Tasks 1–5 are implemented. M0d settings, lifecycle, multi-finger input and the residence–helm–engineering route are recorded in docs/evidence/m0d-controls.md. Physical Android/iPhone checks remain pending. M0c travel and context verification is recorded in docs/evidence/m0c-piloting.md. M0b adds native/WebAssembly collision, lift, transform, standing-motion and rendered keyboard/touch tour checks; see docs/evidence/m0b-interior.md. Items 7–12 remain unchecked because they cover the full M0 experience, including durable saves and real devices. The non-save portion of item 10 is covered by the M0d automated route and interruption tests; confirmed-save reload still belongs to M0e. User acceptance remains pending. Add checks as each step lands; M0f integrates the full evidence/playtest. Record automated results separately from user acceptance. Commit and push each completed step. The [implementation plan](../../../docs/implementation-plan.md) gives each step's scope and evidence.
+Tasks 1–6 are implemented. M0e save/settings, native and IndexedDB publication, recovery and export/import evidence is in docs/evidence/m0e-saves.md. M0d controls/lifecycle evidence is in docs/evidence/m0d-controls.md; M0a–M0c retain the platform, connected interior and supported-travel records. Automated coverage for items 7–11 is now present, including fresh-page saved-route reload and failed/interrupted publication; M0f will integrate/review the complete evidence and close those verification items. Reference-device performance and physical Android/iPhone checks remain pending, as do all user acceptance items. Keep the change open until its full verification and explicit review conditions are met. Commit and push completed steps; publishing does not imply acceptance. The [implementation plan](../../../docs/implementation-plan.md) gives each step's scope.

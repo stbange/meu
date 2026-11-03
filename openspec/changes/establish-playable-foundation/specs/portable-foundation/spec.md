@@ -60,6 +60,34 @@ The game SHALL preserve basic player and robot state in versioned local saves, r
 - **WHEN** an imported or loaded save has an unsupported schema
 - **THEN** the game explains the incompatibility without modifying the running state or destroying the source save
 
+#### Scenario: Confirm publication before displaying saved
+- **WHEN** a save write has been requested but persistent publication has not completed, or publication fails or is interrupted
+- **THEN** the game does not display a successful-save status before completion, keeps a complete previously confirmed snapshot recoverable, and offers export of the current valid journey after failure
+
+#### Scenario: Save a settled journey with settings
+- **WHEN** the Commander explicitly saves a parked supported robot with the lift settled
+- **THEN** the snapshot preserves robot and player poses, interior/lift location, lights, visited spaces, simulation ticks and all settings, while an unfinished stop or lift ride is rejected without replacing saved generations
+
+#### Scenario: Restore without old input or sound
+- **WHEN** a valid latest journey is found on a fresh launch
+- **THEN** it restores only after geometry validation, remains paused and parked with no held input or helm ownership, and waits for an explicit resume gesture before simulation or audio starts
+
+#### Scenario: Portable export and staged import
+- **WHEN** the player exports a valid journey and imports it in another supported native or web build
+- **THEN** the same versioned state can be restored, malformed or unsafe candidates leave live state and local saved generations unchanged, and a successful import stays unsaved locally until an explicit Save action
+
+#### Scenario: Recover missing or damaged latest data
+- **WHEN** the latest slot is absent or damaged and the previous slot is valid
+- **THEN** previous recovery is offered rather than silently applied, recovering does not rewrite the source, and a later explicit repair save retains the most recent damaged source separately
+
+#### Scenario: Concurrent game windows
+- **WHEN** two game windows publish a save to the same local journal
+- **THEN** publication is serialized or explicitly rejected, generations do not partially overwrite each other, and the latest and previous complete snapshots remain distinguishable
+
+#### Scenario: Bounded damaged data and responsive journey menu
+- **WHEN** malformed stored data exceeds the supported record size or a journey operation is still pending on a phone layout
+- **THEN** decoding rejects the data without an unbounded host-to-game copy, required controls remain reachable within safe areas, and gameplay/menu focus does not resume behind the pending operation
+
 ### Requirement: PORT-04 Reproducible diagnostics
 
 The game test harness SHALL record the build/content versions, scene identity, input commands, and simulation ticks needed to reproduce a failing foundation scenario.

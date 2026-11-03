@@ -136,9 +136,9 @@ bool meu_renderer_init(void)
     return glGetError() == GL_NO_ERROR;
 }
 
-bool meu_renderer_draw(const MeuSimulation *state, int width, int height,int selection)
+bool meu_renderer_draw(const MeuSimulation *state, int width, int height,int selection,const char *storage_status)
 {
-    (void)selection;
+    (void)selection; (void)storage_status;
     if (width<=0 || height<=0) return true;
     float projection[16],view[16],mvp[16],inverse[16],world_mvp[16];
     meu_matrix_perspective(projection,(float)width/(float)height);
@@ -165,7 +165,7 @@ bool meu_renderer_draw(const MeuSimulation *state, int width, int height,int sel
     glDrawArrays(GL_TRIANGLES,(GLint)interior_count,(GLsizei)exterior_count);
     meu_vertex_count=0; meu_mesh_lift(state); unsigned lift_count=meu_vertex_count;
 #ifndef __EMSCRIPTEN__
-    meu_mesh_hud(state,width,height,selection);
+    meu_mesh_hud(state,width,height,selection,storage_status);
 #endif
     bind_mesh(dynamic_buffer);
     pBufferData(GL_ARRAY_BUFFER,(GLsizeiptr)(meu_vertex_count*sizeof(MeuVertex)),meu_vertices,GL_STREAM_DRAW);

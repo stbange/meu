@@ -49,8 +49,8 @@ jobs:
           apt-get install -y python3 ca-certificates git libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev libasound2-dev libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev xvfb xauth
       - uses: actions/checkout@v7.0.1
       - run: python3 tools/bootstrap.py
-      - name: Native build, C tests and actual software-OpenGL interior, piloting and lifecycle tours
-        run: xvfb-run -a python3 tools/build.py native --test --tour --pilot --lifecycle
+      - name: Native build, C tests and actual software-OpenGL interior, piloting, lifecycle and persistence tours
+        run: xvfb-run -a python3 tools/build.py native --test --tour --pilot --lifecycle --persistence
         env:
           SDL_AUDIODRIVER: dummy
           LIBGL_ALWAYS_SOFTWARE: '1'
@@ -63,6 +63,7 @@ jobs:
           path: |
             build/native/bin/
             build/native/Testing/
+            build/native/persistence-replay/
             build/core-sanitizers/Testing/
             test-results/
           if-no-files-found: warn
@@ -84,15 +85,15 @@ jobs:
         run: npm run test:web
       - name: Build without browser test diagnostics
         run: python3 tools/build.py web --release --test
-      - name: Shipping-like browser launch
-        run: npm run test:web -- --grep "renders the C/OpenGL room"
+      - name: Shipping-like browser launch and durable save round trip
+        run: npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey"
         env:
           MEU_RELEASE: '1'
       - name: Stage public runtime files
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
           mkdir -p dist/pages
-          cp build/web-release/bin/{index.html,index.js,index.wasm,input.js,style.css} dist/pages/
+          cp build/web-release/bin/{index.html,index.js,index.wasm,input.js,storage.js,style.css} dist/pages/
           touch dist/pages/.nojekyll
           printf '%s\n' "$GITHUB_SHA" > dist/pages/revision.txt
       - name: Upload Pages artifact
@@ -162,8 +163,8 @@ jobs:
           throw new Error('The published site did not serve the expected source revision.');
           JS
       - run: npx playwright install --with-deps chromium webkit
-      - name: Test live page on desktop and phone layouts
-        run: npm run test:web -- --grep "renders the C/OpenGL room"
+      - name: Test live page and saved journeys on desktop and phone layouts
+        run: npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey"
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:

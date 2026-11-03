@@ -9,5 +9,5 @@ void meu_mesh_text(const char *text,float x,float y,float z,float pixel,int dire
 void meu_mesh_interior(void);
 void meu_mesh_exterior(void);
 void meu_mesh_lift(const MeuSimulation *state);
-void meu_mesh_hud(const MeuSimulation *state,int width,int height,int selection);
+void meu_mesh_hud(const MeuSimulation *state,int width,int height,int selection,const char *storage_status);
 #endif

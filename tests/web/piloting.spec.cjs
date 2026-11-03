@@ -123,6 +123,11 @@ test('pilots from the physical helm, looks independently, parks and releases saf
   const paused = await state(page); await page.waitForTimeout(200);
   expect((await state(page)).robotZ).toBe(paused.robotZ);
   expect(paused.held).toBe(0); expect(paused.helm).toBe(false);
+  await c.tap(page.getByRole('button',{name:'Saved journeys',exact:true}));
+  await c.tap(page.getByRole('button',{name:'Save journey',exact:true}));
+  await expect(page.locator('body')).toHaveAttribute('data-save-state','error');
+  await expect(page.locator('#save-status')).toContainText('Park the unit');
+  await c.tap(page.getByRole('button',{name:'Close journeys',exact:true}));
   await c.tap(page.getByRole('button', { name:'Resume exploration', exact:true }));
   await c.until(s => s.parked);
   expect((await state(page)).travelSafe).toBe(true);

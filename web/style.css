@@ -41,15 +41,15 @@ p { margin:10px 0; }
 }
 #begin { width:100%; background:#c9b27b; color:#172224; font-weight:650; }
 #status { font-size:13px; color:#b7c8b6; }
-#settings-panel {
+#settings-panel,#journeys-panel {
   position:fixed; top:max(12px,var(--safe-top)); bottom:max(12px,var(--safe-bottom));
   left:max(12px,var(--safe-left)); right:max(12px,var(--safe-right)); margin:auto;
   width:min(440px,calc(100% - 24px - var(--safe-left) - var(--safe-right)));
   height:fit-content; max-height:calc(100% - 24px - var(--safe-top) - var(--safe-bottom));
   display:flex; flex-direction:column;
 }
-#settings-title { flex-shrink:0; }
-#settings-fields { min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; }
+#settings-title,#journeys-title { flex-shrink:0; }
+#settings-fields,#journey-content { min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; }
 .setting { display:flex; min-height:56px; align-items:center; gap:12px; padding:8px 2px; border-bottom:1px solid #9bb6a130; font-size:15px; }
 .setting small { display:block; color:#afc1ad; font-size:12px; }
 .setting.check { justify-content:space-between; }
@@ -111,4 +111,16 @@ body[data-context="panel"] #controls,body[data-context="panel"] #use,body[data-c
   #welcome h2 { font-size:23px; margin:4px 0 8px; } #welcome p { margin:6px 0; }
   #welcome .hint { display:none; } #settings-panel { padding:12px 16px; }
   #settings-title { font-size:23px; margin:0 0 6px; }
+}
+
+#journeys { width:100%; margin-top:7px; }
+#journey-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+#journey-actions button { font-size:14px; }
+#save-status { font-size:14px; color:#e0cd96; }
+#journey-content .hint { font-size:12px; }
+#journeys-panel > .dialog-actions { margin-top:10px; }
+#save-note:empty { display:none; }
+@media (max-height:430px) {
+  #journeys-panel { padding:12px 16px; }
+  #journeys-title { font-size:23px; margin:0 0 6px; }
 }

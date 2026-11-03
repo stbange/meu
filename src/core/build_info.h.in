@@ -1,6 +1,6 @@
 #ifndef MEU_BUILD_INFO_H
 #define MEU_BUILD_INFO_H
 #define MEU_BUILD_ID "@PROJECT_VERSION@-@MEU_REVISION@"
-#define MEU_SCENE_ID "m0d-controls-v1"
-#define MEU_CONTENT_VERSION 4
+#define MEU_SCENE_ID "m0e-saves-v1"
+#define MEU_CONTENT_VERSION 5
 #endif

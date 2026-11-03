@@ -6,9 +6,9 @@
   const buttons = [...document.querySelectorAll('[data-action]')];
   const keys = new Set(), pointers = new Map();
   const keyMap = { KeyW:0, KeyS:1, KeyA:2, KeyD:3, ArrowLeft:4, ArrowRight:5, ArrowUp:6, ArrowDown:7, KeyE:8, Digit1:9, Digit2:10, Digit3:11, Space:12, KeyP:13 };
-  let ready = false, failed = false, context = 3, epoch = 0, looking = null;
+  let ready = false, storageReady=false, storageBusy=false, failed = false, context = 3, epoch = 0, looking = null;
   let settingsOpen = false, pauseReason = 'menu', layout = '';
-  const contexts = ['foot','helm','panel','paused','settings'];
+  const contexts = ['foot','helm','panel','paused','settings','journeys'];
   const call = (name, types = [], args = [], result = null) => Module.ccall(name,result,types,args);
   const playing = () => ready && (context === 0 || context === 1);
   const owner = id => [...pointers.values()].some(p => p.action === id) || [...keys].some(key => keyMap[key] === id);
@@ -38,8 +38,10 @@
     return !!call('meu_web_action',['number','number'],[id,+pressed],'number');
   }
   function available() {
-    begin.disabled = !ready || failed || document.hidden;
-    pauseButton.disabled = settingsButton.disabled = !ready || failed;
+    begin.disabled = !ready || !storageReady || storageBusy || failed || document.hidden;
+    pauseButton.disabled = !ready || failed;
+    settingsButton.disabled = !ready || !storageReady || storageBusy || failed;
+    $('#journeys').disabled = !ready || !storageReady || storageBusy || failed;
   }
   function pause(reason = 'menu') {
     pauseReason = reason;
@@ -47,7 +49,7 @@
     available();
   }
   function start() {
-    if (!ready || failed || settingsOpen || document.hidden || !document.hasFocus()) return;
+    if (!ready || !storageReady || storageBusy || failed || settingsOpen || context===5 || document.hidden || !document.hasFocus()) return;
     call('meu_web_start'); canvas.focus();
   }
   function resize() {
@@ -84,23 +86,29 @@
   window.MEU = {
     ready() {
       ready = true; resize(); available();
-      body.dataset.ready = 'true'; begin.textContent = 'Begin exploration';
+      begin.textContent = 'Begin exploration';
       $('#status').textContent = 'Ready. Sound starts when you begin.';
       if (typeof Module._meu_state_json === 'function')
         this.readState = () => JSON.parse(call('meu_state_json',[],[],'string'));
+      window.MEUStorage.boot().finally(()=>{storageReady=true;body.dataset.ready='true';available();});
     },
     context(id, generation) {
       if (id === context && generation === epoch) return;
+      const leftJourneys=context===5 && id!==5;
       clearInput(); context = id; epoch = generation;
       body.dataset.context = contexts[id]; mode(id);
       $('#unit-info').hidden = id !== 2;
+      $('#journeys-panel').hidden = id !== 5;
+      $('#welcome').hidden = id === 5 || settingsOpen;
+      if(id===5) $('#journeys-title').focus();
+      else if(leftJourneys && id===3) begin.focus();
       if (id === 2) $('#close-info').focus();
     },
     preferences(open, sensitivity, invert, bob, sway, volume) {
       const changed = settingsOpen !== !!open;
       settingsOpen = !!open;
       $('#settings-panel').hidden = !settingsOpen;
-      $('#welcome').hidden = settingsOpen;
+      $('#welcome').hidden = settingsOpen || context===5;
       settingsButton.setAttribute('aria-expanded',String(settingsOpen));
       $('#sensitivity').value = sensitivity;
       $('#sensitivity-value').textContent = sensitivity.toFixed(2) + '×';
@@ -144,6 +152,11 @@
     started() {
       clearInput(); body.dataset.started = 'true'; body.dataset.paused = 'false';
     },
+    storageBusy(value) { storageBusy=!!value;available(); },
+    restored() {
+      clearInput();body.dataset.started='true';body.dataset.paused='true';
+      begin.textContent='Resume exploration';available();
+    },
     fail(message) {
       failed = true; clearInput(); body.dataset.paused = 'true'; body.dataset.error = 'true';
       $('#status').textContent = message; begin.textContent = 'Reload to try again'; available();
@@ -151,7 +164,18 @@
   };
   press(begin,start);
   press(pauseButton,() => pause());
-  press(settingsButton,() => { if (ready) call('meu_web_settings',['number'],[settingsOpen ? 1 : 0]); });
+  press(settingsButton,() => { if (ready && !storageBusy) call('meu_web_settings',['number'],[settingsOpen ? 1 : 0]); });
+  press($('#journeys'),()=>call('meu_web_journeys',['number'],[0]));
+  press($('#close-journeys'),()=>{if(!storageBusy)call('meu_web_journeys',['number'],[1]);});
+  press($('#save-journey'),()=>window.MEUStorage.save());
+  press($('#load-journey'),()=>window.MEUStorage.load());
+  press($('#recover-journey'),()=>window.MEUStorage.load(true));
+  press($('#export-journey'),()=>window.MEUStorage.export());
+  press($('#import-journey'),()=>$('#import-file').click());
+  press($('#export-damaged'),()=>window.MEUStorage.exportDamaged());
+  $('#import-file').addEventListener('change',event=>{
+    const file=event.target.files[0];event.target.value='';window.MEUStorage.import(file);
+  });
   press($('#close-settings'),() => call('meu_web_settings',['number'],[1]));
   press($('#reset-settings'),() => call('meu_web_settings',['number'],[2]));
   press($('#close-info'),() => action(8,true));
@@ -161,12 +185,27 @@
     call('meu_web_setting',['number','number'],[Number(input.dataset.setting),value],'number');
   }));
   window.addEventListener('keydown', event => {
-    if (event.code === 'F1' && ready) {
+    if (storageBusy && ['F1','F2','Escape','Enter'].includes(event.code)) {event.preventDefault();return;}
+    if(event.code==='F2' && ready && storageReady){
+      call('meu_web_journeys',['number'],[context===5?1:0]);event.preventDefault();return;
+    }
+    if (event.code === 'F1' && ready && storageReady) {
       call('meu_web_settings',['number'],[settingsOpen ? 1 : 0]); event.preventDefault(); return;
     }
     if (event.code === 'Escape') {
-      if (settingsOpen) call('meu_web_settings',['number'],[1]); else pause();
+      if(context===5)call('meu_web_journeys',['number'],[1]);
+      else if (settingsOpen) call('meu_web_settings',['number'],[1]); else pause();
       event.preventDefault(); return;
+    }
+    if(context===5){
+      if(event.code==='Tab'){
+        const fields=[...$('#journeys-panel').querySelectorAll('button')].filter(e=>!e.disabled && !e.hidden);
+        if(!fields.length){$('#journeys-title').focus();event.preventDefault();return;}
+        const first=fields[0],last=fields[fields.length-1],selected=document.activeElement;
+        if(event.shiftKey && (selected===first || selected===$('#journeys-title'))){last.focus();event.preventDefault();}
+        else if(!event.shiftKey && selected===last){first.focus();event.preventDefault();}
+      }
+      return;
     }
     if (context === 2 && event.code === 'Tab') { $('#close-info').focus(); event.preventDefault(); return; }
     if (settingsOpen) {

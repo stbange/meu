@@ -6,7 +6,7 @@ The implementation target is **C17, SDL3, and OpenGL** on Windows and Linux, plu
 
 ## Current status
 
-M0d adds complete touch contexts, settings and deliberate pause/resume to the connected 240-metre home. Explore its rooms, pilot from the bridge, brake and park safely, and adjust sensitivity, vertical drag, optional walking bob/machine sway and volume. Settings pause the game; closing them leaves it paused until you resume. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0d evidence](docs/evidence/m0d-controls.md).
+M0e adds durable local journeys with saved settings, previous-snapshot recovery and portable export/import to the connected 240-metre home. Explore, pilot and park, then pause and open Saved journeys to save. A confirmed journey restores paused and parked when the game opens again. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0e evidence](docs/evidence/m0e-saves.md).
 
 ## Start here
 
@@ -17,7 +17,7 @@ M0d adds complete touch contexts, settings and deliberate pause/resume to the co
 - [Build and test](docs/build-and-test.md): pinned tools, launch commands, controls, and checks.
 - [First OpenSpec proposal](openspec/changes/establish-playable-foundation/proposal.md): M0 requirements, design, and unchecked tasks.
 
-The next step is **M0e: durable local saves**. Settings currently apply for the running session. The complete M0 experience remains in development.
+The next step is **M0f: integrated verification and focused playtest**, including physical-phone and performance review. The complete M0 experience remains in development.
 
 ## Run the prototype
 
@@ -39,7 +39,7 @@ npm run build:web
 npm run serve:web
 ~~~
 
-Open `http://127.0.0.1:4174`. Begin exploration, then use WASD and mouse drag/arrows, or the movement buttons and look pad. Approach the central bridge console and use E or the prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases the helm. Looking does not steer; releasing drive brakes. Touch controls adapt to piloting, with Brake, Park and Release helm buttons. The lift is behind the starting position: walk backward into its centre, select 1/2/3 (or tap a deck), then walk forward out at your destination. Use E or the contextual button at the dimensions plaque, reading lamp and inspection console. Open Settings or press F1 to adjust controls, camera movement and sound; both camera effects start off. Close settings, then choose Resume exploration (Enter on desktop). Focus loss, backgrounding, pause, or resizing stops simulation and clears old input until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
+Open `http://127.0.0.1:4174`. Begin exploration, then use WASD and mouse drag/arrows, or the movement buttons and look pad. Approach the central bridge console and use E or the prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases the helm. Looking does not steer; releasing drive brakes. Touch controls adapt to piloting, with Brake, Park and Release helm buttons. The lift is behind the starting position: walk backward into its centre, select 1/2/3 (or tap a deck), then walk forward out at your destination. Use E or the contextual button at the dimensions plaque, reading lamp and inspection console. Open Settings or press F1 to adjust controls, camera movement and sound; both camera effects start off. Close settings, then choose Resume exploration (Enter on desktop). Settings are kept when you Save journey: pause, open Saved journeys (F2 on desktop), and save after the unit is parked and the lift has finished. A saved journey loads paused on the next launch. Recover previous keeps a damaged source, and Export/Import moves a .meu backup between native and web builds. Import changes the running journey; Save here to keep it locally. Focus loss, backgrounding, pause, or resizing stops simulation and clears old input until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
 
 ## Specification tooling
 
