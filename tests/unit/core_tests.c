@@ -23,14 +23,14 @@ int main(void)
     meu_sim_start(&a);
     CHECK(meu_sim_action(&a, MEU_FORWARD, true));
     for (int i = 0; i < 60; ++i) meu_sim_advance(&a, 1.0 / 60.0);
-    CHECK(a.ticks == 60 && NEAR(a.z, 3.0f));
+    CHECK(a.ticks == 60 && NEAR(a.z, -10.5f));
     meu_sim_init(&b); meu_sim_start(&b); meu_sim_action(&b, MEU_FORWARD, true);
     for (int i = 0; i < 30; ++i) meu_sim_advance(&b, 1.0 / 30.0);
     CHECK(b.ticks == a.ticks && NEAR(b.z, a.z));
     meu_sim_init(&b); meu_sim_start(&b);
     meu_sim_action(&b, MEU_FORWARD, true); meu_sim_action(&b, MEU_RIGHT, true);
     for (int i = 0; i < 60; ++i) meu_sim_advance(&b, MEU_TICK_SECONDS);
-    CHECK(NEAR(hypotf(b.x, b.z - 5.5f), MEU_WALK_SPEED));
+    CHECK(NEAR(hypotf(b.x, b.z + 8.0f), MEU_WALK_SPEED));
     meu_sim_pause(&b);
     CHECK(b.held == 0 && b.accumulator == 0);
     CHECK(meu_sim_advance(&b, 600) == 0 && b.ticks == 60);
@@ -46,7 +46,7 @@ int main(void)
     meu_sim_look(&a, 1.57079632679f, 0);
     meu_sim_action(&a, MEU_FORWARD, true);
     for (int i = 0; i < 60; ++i) meu_sim_advance(&a, MEU_TICK_SECONDS);
-    CHECK(NEAR(a.x, 2.5f) && NEAR(a.z, 5.5f));
+    CHECK(NEAR(a.x, 2.5f) && NEAR(a.z, -8.0f));
     meu_sim_look(&a, NAN, 0); CHECK(isfinite(a.yaw));
     meu_sim_look(&a, 0, 100); CHECK(NEAR(a.pitch, 1.4f));
     meu_sim_action(&a, MEU_BACKWARD, true);
@@ -55,7 +55,7 @@ int main(void)
     CHECK(NEAR(a.x, before));
     meu_sim_action(&a, MEU_BACKWARD, false);
     for (int i = 0; i < 600; ++i) meu_sim_advance(&a, MEU_TICK_SECONDS);
-    CHECK(NEAR(a.x, 5.8f));
+    CHECK(a.x > 9.6f && a.x < 9.73f && a.grounded);
     meu_matrix_view(view, 2, 1.7f, 5, 0, 0);
     CHECK(NEAR(view[0], 1) && NEAR(view[5], 1) && NEAR(view[10], 1));
     CHECK(NEAR(view[12], -2) && NEAR(view[13], -1.7f) && NEAR(view[14], -5));

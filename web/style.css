@@ -31,3 +31,21 @@ body[data-paused="true"] #controls, body[data-paused="true"] #reticle { visibili
 body[data-paused="false"] #welcome { display: none; }
 @media (max-width: 400px) { header { left: 12px; right: 12px; } .eyebrow { font-size: 8px; } #controls { left: 12px; right: 12px; } #welcome { padding: 20px; } footer span { display: none; } }
 @media (max-height: 430px) { #welcome { padding: 15px 22px; width: min(440px,calc(100% - 140px)); } #welcome h2 { font-size: 23px; margin: 8px 0; } #welcome p { margin: 6px 0; } .hint { display: none; } #controls { bottom: max(25px,env(safe-area-inset-bottom)); } }
+
+[hidden] { display: none !important; }
+#altitude { font-size: 11px; color: #b5c6b5; margin-top: 4px; }
+#lift-panel { position: fixed; top: max(100px,calc(env(safe-area-inset-top) + 80px)); left: 50%; transform: translateX(-50%); width: min(440px,calc(100% - 24px)); padding: 10px; background: #152526e8; border: 1px solid #9bb6a16b; border-radius: 4px; }
+#lift-panel p { margin: 0 0 8px; font-size: 12px; text-align: center; color: #d0c397; }
+#lift-panel > div { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+#lift-panel button { font-size: 12px; min-height: 56px; padding: 5px; }
+#lift-panel small { display: block; color: #a7bca8; }
+#lift-panel [aria-current="true"] { border-color: #cfb579; background: #384c43; opacity: 1; }
+#use { position: fixed; top: calc(50% + 26px); left: 50%; transform: translateX(-50%); padding: 8px 16px; max-width: calc(100% - 24px); font-size: 13px; background: #263b35ef; }
+#unit-info { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); width: min(390px,calc(100% - 24px)); padding: 18px; background: #152526f2; border: 1px solid #cfb579; font-size: 13px; line-height: 1.8; color: #e2d3a8; }
+body[data-paused="true"] #lift-panel, body[data-paused="true"] #use, body[data-paused="true"] #unit-info { visibility: hidden; }
+@media (max-height: 430px) {
+  header { top: 8px; }
+  #lift-panel { top: 78px; width: min(340px,calc(100% - 280px)); padding: 6px; }
+  #lift-panel button { min-height: 48px; font-size: 10px; }
+  #lift-panel p { font-size: 10px; margin-bottom: 4px; }
+}

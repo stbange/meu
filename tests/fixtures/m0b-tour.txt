@@ -1,0 +1,52 @@
+# All travel uses the production input/update loop; no teleports.
+start
+motion
+frames 3600
+expect x 0 0.02
+expect z -8 0.02
+expect y 197.7 0.02
+press backward
+frames 180
+release backward
+expect room 3 0
+press quarters
+frames 420
+expect lift 156 0.001
+expect moving 0 0
+press forward
+frames 180
+release forward
+expect room 1 0
+expect y 157.7 0.02
+pause
+press forward
+frames 60
+expect z -8 0.02
+expect held 0 0
+start
+press backward
+frames 180
+release backward
+press engineering
+frames 460
+expect lift 112 0.001
+press forward
+frames 540
+release forward
+expect room 2 0
+expect y 114.9 0.02
+expect z -23 0.02
+expect grounded 1 0
+press backward
+frames 540
+release backward
+press bridge
+frames 660
+expect moving 0 0
+press forward
+frames 180
+release forward
+expect room 0 0
+expect y 197.7 0.02
+expect z -8 0.02
+expect visited 15 0

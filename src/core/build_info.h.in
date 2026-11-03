@@ -1,6 +1,6 @@
 #ifndef MEU_BUILD_INFO_H
 #define MEU_BUILD_INFO_H
 #define MEU_BUILD_ID "@PROJECT_VERSION@-@MEU_REVISION@"
-#define MEU_SCENE_ID "m0a-room-v1"
-#define MEU_CONTENT_VERSION 1
+#define MEU_SCENE_ID "m0b-unit-v1"
+#define MEU_CONTENT_VERSION 2
 #endif

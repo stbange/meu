@@ -7,7 +7,7 @@
 #include <inttypes.h>
 static int action_id(const char *name)
 {
-    const char *names[] = {"forward","backward","left","right","look-left","look-right","look-up","look-down"};
+    const char *names[] = {"forward","backward","left","right","look-left","look-right","look-up","look-down","interact","bridge","quarters","engineering"};
     for (int i = 0; i < MEU_ACTION_COUNT; ++i) if (!strcmp(name, names[i])) return i;
     return -1;
 }
@@ -32,6 +32,7 @@ int main(int argc, char **argv)
         if (line[0] == '#' || sscanf(line, "%31s", command) != 1) continue;
         printf("line=%u tick=%" PRIu64 " command=%s", line_number, state.ticks, line);
         if (!strcmp(command, "start")) meu_sim_start(&state);
+        else if (!strcmp(command, "motion")) state.motion_fixture = true;
         else if (!strcmp(command, "pause")) meu_sim_pause(&state);
         else if (!strcmp(command, "press") || !strcmp(command, "release")) {
             if (sscanf(line, "%*s %31s", key) != 1 || action_id(key) < 0) goto fail;
@@ -39,12 +40,21 @@ int main(int argc, char **argv)
         } else if (!strcmp(command, "frames")) {
             unsigned count;
             if (sscanf(line, "%*s %u", &count) != 1 || count > 36000) goto fail;
-            for (unsigned i = 0; i < count; ++i) meu_sim_advance(&state, MEU_TICK_SECONDS);
+            for (unsigned i = 0; i < count; ++i) {
+                meu_sim_advance(&state, MEU_TICK_SECONDS);
+                if (!state.grounded) goto fail;
+            }
         } else if (!strcmp(command, "expect")) {
             double expected, tolerance, actual;
             if (sscanf(line, "%*s %31s %lf %lf", key, &expected, &tolerance) != 3 || tolerance < 0) goto fail;
             if (!strcmp(key, "x")) actual = state.x;
             else if (!strcmp(key, "z")) actual = state.z;
+            else if (!strcmp(key, "y")) actual = state.y;
+            else if (!strcmp(key, "room")) actual = meu_sim_room(&state);
+            else if (!strcmp(key, "grounded")) actual = state.grounded;
+            else if (!strcmp(key, "visited")) actual = state.visited;
+            else if (!strcmp(key, "lift")) actual = state.lift_y;
+            else if (!strcmp(key, "moving")) actual = meu_sim_lift_moving(&state);
             else if (!strcmp(key, "ticks")) actual = (double)state.ticks;
             else if (!strcmp(key, "held")) actual = state.held;
             else goto fail;

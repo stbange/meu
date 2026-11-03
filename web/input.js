@@ -12,7 +12,7 @@
   const active = () => ready && body.dataset.paused === 'false';
   const call = (name, types = [], args = []) => Module.ccall(name, null, types, args);
   const action = (id, pressed) => { if (ready) call('meu_web_action', ['number', 'number'], [id, +pressed]); };
-  const keyMap = { KeyW: 0, KeyS: 1, KeyA: 2, KeyD: 3, ArrowLeft: 4, ArrowRight: 5, ArrowUp: 6, ArrowDown: 7 };
+  const keyMap = { KeyW: 0, KeyS: 1, KeyA: 2, KeyD: 3, ArrowLeft: 4, ArrowRight: 5, ArrowUp: 6, ArrowDown: 7, KeyE: 8, Digit1: 9, Digit2: 10, Digit3: 11 };
 
   function clearInput() {
     heldKeys.clear();
@@ -37,6 +37,23 @@
       if (typeof Module._meu_state_json === 'function') {
         this.readState = () => JSON.parse(Module.ccall('meu_state_json', 'string', [], []));
       }
+    },
+    hud(room, height, aboard, moving, current, target, use, info) {
+      const names = ['Bridge', 'Living quarters', 'Engineering hall', 'Service lift'];
+      const uses = ['', 'Read unit dimensions', 'Toggle reading lamp', 'Toggle inspection lights', 'Call service lift'];
+      document.querySelector('#room').textContent = names[room];
+      document.querySelector('#altitude').textContent = (room === 3 ? 'Lift ' : 'Deck ') + Math.round(height) + ' m · Unit height 240 m';
+      const panel = document.querySelector('#lift-panel');
+      panel.hidden = !aboard;
+      document.querySelector('#lift-status').textContent = moving ? 'Travelling to ' + names[target] + '… Gates locked.' : 'Choose a deck · walk forward to leave';
+      panel.querySelectorAll('button').forEach((button, i) => {
+        button.disabled = !!moving || i === current;
+        button.setAttribute('aria-current', String(!moving && i === current));
+      });
+      const useButton = document.querySelector('#use');
+      useButton.hidden = !use || !!aboard;
+      useButton.textContent = (info ? 'Close dimensions' : uses[use]) + ' · E';
+      document.querySelector('#unit-info').hidden = !info;
     },
     paused() {
       clearInput();
@@ -76,7 +93,7 @@
   });
   buttons.forEach(button => {
     button.addEventListener('pointerdown', event => {
-      if (!active()) return;
+      if (!active() || button.disabled) return;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
       pointers.set(event.pointerId, Number(button.dataset.action));

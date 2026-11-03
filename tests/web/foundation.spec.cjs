@@ -39,7 +39,7 @@ test('renders the C/OpenGL room and begins only after a gesture', async ({ page,
   await expect(page.locator('body')).not.toHaveAttribute('data-error', 'true');
   if (!release) {
     const before = await state(page);
-    expect(before.scene).toBe('m0a-room-v1');
+    expect(before.scene).toBe('m0b-unit-v1');
     if (process.env.GITHUB_SHA) expect(before.build).toContain(process.env.GITHUB_SHA);
     expect(before.frames).toBeGreaterThanOrEqual(3);
     expect(before.variation).toBeGreaterThan(8);
@@ -56,7 +56,7 @@ test('renders the C/OpenGL room and begins only after a gesture', async ({ page,
     expect((await state(page)).audioAttempts).toBe(1);
     expect((await state(page)).audioReady).toBe(true);
   }
-  for (const button of await page.locator('#controls button').all()) {
+  for (const button of await page.locator('#controls button:visible').all()) {
     const box = await button.boundingBox();
     expect(box.width).toBeGreaterThanOrEqual(48);
     expect(box.height).toBeGreaterThanOrEqual(48);

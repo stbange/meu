@@ -11,18 +11,28 @@
 <body data-ready="false" data-paused="true" data-rendered="false">
   <canvas id="canvas" tabindex="0" aria-label="First-person view inside the exploration unit"></canvas>
   <header>
-    <div><span class="eyebrow">MECHANIZED EXPLORATION UNIT</span><h1>Observation room</h1></div>
+    <div><span class="eyebrow">MECHANIZED EXPLORATION UNIT</span><h1 id="room">Bridge</h1><div id="altitude">Deck 196 m · Unit height 240 m</div></div>
     <button id="pause" disabled>Pause</button>
   </header>
   <div id="reticle" aria-hidden="true">+</div>
   <section id="welcome" aria-label="Start exploration">
-    <span class="eyebrow">FOUNDATION PROTOTYPE</span>
+    <span class="eyebrow">M0b · THE MOVING HOME</span>
     <h2>Your machine. Your home.</h2>
-    <p>Walk through the test room and look out over the silent city.</p>
+    <p>Explore the bridge, your living quarters and the engineering hall inside a 240-metre machine.</p>
     <button id="begin" disabled>Loading…</button>
     <p id="status" role="status">Preparing the exploration unit…</p>
-    <p class="hint">WASD to move · Drag or arrow keys to look<br>On a phone, use the movement buttons and look pad.</p>
+    <p class="hint">WASD to walk · Drag or arrows to look · E to use<br>The service lift is behind you. Walk backward into it, then choose a deck. On a phone, use the buttons and look pad.</p>
   </section>
+  <section id="lift-panel" aria-label="Lift destinations" hidden>
+    <p id="lift-status">Choose a deck</p>
+    <div>
+      <button data-action="9" aria-label="Lift to bridge">1 · Bridge<small>196 m</small></button>
+      <button data-action="10" aria-label="Lift to living quarters">2 · Quarters<small>156 m</small></button>
+      <button data-action="11" aria-label="Lift to engineering">3 · Engineering<small>112 m</small></button>
+    </div>
+  </section>
+  <aside id="unit-info" hidden>MEU / 240 m tall<br>Bridge 196 m · Quarters 156 m<br>Engineering 112 m · Lift travel 84 m</aside>
+  <button id="use" data-action="8" hidden>Use</button>
   <section id="controls" aria-label="Touch controls">
     <div id="movement" aria-label="Move">
       <button data-action="0" aria-label="Move forward">↑</button>
@@ -32,7 +42,7 @@
     </div>
     <div id="look" role="group" aria-label="Drag to look"><span>LOOK<br><small>drag here</small></span></div>
   </section>
-  <footer>MEU / M0a <span>First-person platform prototype</span></footer>
+  <footer>MEU / M0b <span>One commander. Three decks. One enormous home.</span></footer>
   <script>
     var Module = {
       canvas: document.getElementById('canvas'),

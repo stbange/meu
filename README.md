@@ -6,7 +6,7 @@ The implementation target is **C17, SDL3, and OpenGL** on Windows and Linux, plu
 
 ## Current status
 
-M0a adds a running first-person room, native/web builds, touch/desktop input, and initial automated checks. The connected interior and steering come next. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0a evidence](docs/evidence/m0a-foundation.md).
+M0b adds the bridge, living quarters, engineering hall and an 84-metre service lift inside a 240-metre robot. Furniture, reactors, visible hull and a monumental alien doorway establish scale. Walking, ramps, collision, contextual interactions and lift travel work with desktop and touch controls. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0b evidence](docs/evidence/m0b-interior.md).
 
 ## Start here
 
@@ -17,11 +17,11 @@ M0a adds a running first-person room, native/web builds, touch/desktop input, an
 - [Build and test](docs/build-and-test.md): pinned tools, launch commands, controls, and checks.
 - [First OpenSpec proposal](openspec/changes/establish-playable-foundation/proposal.md): M0 requirements, design, and unchecked tasks.
 
-The next step is **M0b: habitable interior and convincing scale**. The complete M0 experience remains in development.
+The next step is **M0c: bridge piloting and supported travel**. The complete M0 experience remains in development.
 
 ## Run the prototype
 
-Play the [M0a web prototype on GitHub Pages](https://stbange.github.io/meu/). See [publishing and live verification](docs/github-pages.md).
+Play the [MEU web prototype on GitHub Pages](https://stbange.github.io/meu/). See [publishing and live verification](docs/github-pages.md).
 
 On Windows, from this checkout:
 
@@ -39,7 +39,7 @@ npm run build:web
 npm run serve:web
 ~~~
 
-Open `http://127.0.0.1:4174`. Begin exploration, then use WASD and mouse drag/arrows, or the movement buttons and look pad. Focus loss, pause, or resizing stops simulation until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
+Open `http://127.0.0.1:4174`. Begin exploration, then use WASD and mouse drag/arrows, or the movement buttons and look pad. The lift is behind the starting position: walk backward into its centre, select 1/2/3 (or tap a deck), then walk forward out at your destination. Use E or the contextual button at the dimensions plaque, reading lamp and inspection console. Focus loss, pause, or resizing stops simulation until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
 
 ## Specification tooling
 

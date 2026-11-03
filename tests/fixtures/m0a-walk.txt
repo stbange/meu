@@ -3,23 +3,23 @@ start
 press forward
 frames 120
 release forward
-expect z 0.5 0.0001
+expect z -13 0.0001
 expect ticks 120 0
 pause
 press forward
 frames 600
-expect z 0.5 0.0001
+expect z -13 0.0001
 expect ticks 120 0
 expect held 0 0
 start
 frames 60
-expect z 0.5 0.0001
+expect z -13 0.0001
 press forward
 press backward
 frames 60
-expect z 0.5 0.0001
+expect z -13 0.0001
 release backward
 frames 600
 release forward
-expect z -6.4 0.0001
+expect z -22.45 0.15
 expect ticks 840 0

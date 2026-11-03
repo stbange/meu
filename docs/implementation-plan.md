@@ -183,4 +183,4 @@ Only mark a user acceptance item complete after explicit user feedback. If a pla
 
 ## First implementation handoff
 
-M0a is implemented on `codex/m0a-foundation`. Next, read its evidence and the foundation proposal/design/scenarios, then implement M0b's four connected spaces and scale scene. Preserve the working native/web paths and add the relevant collision, lift, and coordinate tests. Keep user acceptance pending until explicitly reviewed.
+M0a and M0b are implemented; see their evidence records. Next, read the foundation proposal/design/scenarios and implement M0c bridge piloting and supported travel. Preserve the connected interior and native/web paths, and extend the motion fixture into the supported travel system. Keep user acceptance pending until explicitly reviewed.

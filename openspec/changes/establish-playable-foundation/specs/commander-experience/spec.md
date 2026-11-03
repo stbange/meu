@@ -8,6 +8,14 @@ The game SHALL present movement, piloting, and interactions from the sole human 
 - **WHEN** the Commander travels between the bridge, residence, engineering, and service spine
 - **THEN** each space is reachable in first person without a detached camera or a required human crew
 
+#### Scenario: Select a lift destination
+- **WHEN** the Commander is fully inside the stopped service lift and selects bridge, residence, or engineering using keyboard or touch
+- **THEN** the lift carries the Commander to that deck without changing viewpoint, and the destination is displayed
+
+#### Scenario: Use a home object
+- **WHEN** the Commander faces an unobstructed home object within reach and uses it
+- **THEN** a dimensions plaque opens readable unit dimensions, a reading lamp changes the residence light, or an inspection console changes the engineering light
+
 #### Scenario: Use the bridge
 - **WHEN** the Commander takes or releases helm control
 - **THEN** the viewpoint remains at the Commander's physical position and exterior architecture remains visible through the bridge
@@ -23,6 +31,22 @@ The game SHALL preserve the Commander's intended position and footing relative t
 #### Scenario: Interior traversal during motion
 - **WHEN** the motion fixture drives supported robot travel while the Commander walks, uses a ramp, or rides the lift
 - **THEN** locomotion and collision remain stable and only the intended local movement changes the Commander's cabin position
+
+#### Scenario: Lift safety and pause
+- **WHEN** the car is moving, the Commander tries to leave or retarget it, or the application pauses mid-ride
+- **THEN** gates prevent leaving into the shaft, a new destination is rejected until arrival, and pause freezes both rider and car until explicit resume
+
+#### Scenario: Empty lift landing
+- **WHEN** the car is absent from a landing
+- **THEN** a closed landing gate prevents entering the shaft and the Commander can summon the car from the landing's call panel
+
+#### Scenario: Human-scale collision and ramps
+- **WHEN** the Commander walks against furniture, structure, windows or a catwalk edge, or ascends and descends the engineering ramp
+- **THEN** solid objects and unsupported edges block passage and supported ramp movement preserves footing without a height jump
+
+#### Scenario: Standing motion fixture
+- **WHEN** the Commander stands still for 60 seconds while the supported fixture translates, turns, accelerates and brakes the robot
+- **THEN** unintended robot-local standing drift is less than 2 cm, with no ejection or floor penetration
 
 ### Requirement: VIEW-03 Pause and input cleanup
 
