@@ -46,7 +46,7 @@ jobs:
       - name: Install window, OpenGL, audio, and headless display dependencies
         run: |
           apt-get update
-          apt-get install -y python3 ca-certificates git libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libasound2-dev libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev xvfb xauth
+          apt-get install -y python3 ca-certificates git libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev libasound2-dev libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev xvfb xauth
       - uses: actions/checkout@v7.0.1
       - run: python3 tools/bootstrap.py
       - name: Native build, C tests and actual software-OpenGL frame capture

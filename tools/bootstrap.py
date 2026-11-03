@@ -46,9 +46,12 @@ def extract(archive, destination, kind):
     elif kind == "tar":
         subprocess.run(["tar", "-xf", str(archive), "-C", str(destination)], check=True)
     else:
-        # Windows bsdtar can read the official w64devkit self-extracting archive.
-        # Extract its contents; do not execute the self-extracting installer.
-        subprocess.run(["tar", "-xf", str(archive), "-C", str(destination)], check=True)
+        # The Windows 2022 system tar lacks this archive's LZMA codec.
+        # Extract with the pinned standalone reader, without running an installer.
+        reader = TOOLS / "7zr.exe"
+        if not reader.exists():
+            shutil.copyfile(download("7zr-windows"), reader)
+        subprocess.run([str(reader), "x", "-y", str(archive), "-o" + str(destination)], check=True)
 
 
 def main():

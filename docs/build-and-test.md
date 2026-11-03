@@ -11,6 +11,7 @@ M0a supplies a minimal first-person observation room. It is a platform prototype
 | Ninja | 1.12.1 |
 | Windows/Linux reference compiler | GCC 14.2.0 |
 | Windows compiler distribution | w64devkit 2.1.0 |
+| Windows archive reader | 7zr 25.01 |
 | SDL | 3.4.18, built from checksum-pinned source |
 | Emscripten | 6.0.10 |
 | Emscripten SDK manifest | d7b4130688bfa348392b921ab04015aa15c4f154 |

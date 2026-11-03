@@ -2,10 +2,15 @@
   "cmake": "3.31.6",
   "ninja": "1.12.1",
   "gcc": "14.2.0",
+  "sevenzip": "25.01",
   "sdl": "3.4.18",
   "emscripten": "6.0.10",
   "emsdk_commit": "d7b4130688bfa348392b921ab04015aa15c4f154",
   "downloads": {
+    "7zr-windows": {
+      "url": "https://github.com/ip7z/7zip/releases/download/25.01/7zr.exe",
+      "sha256": "27cbe3d5804ad09e90bbcaa916da0d5c3b0be9462d0e0fb6cb54be5ed9030875"
+    },
     "cmake-windows": {
       "url": "https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-windows-x86_64.zip",
       "sha256": "d163cd3ab4959b0a53fa8988f2ddbd2e6c501658201e6a154386bad9dbe4f836"
