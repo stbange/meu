@@ -72,31 +72,7 @@ test('walks the connected decks using the real keyboard or touch lift controls',
   };
   await expect(page.locator('#room')).toHaveText('Bridge');
   await page.screenshot({ path: info.outputPath('bridge.png') });
-  if (!isMobile) {
-    await page.keyboard.down('KeyD');
-    await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeGreaterThan(1.9);
-    await page.keyboard.up('KeyD');
-    await move(true, s => s.z < -21.4);
-    await page.keyboard.down('KeyD');
-    await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeGreaterThan(1.2);
-    await page.keyboard.up('KeyD');
-    await move(true, s => s.z < -22.6);
-    const look = async (yaw, pitch) => {
-      const before = await state(page);
-      await page.mouse.move(500,300); await page.mouse.down();
-      await page.mouse.move(500+(yaw-before.yaw)/.004,300-(pitch-before.pitch)/.004,{steps: 8});
-      await page.mouse.up();
-    };
-    await look(.95,-.65);
-    await page.screenshot({ path: info.outputPath('robot-shoulders.png') });
-    await look(0,.34);
-    await page.screenshot({ path: info.outputPath('alien-doorway.png') });
-    await look(0,-.08);
-    await move(false, s => s.z > -8);
-    await page.keyboard.down('KeyA');
-    await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeLessThan(.05);
-    await page.keyboard.up('KeyA');
-  }
+  // Scale close-ups remain in M0b evidence; this replay follows the connected decks.
   await move(false, s => s.z > -.65);
   if (!isMobile) {
     await page.keyboard.down('KeyD');
