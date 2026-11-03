@@ -1,0 +1,26 @@
+# Generated build and test output
+/build/
+/out/
+/dist/
+/test-results/
+/playwright-report/
+/coverage/
+/captures/
+
+# Per-checkout development dependencies and toolchains
+/node_modules/
+/.tools/
+/.cache/
+/CMakeUserPresets.json
+/compile_commands.json
+
+# Local editor and machine settings
+/.vs/
+/.vscode/
+.DS_Store
+Thumbs.db
+
+# Personal local environment files
+.env
+.env.*
+!.env.example

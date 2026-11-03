@@ -1,0 +1,29 @@
+schema: spec-driven
+
+context: |
+  Mechanized Exploration Unit is a separate single-player game concept.
+  Implementation is not started; game design and all change artifacts are drafts.
+  The player is the sole human, always viewed in first person, including piloting.
+  A skyscraper-sized robot is vehicle, explorable maintenance space, and home.
+  Robotic assistants may help; no human crew or present alien population.
+  Sunlight and alien power grids supply energy; salvage enables technology integration.
+  Vac-suit egress is possible only where environmental and access conditions permit it.
+  Alien ruins and their landscape are procedurally generated for replayability.
+  Target C with SDL and OpenGL on Windows, Linux, and the web.
+  Web controls and layouts must work on small touch screens from the foundation.
+  docs/game-design-draft.md distinguishes requested requirements from proposed defaults.
+  Main specifications are reserved for implemented, verified behavior.
+
+rules:
+  proposal:
+    - State scope, dependencies, exclusions, and proposed defaults.
+  specs:
+    - Use SHALL or MUST and observable WHEN/THEN scenarios including failure behavior.
+    - Preserve exclusive first-person play and touch access to required actions.
+    - Keep technical implementation choices in design rather than behavioral requirements.
+  design:
+    - Explain persistence, coordinate handling, platform limits, and performance risks.
+  tasks:
+    - Map implementation tasks to requirement identifiers and verification evidence.
+    - Keep implementation, automated verification, and user acceptance separate.
+    - Leave all incomplete and unverified tasks unchecked.
