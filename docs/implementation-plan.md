@@ -1,6 +1,6 @@
 # Mechanized Exploration Unit Implementation Plan
 
-Planning baseline: 3 November 2026. M0a is implemented; later steps remain pending. The [design draft](game-design-draft.md) describes the experience, [status](status.md) records progress/acceptance, and [M0a evidence](evidence/m0a-foundation.md) records verification and limits.
+Planning baseline: 3 November 2026. M0a–M0c are implemented; later steps remain pending. The [design draft](game-design-draft.md) describes the experience, [status](status.md) records progress/acceptance, and [M0a evidence](evidence/m0a-foundation.md) records verification and limits.
 
 ## Delivery approach
 
@@ -183,4 +183,4 @@ Only mark a user acceptance item complete after explicit user feedback. If a pla
 
 ## First implementation handoff
 
-M0a and M0b are implemented; see their evidence records. Next, read the foundation proposal/design/scenarios and implement M0c bridge piloting and supported travel. Preserve the connected interior and native/web paths, and extend the motion fixture into the supported travel system. Keep user acceptance pending until explicitly reviewed.
+M0a–M0c are implemented; see their evidence records. Next, read the foundation proposal/design/scenarios and implement M0d touch settings and complete lifecycle behavior. Preserve the helm/on-foot contexts, supported travel, connected interior and native/web paths. Keep user acceptance pending until explicitly reviewed.

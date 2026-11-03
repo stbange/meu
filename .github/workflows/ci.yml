@@ -49,8 +49,8 @@ jobs:
           apt-get install -y python3 ca-certificates git libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libxtst-dev libasound2-dev libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev xvfb xauth
       - uses: actions/checkout@v7.0.1
       - run: python3 tools/bootstrap.py
-      - name: Native build, C tests and actual software-OpenGL interior tour
-        run: xvfb-run -a python3 tools/build.py native --test --tour
+      - name: Native build, C tests and actual software-OpenGL interior and piloting tours
+        run: xvfb-run -a python3 tools/build.py native --test --tour --pilot
         env:
           SDL_AUDIODRIVER: dummy
           LIBGL_ALWAYS_SOFTWARE: '1'

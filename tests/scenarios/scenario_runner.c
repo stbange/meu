@@ -7,7 +7,7 @@
 #include <inttypes.h>
 static int action_id(const char *name)
 {
-    const char *names[] = {"forward","backward","left","right","look-left","look-right","look-up","look-down","interact","bridge","quarters","engineering"};
+    const char *names[] = {"forward","backward","left","right","look-left","look-right","look-up","look-down","interact","bridge","quarters","engineering","brake","park"};
     for (int i = 0; i < MEU_ACTION_COUNT; ++i) if (!strcmp(name, names[i])) return i;
     return -1;
 }
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
             if (sscanf(line, "%*s %u", &count) != 1 || count > 36000) goto fail;
             for (unsigned i = 0; i < count; ++i) {
                 meu_sim_advance(&state, MEU_TICK_SECONDS);
-                if (!state.grounded) goto fail;
+                if (!state.grounded || (!state.motion_fixture && meu_world_validate(state.world,state.robot,0)!=MEU_ROUTE_CLEAR)) goto fail;
             }
         } else if (!strcmp(command, "expect")) {
             double expected, tolerance, actual;
@@ -50,6 +50,13 @@ int main(int argc, char **argv)
             if (!strcmp(key, "x")) actual = state.x;
             else if (!strcmp(key, "z")) actual = state.z;
             else if (!strcmp(key, "y")) actual = state.y;
+            else if (!strcmp(key, "robot-x")) actual = state.robot.x;
+            else if (!strcmp(key, "robot-z")) actual = state.robot.z;
+            else if (!strcmp(key, "heading")) actual = state.robot.yaw;
+            else if (!strcmp(key, "speed")) actual = state.travel.speed;
+            else if (!strcmp(key, "helm")) actual = state.travel.helm;
+            else if (!strcmp(key, "parked")) actual = state.travel.parked;
+            else if (!strcmp(key, "reason")) actual = state.travel.reason;
             else if (!strcmp(key, "room")) actual = meu_sim_room(&state);
             else if (!strcmp(key, "grounded")) actual = state.grounded;
             else if (!strcmp(key, "visited")) actual = state.visited;
@@ -67,8 +74,8 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
 fail:
     fprintf(stderr, "FAIL build=%s scene=%s fixture=%s line=%u tick=%" PRIu64
-        " x=%.6f z=%.6f held=%u paused=%d\n", MEU_BUILD_ID, MEU_SCENE_ID,
-        argv[1], line_number, state.ticks, state.x, state.z, state.held, (int)state.paused);
+        " x=%.6f z=%.6f held=%u paused=%d robot=(%.3f,%.3f) speed=%.3f reason=%d\n", MEU_BUILD_ID, MEU_SCENE_ID,
+        argv[1], line_number, state.ticks, state.x, state.z, state.held, (int)state.paused,state.robot.x,state.robot.z,state.travel.speed,state.travel.reason);
     fclose(fixture);
     return EXIT_FAILURE;
 }

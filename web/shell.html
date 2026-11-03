@@ -8,7 +8,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-ready="false" data-paused="true" data-rendered="false">
+<body data-ready="false" data-helm="false" data-paused="true" data-rendered="false">
   <canvas id="canvas" tabindex="0" aria-label="First-person view inside the exploration unit"></canvas>
   <header>
     <div><span class="eyebrow">MECHANIZED EXPLORATION UNIT</span><h1 id="room">Bridge</h1><div id="altitude">Deck 196 m · Unit height 240 m</div></div>
@@ -16,12 +16,21 @@
   </header>
   <div id="reticle" aria-hidden="true">+</div>
   <section id="welcome" aria-label="Start exploration">
-    <span class="eyebrow">M0b · THE MOVING HOME</span>
+    <span class="eyebrow">M0c · BRIDGE PILOTING</span>
     <h2>Your machine. Your home.</h2>
-    <p>Explore the bridge, your living quarters and the engineering hall inside a 240-metre machine.</p>
+    <p>Pilot your 240-metre machine through the silent city, then explore the home inside it.</p>
     <button id="begin" disabled>Loading…</button>
     <p id="status" role="status">Preparing the exploration unit…</p>
-    <p class="hint">WASD to walk · Drag or arrows to look · E to use<br>The service lift is behind you. Walk backward into it, then choose a deck. On a phone, use the buttons and look pad.</p>
+    <p class="hint">WASD to walk · Drag or arrows to look · E to use<br>The helm is at the central console ahead: approach and use it. At the helm, W/S drives, A/D turns, Space brakes and P parks. The lift is behind you. Touch controls adapt to each station.</p>
+  </section>
+  <section id="navigation" aria-label="Robot navigation">
+    <div id="telemetry"><span id="speed">0.0 m/s</span><span id="heading">Heading 000°</span><span id="stopping">Stop 0 m</span></div>
+    <p id="travel-status" role="status">Parked · support verified</p>
+    <div id="pilot-actions" hidden>
+      <button data-action="12" aria-label="Brake robot">Brake<small>Space</small></button>
+      <button data-action="13" aria-label="Park robot">Park<small>P</small></button>
+      <button data-action="8" aria-label="Release helm">Release helm<small>E</small></button>
+    </div>
   </section>
   <section id="lift-panel" aria-label="Lift destinations" hidden>
     <p id="lift-status">Choose a deck</p>
@@ -42,7 +51,7 @@
     </div>
     <div id="look" role="group" aria-label="Drag to look"><span>LOOK<br><small>drag here</small></span></div>
   </section>
-  <footer>MEU / M0b <span>One commander. Three decks. One enormous home.</span></footer>
+  <footer>MEU / M0c <span>One commander. Three decks. One enormous home.</span></footer>
   <script>
     var Module = {
       canvas: document.getElementById('canvas'),

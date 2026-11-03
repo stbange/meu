@@ -11,14 +11,20 @@ void meu_sim_init(MeuSimulation *s)
 {
     memset(s,0,sizeof(*s)); s->y=196+MEU_EYE_HEIGHT; s->z=-8; s->pitch=-.08f;
     s->lift_y=196; s->lift_door=1; s->paused=true; s->grounded=true;
+    s->world=meu_world_default(); meu_travel_init(&s->travel);
     s->quarters_light=true; s->inspection_light=true; s->visited=1; previous(s);
 }
 void meu_sim_start(MeuSimulation *s)
 {
     s->started=true; s->paused=false; s->held=0; s->accumulator=0; previous(s);
 }
+void meu_sim_release_helm(MeuSimulation *s)
+{
+    s->travel.helm=false; s->held=0; meu_travel_stop(&s->travel);
+}
 void meu_sim_pause(MeuSimulation *s)
 {
+    meu_sim_release_helm(s);
     s->paused=true; s->held=0; s->accumulator=0; previous(s);
 }
 bool meu_sim_on_lift(const MeuSimulation *s)
@@ -41,36 +47,54 @@ bool meu_sim_lift_ready(const MeuSimulation *s)
 }
 bool meu_sim_request_lift(MeuSimulation *s,int deck)
 {
-    if (deck<0 || deck>2 || !meu_sim_lift_ready(s)) return false;
+    if (s->travel.helm || deck<0 || deck>2 || !meu_sim_lift_ready(s)) return false;
     s->lift_target=deck; return true;
 }
 MeuUse meu_sim_use_target(const MeuSimulation *s)
 {
+    if (s->travel.helm) return MEU_USE_HELM;
     if (s->info_open) return MEU_USE_PLACARD;
-    float positions[6][3]={{3.85f,197.3f,-9.7f},{6.55f,157.4f,-7.25f},{0,114.5f,-26.5f},
-        {-1.65f,197.25f,-3.25f},{-1.65f,157.25f,-3.25f},{-1.65f,113.25f,-3.25f}};
-    for (int i=0;i<6;++i) {
+    float positions[7][3]={{3.85f,197.3f,-9.7f},{6.55f,157.4f,-7.25f},{0,114.5f,-26.5f},
+        {-1.65f,197.25f,-3.25f},{-1.65f,157.25f,-3.25f},{-1.65f,113.25f,-3.25f},{0,197.2f,-14.5f}};
+    for (int i=0;i<7;++i) {
+        if (i==6 && (!s->travel.parked || s->motion_fixture)) continue;
         float dx=positions[i][0]-s->x,dy=positions[i][1]-s->y,dz=positions[i][2]-s->z;
         float distance=sqrtf(dx*dx+dy*dy+dz*dz);
         float facing=(dx*sinf(s->yaw)*cosf(s->pitch)+dy*sinf(s->pitch)-dz*cosf(s->yaw)*cosf(s->pitch))/fmaxf(distance,.001f);
         if (distance<2.8f && facing>.4f && meu_interior_clear_ray(s->x,s->y,s->z,positions[i][0],positions[i][1],positions[i][2]))
-            return i<3 ? (MeuUse)(i+1) : MEU_USE_CALL;
+            return i<3 ? (MeuUse)(i+1) : i==6 ? MEU_USE_HELM : MEU_USE_CALL;
     }
     return MEU_USE_NONE;
 }
 const char *meu_sim_use_name(MeuUse use)
 {
-    static const char *names[]={"", "Read unit dimensions", "Toggle reading lamp", "Toggle inspection lights", "Call service lift"};
-    return names[use>=0 && use<=MEU_USE_CALL ? use : 0];
+    static const char *names[]={"", "Read unit dimensions", "Toggle reading lamp", "Toggle inspection lights", "Call service lift", "Take bridge helm"};
+    return names[use>=0 && use<=MEU_USE_HELM ? use : 0];
 }
 bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
 {
     if (action<0 || action>=MEU_ACTION_COUNT) return false;
     if (pressed && (!s->started || s->paused)) return false;
-    if (action>=MEU_INTERACT) {
+    if (action==MEU_PARK) {
         if (!pressed) return true;
-        if (action>MEU_INTERACT) return meu_sim_request_lift(s,action-MEU_TO_BRIDGE);
+        if (!s->travel.helm) return false;
+        s->held=0; meu_travel_stop(&s->travel); return true;
+    }
+    if (action==MEU_BRAKE) {
+        if (pressed && !s->travel.helm) return false;
+        if (pressed) s->held=(s->held & ~UINT32_C(15)) | (UINT32_C(1)<<MEU_BRAKE);
+        else s->held&=~(UINT32_C(1)<<MEU_BRAKE);
+        return true;
+    }
+    if (action>=MEU_TO_BRIDGE && action<=MEU_TO_ENGINEERING)
+        return !pressed || meu_sim_request_lift(s,action-MEU_TO_BRIDGE);
+    if (action==MEU_INTERACT) {
+        if (!pressed) return true;
         switch (meu_sim_use_target(s)) {
+            case MEU_USE_HELM:
+                if (s->travel.helm) meu_sim_release_helm(s);
+                else { s->travel.helm=true; s->held=0; s->info_open=false; }
+                break;
             case MEU_USE_PLACARD: s->info_open=!s->info_open; break;
             case MEU_USE_LAMP: s->quarters_light=!s->quarters_light; break;
             case MEU_USE_INSPECTION: s->inspection_light=!s->inspection_light; break;
@@ -79,8 +103,17 @@ bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
                 s->lift_target=s->y>180 ? 0 : s->y>145 ? 1 : 2; break;
             default: return false;
         }
-    } else if (pressed) s->held|=UINT32_C(1)<<action;
-    else s->held&=~(UINT32_C(1)<<action);
+    } else if (pressed) {
+        if (s->travel.helm && action<=MEU_RIGHT) {
+            if ((s->held&(UINT32_C(1)<<MEU_BRAKE)) ||
+                (s->travel.park_requested && !s->travel.parked)) return false;
+            if (s->travel.parked && !(s->held&15)) {
+                s->travel.latched=false; s->travel.reason=MEU_ROUTE_CLEAR;
+            }
+            if (!s->travel.latched) s->travel.park_requested=false;
+        }
+        s->held|=UINT32_C(1)<<action;
+    } else s->held&=~(UINT32_C(1)<<action);
     return true;
 }
 void meu_sim_look(MeuSimulation *s,float yaw,float pitch)
@@ -141,11 +174,13 @@ static void tick(MeuSimulation *s)
     float forward=(float)(held(s,MEU_FORWARD)-held(s,MEU_BACKWARD));
     float right=(float)(held(s,MEU_RIGHT)-held(s,MEU_LEFT));
     float length=sqrtf(forward*forward+right*right);
-    if (length>1) { forward/=length; right/=length; }
+    if (length>1 && !s->travel.helm) { forward/=length; right/=length; }
     meu_sim_look(s,(float)(held(s,MEU_LOOK_RIGHT)-held(s,MEU_LOOK_LEFT))*1.5f*dt,
         (float)(held(s,MEU_LOOK_UP)-held(s,MEU_LOOK_DOWN))*1.5f*dt);
-    meu_sim_move(s,(sinf(s->yaw)*forward+cosf(s->yaw)*right)*MEU_WALK_SPEED*dt,
+    if (!s->travel.helm) meu_sim_move(s,(sinf(s->yaw)*forward+cosf(s->yaw)*right)*MEU_WALK_SPEED*dt,
         (-cosf(s->yaw)*forward+sinf(s->yaw)*right)*MEU_WALK_SPEED*dt);
+    if (!s->motion_fixture)
+        meu_travel_tick(&s->travel,&s->robot,s->world,(int)forward,(int)right,held(s,MEU_BRAKE)!=0);
     ++s->ticks; s->visited|=UINT32_C(1)<<meu_sim_room(s);
     /* Test-only motion driver: the future steering system supplies this same pose. */
     if (s->motion_fixture) {

@@ -14,6 +14,16 @@ Keep a metre-based scale model and a character pose relative to the robot while 
 
 Use supported-foot or simplified footprint travel on the authored test surface. Predict clearance and stopping distance before committing travel. The first build does not simulate a freely balancing giant rigid body. Validate that parking, collision, the visible hull, and interior apertures agree. Record the coordinate convention so later world rebasing does not change logical positions.
 
+### M0c supported travel implementation
+
+The authored exterior uses one set of coloured boxes for rendering, solid structure and flat support rectangles. The robot travels on the y=0 support plane. Both 23 by 48 m foot rectangles must be fully supported, including their interiors; a partition at support boundaries tests the union exactly, rather than sampling corners. Conservative oriented hull bands cover the feet, legs, shoulders/arms, torso, forward deck and 240 m head. They include all visible interior/hull geometry and can reject a narrow route earlier than a detailed hull mesh would.
+
+World pose uses double-precision x/z metres and yaw radians. Robot-local forward is -Z; positive yaw turns right. Interior collision and Commander position remain local. The existing renderer applies the inverse world pose to exterior geometry once, with the same interpolation as the interior/lift. M0c uses continuous footprint travel, with no free balancing or gait-induced camera motion.
+
+Provisional controls use 12 m/s maximum speed, 3 m/s² acceleration, 4 m/s² braking, 0.10 rad/s maximum turn rate and 0.25 rad/s² turn acceleration/braking. Each fixed tick proposes speed and heading changes, then validates both that swept move and the complete braking trajectory. The prediction integrates at bounded 0.05 s intervals. Each interval inflates the hull/feet by translation plus 80 m times angular displacement, enclosing intermediate positions, and retains 2 m horizontal/overhead clearance. A rejected proposal follows the previously reserved braking path. Invalid fixture/state geometry fails closed and cannot report valid parking.
+
+Drive release brakes. Brake clears the old throttle; Park clears travel inputs and requests a stationary supported state. Releasing the helm or pausing relinquishes control, clears held actions and requests parking. Pause first freezes all simulation; braking proceeds after explicit resume. Only a fresh station acquisition and travel input can command further movement. A rejected held command latches the safety stop until released; the bridge displays the reason. Saves themselves remain M0e.
+
 ## Input and small screens
 
 Map mouse/keyboard, touch, and later controllers to actions and contexts: on foot, helm, station panel, and pause. Looking around at the helm must not steer. Release or context loss cancels held actions. Use CSS-pixel-aware touch sizing and safe areas; never infer touch layout from framebuffer resolution alone.

@@ -12,7 +12,7 @@
   const active = () => ready && body.dataset.paused === 'false';
   const call = (name, types = [], args = []) => Module.ccall(name, null, types, args);
   const action = (id, pressed) => { if (ready) call('meu_web_action', ['number', 'number'], [id, +pressed]); };
-  const keyMap = { KeyW: 0, KeyS: 1, KeyA: 2, KeyD: 3, ArrowLeft: 4, ArrowRight: 5, ArrowUp: 6, ArrowDown: 7, KeyE: 8, Digit1: 9, Digit2: 10, Digit3: 11 };
+  const keyMap = { KeyW: 0, KeyS: 1, KeyA: 2, KeyD: 3, ArrowLeft: 4, ArrowRight: 5, ArrowUp: 6, ArrowDown: 7, KeyE: 8, Digit1: 9, Digit2: 10, Digit3: 11, Space: 12, KeyP: 13 };
 
   function clearInput() {
     heldKeys.clear();
@@ -40,9 +40,10 @@
     },
     hud(room, height, aboard, moving, current, target, use, info, liftReady) {
       const names = ['Bridge', 'Living quarters', 'Engineering hall', 'Service lift'];
-      const uses = ['', 'Read unit dimensions', 'Toggle reading lamp', 'Toggle inspection lights', 'Call service lift'];
+      const uses = ['', 'Read unit dimensions', 'Toggle reading lamp', 'Toggle inspection lights', 'Call service lift', 'Take bridge helm'];
       document.querySelector('#room').textContent = names[room];
       document.querySelector('#altitude').textContent = (room === 3 ? 'Lift ' : 'Deck ') + Math.round(height) + ' m · Unit height 240 m';
+      document.querySelector('#navigation').hidden = room !== 0;
       const panel = document.querySelector('#lift-panel');
       panel.hidden = !aboard;
       document.querySelector('#lift-status').textContent = moving ? 'Travelling to ' + names[target] + '… Gates locked.' :
@@ -55,6 +56,25 @@
       useButton.hidden = !use || !!aboard;
       useButton.textContent = (info ? 'Close dimensions' : uses[use]) + ' · E';
       document.querySelector('#unit-info').hidden = !info;
+    },
+    navigation(helm, speed, heading, parked, parking, reason, stopping) {
+      const mode = helm ? 'true' : 'false';
+      if (body.dataset.helm !== mode) clearInput();
+      body.dataset.helm = mode;
+      document.querySelector('#speed').textContent = speed.toFixed(1) + ' m/s';
+      document.querySelector('#heading').textContent = 'Heading ' + String(Math.round((heading % 360 + 360) % 360)).padStart(3,'0') + '°';
+      document.querySelector('#stopping').textContent = 'Stop ' + stopping.toFixed(1) + ' m';
+      const reasons = ['', 'Structure in stopping path', 'Unsupported ground ahead', 'Travel unavailable'];
+      document.querySelector('#travel-status').textContent = reason ? (parked ? 'Parked · ' : '') + reasons[reason] :
+        parked ? 'Parked · support verified' : parking ? 'Braking to park…' : helm ? 'Manual travel · release drive to brake' : 'Stopping…';
+      document.querySelector('#pilot-actions').hidden = !helm;
+      const labels = helm ? ['Drive forward','Drive reverse','Turn left','Turn right'] : ['Move forward','Move backward','Move left','Move right'];
+      const arrows = ['↑','↓','←','→'];
+      document.querySelectorAll('#movement button').forEach(button => {
+        const id = Number(button.dataset.action);
+        button.setAttribute('aria-label', labels[id]);
+        button.textContent = arrows[id];
+      });
     },
     paused() {
       clearInput();
@@ -77,6 +97,8 @@
     }
   };
   begin.addEventListener('click', () => { if (ready) { call('meu_web_start'); canvas.focus(); } });
+  // A second touch does not generate a compatibility click while drive is held.
+  pauseButton.addEventListener('pointerdown', event => { event.preventDefault(); pause(); });
   pauseButton.addEventListener('click', pause);
   window.addEventListener('keydown', event => {
     if (event.code === 'Escape') { pause(); event.preventDefault(); return; }

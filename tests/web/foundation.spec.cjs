@@ -39,7 +39,7 @@ test('renders the C/OpenGL room and begins only after a gesture', async ({ page,
   await expect(page.locator('body')).not.toHaveAttribute('data-error', 'true');
   if (!release) {
     const before = await state(page);
-    expect(before.scene).toBe('m0b-unit-v1');
+    expect(before.scene).toBe('m0c-travel-v1');
     if (process.env.GITHUB_SHA) expect(before.build).toContain(process.env.GITHUB_SHA);
     expect(before.frames).toBeGreaterThanOrEqual(3);
     expect(before.variation).toBeGreaterThan(8);

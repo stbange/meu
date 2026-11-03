@@ -1,0 +1,23 @@
+# The shoulders approach a visible alien buttress. Held throttle cannot override safety.
+start
+press forward
+frames 100
+release forward
+press interact
+press forward
+frames 300
+press right
+frames 120
+release right
+frames 1100
+expect helm 1 0
+expect reason 1 0
+expect parked 1 0
+expect speed 0 0.00001
+expect heading 0.2 0.00001
+frames 300
+expect parked 1 0
+expect speed 0 0.00001
+release forward
+press interact
+expect helm 0 0

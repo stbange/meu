@@ -1,4 +1,5 @@
 #include "render/mesh.h"
+#include "world/travel_world.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -76,6 +77,7 @@ void meu_mesh_interior(void)
         else meu_mesh_box(b->x,b->y,b->z,b->w,b->h,b->d,b->r,b->g,b->b);
     }
     /* These signs face the entering commander; the lift signs face aft. */
+    meu_mesh_text("HELM",-.6f,197,-14.49f,.04f,1,.83f,.87f,.63f);
     meu_mesh_text("BRIDGE", -2.5f,200,-22.98f,.12f,1,.72f,.87f,.77f);
     meu_mesh_text("MEU 240 M",3.48f,196.8f,-9.63f,.014f,1,.83f,.72f,.42f);
     meu_mesh_text("LIVING QUARTERS", -3.5f,158.7f,-18.98f,.08f,1,.87f,.76f,.52f);
@@ -135,37 +137,16 @@ void meu_mesh_interior(void)
 }
 void meu_mesh_exterior(void)
 {
-    /* M0b scale fixture, deliberately authored rather than the later seeded city. */
-    meu_mesh_box(-95,-8,-1000,190,8,1100,.25f,.30f,.28f);
-    meu_mesh_box(-220,-8,-750,440,8,300,.29f,.33f,.29f);
-    meu_mesh_box(-1000,-8,-1400,830,8,1000,.25f,.30f,.28f);
-    meu_mesh_box(170,-8,-1400,830,8,1000,.25f,.30f,.28f);
-    /* A canyon cleft runs under the monumental platform. */
-    meu_mesh_box(-1100,-200,-1500,750,192,1700,.24f,.27f,.25f);
-    meu_mesh_box(350,-260,-1500,750,252,1700,.26f,.28f,.25f);
-    meu_mesh_box(-350,-260,-1500,700,5,1700,.10f,.18f,.20f);
-    for (int i=0;i<14;++i) {
-        float x=(float)(i-7)*105,z=-360-(float)(i%3)*240,h=300+(float)((i*7)%6)*85;
-        if (x>-130 && x<230) continue;
-        meu_mesh_box(x,0,z,40,h,65,.38f,.46f,.41f);
-        meu_mesh_box(x-15,h-45,z-15,70,22,95,.53f,.57f,.46f);
-        meu_mesh_box(x+7,80,z+65,3,h*.4f,.6f,.39f,.72f,.63f);
-        for (int j=0;j<4;++j)
-            meu_mesh_box(x-8,50+(float)j*70,z+65,56,4,10,.46f,.52f,.43f);
+    const MeuWorld *world=meu_world_default();
+    for (size_t i=0;i<world->count;++i) {
+        const MeuWorldBox *b=&world->boxes[i];
+        meu_mesh_box((float)b->x,(float)b->y,(float)b->z,(float)b->w,(float)b->h,(float)b->d,b->r,b->g,b->b);
     }
-    /* 540 m alien doorway; the 240 m unit could walk through it. */
-    meu_mesh_box(-155,0,-620,50,540,70,.48f,.54f,.45f);
-    meu_mesh_box(105,0,-620,50,540,70,.48f,.54f,.45f);
-    meu_mesh_box(-155,490,-620,310,50,70,.53f,.59f,.48f);
-    meu_mesh_box(-175,540,-640,350,12,110,.37f,.46f,.41f);
-    for (int i=0;i<8;++i) {
-        float y=35+(float)i*57;
-        meu_mesh_box(-155,y,-548,50,5,1,.35f,.71f,.61f);
-        meu_mesh_box(105,y,-548,50,5,1,.35f,.71f,.61f);
+    for (int z=-25;z>=-975;z-=25) {
+        meu_mesh_box(-1,.03f,(float)z,2,.03f,8,.56f,.63f,.46f);
+        meu_mesh_box(-93,.03f,(float)z,3,.03f,8,.68f,.55f,.32f);
+        meu_mesh_box(90,.03f,(float)z,3,.03f,8,.68f,.55f,.32f);
     }
-    meu_mesh_box(-600,240,-950,1200,15,80,.40f,.48f,.42f);
-    meu_mesh_box(-440,0,-1040,30,610,30,.40f,.48f,.42f);
-    meu_mesh_box(410,0,-1040,30,610,30,.40f,.48f,.42f);
 }
 void meu_mesh_lift(const MeuSimulation *s)
 {
@@ -208,6 +189,12 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height)
     meu_mesh_text(line,left,top,0,size,1,.86f,.91f,.79f);
     if (s->paused) {
         meu_mesh_text("ENTER TO EXPLORE",left,top-25,0,size,1,.94f,.76f,.43f);
+    } else if (s->travel.helm) {
+        snprintf(line,sizeof(line),"HELM - %.1f M/S - HEADING %.0f",s->travel.speed,s->robot.yaw*57.295779513);
+        meu_mesh_text(line,left,top-25,0,size,1,.94f,.76f,.43f);
+        const char *status=s->travel.reason?meu_route_name(s->travel.reason):
+            s->travel.parked?"PARKED - SUPPORT VERIFIED":s->travel.park_requested?"BRAKING TO PARK":"MANUAL TRAVEL";
+        meu_mesh_text(status,left,top-50,0,size,1,.94f,.76f,.43f);
     } else if (meu_sim_on_lift(s)) {
         const char *lift=meu_sim_lift_moving(s)?"IN TRANSIT - GATES LOCKED":
             meu_sim_lift_ready(s)?"1 BRIDGE   2 QUARTERS   3 ENGINEERING":"STEP INTO CENTRE TO CHOOSE A DECK";
@@ -220,7 +207,7 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height)
         meu_mesh_text("UNIT HEIGHT 240 M - BRIDGE 196 M",left,top-55,0,size,1,.94f,.82f,.57f);
         meu_mesh_text("QUARTERS 156 M - ENGINEERING 112 M",left,top-78,0,size,1,.94f,.82f,.57f);
     }
-    meu_mesh_text("WASD WALK - DRAG OR ARROWS LOOK - E USE - ESC PAUSE",left,18,0,size*.75f,1,.68f,.77f,.69f);
+    meu_mesh_text(s->travel.helm?"WS DRIVE - AD TURN - SPACE BRAKE - P PARK - E RELEASE":"WASD WALK - DRAG OR ARROWS LOOK - E USE - ESC PAUSE",left,18,0,size*.75f,1,.68f,.77f,.69f);
     quad((float)width*.5f-3,(float)height*.5f-.6f,0,6,1.2f,.80f,.87f,.73f);
     quad((float)width*.5f-.6f,(float)height*.5f-3,0,1.2f,6,.80f,.87f,.73f);
 }

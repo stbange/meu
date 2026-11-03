@@ -68,6 +68,8 @@ static void build(void)
         box(x+1.4f,196.5f,-16.2f,.8f,.8f,.15f,.42f,.31f,.20f,MEU_SOLID);
         box(side < 0 ? -7 : 5,196,-12,2,1.05f,1,.28f,.34f,.33f,MEU_SOLID);
     }
+    box(-1.3f,196,-15.5f,2.6f,1.1f,1,.23f,.34f,.35f,MEU_SOLID);
+    box(-1.15f,197.11f,-15.4f,2.3f,.05f,.8f,.22f,.77f,.67f,0);
     box(3.4f,196,-10,.9f,1.4f,.35f,.34f,.41f,.38f,MEU_SOLID);
     box(3.5f,197.42f,-10,.7f,.03f,.35f,.90f,.76f,.43f,0);
     /* Residence: 2 m bed, table, storage, reading light, and a plant. */

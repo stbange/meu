@@ -33,7 +33,7 @@ test('walks the connected decks using the real keyboard or touch lift controls',
   await expect(page.locator('body')).toHaveAttribute('data-ready', 'true');
   const press = async locator => isMobile ? locator.tap() : locator.click();
   await press(page.getByRole('button', { name: 'Begin exploration', exact: true }));
-  expect((await state(page)).scene).toBe('m0b-unit-v1');
+  expect((await state(page)).scene).toBe('m0c-travel-v1');
   const session = isMobile ? await page.context().newCDPSession(page) : null;
   const replay = [];
   const move = async (forward, until) => {
@@ -73,6 +73,9 @@ test('walks the connected decks using the real keyboard or touch lift controls',
   await expect(page.locator('#room')).toHaveText('Bridge');
   await page.screenshot({ path: info.outputPath('bridge.png') });
   if (!isMobile) {
+    await page.keyboard.down('KeyD');
+    await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeGreaterThan(1.9);
+    await page.keyboard.up('KeyD');
     await move(true, s => s.z < -21.4);
     await page.keyboard.down('KeyD');
     await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeGreaterThan(1.2);
@@ -89,7 +92,7 @@ test('walks the connected decks using the real keyboard or touch lift controls',
     await look(0,.34);
     await page.screenshot({ path: info.outputPath('alien-doorway.png') });
     await look(0,-.08);
-    await move(false, s => s.z > -21);
+    await move(false, s => s.z > -8);
     await page.keyboard.down('KeyA');
     await expect.poll(async () => (await state(page)).x, { intervals: [30,30,50] }).toBeLessThan(.05);
     await page.keyboard.up('KeyA');

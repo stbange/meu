@@ -49,3 +49,18 @@ body[data-paused="true"] #lift-panel, body[data-paused="true"] #use, body[data-p
   #lift-panel button { min-height: 48px; font-size: 10px; }
   #lift-panel p { font-size: 10px; margin-bottom: 4px; }
 }
+
+#navigation { position: fixed; top: max(100px,calc(env(safe-area-inset-top) + 80px)); left: 50%; transform: translateX(-50%); width: min(440px,calc(100% - 24px)); padding: 10px; background: #152526df; border: 1px solid #9bb6a16b; border-radius: 4px; }
+#telemetry { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #d3dfc7; font-variant-numeric: tabular-nums; }
+#travel-status { font-size: 12px; text-align: center; margin: 6px 0 0; color: #d0c397; }
+#pilot-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-top: 8px; }
+#pilot-actions button { min-height: 48px; font-size: 12px; padding: 4px; }
+#pilot-actions small { display: block; font-size: 10px; color: #acbcaa; }
+body[data-helm="true"] #use { display: none; }
+body[data-paused="true"] #navigation { visibility: hidden; }
+@media (max-height: 430px) {
+  #navigation { top: 78px; width: min(360px,calc(100% - 250px)); padding: 7px; }
+  #telemetry, #travel-status { font-size: 10px; }
+  #pilot-actions { gap: 4px; margin-top: 5px; }
+  #pilot-actions button { font-size: 10px; }
+}

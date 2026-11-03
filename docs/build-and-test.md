@@ -1,6 +1,6 @@
 # Build and Test MEU
 
-M0b supplies a first-person bridge at 196 m, living quarters at 156 m, engineering at 112 m, and a service lift inside a 240 m robot. The exterior is an authored scale fixture; seeded city generation, piloting, repairs and saves come later.
+M0c adds bridge piloting, controlled braking, parking and swept travel/support validation to the first-person bridge at 196 m, living quarters at 156 m, engineering at 112 m, and a service lift inside a 240 m robot. Approach the central console and use E or the touch prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases control. Looking is independent of steering. Releasing drive brakes; releasing the helm requests a parked stop. The exterior is an authored scale fixture; seeded city generation, repair gameplay and saves come later.
 
 ## Reference versions
 
@@ -38,10 +38,10 @@ Enter or click begins exploration and sound. WASD walks; mouse drag or arrows lo
 ~~~text
 npm run test:native
 npm run smoke:native
-python tools/build.py native --test --tour
+python tools/build.py native --test --tour --pilot
 ~~~
 
-The smoke command creates a real OpenGL context, compiles shaders, renders three frames, checks framebuffer variation, writes `test-results/native-room.bmp`, and exits nonzero on failure. It needs a working OpenGL 3.3 driver and windowing session. The tour injects SDL keyboard events through the production input handler, stands for 60 simulated seconds, walks all decks, rides the lift and climbs the ramp while a motion fixture translates, turns, accelerates and brakes the robot. It captures four first-person views and rejects standing drift beyond 2 cm, loss of support or an incomplete route. The fixture drives the normal robot pose input; player coordinates remain robot-local. Windows CI compiles and runs core tests; Linux CI additionally renders the tour with Mesa/Xvfb.
+The smoke command creates a real OpenGL context, compiles shaders, renders three frames, checks framebuffer variation, writes `test-results/native-room.bmp`, and exits nonzero on failure. It needs a working OpenGL 3.3 driver and windowing session. The tour injects SDL keyboard events through the production input handler, stands for 60 simulated seconds, walks all decks, rides the lift and climbs the ramp while a motion fixture translates, turns, accelerates and brakes the robot. It captures four first-person views and rejects standing drift beyond 2 cm, loss of support or an incomplete route. The separate piloting tour uses the actual helm: it reaches full speed, looks without steering, turns toward a visible buttress and checks a controlled safety stop while throttle remains held. Its captures are named native-pilot-helm/travel/blocked.bmp. The fixture drives the normal robot pose input; player coordinates remain robot-local. Windows CI compiles and runs core tests; Linux CI additionally renders the tour with Mesa/Xvfb.
 
 ## Web and phone layout
 
@@ -60,7 +60,7 @@ npx playwright install chromium
 npm run test:web
 ~~~
 
-The suite starts and stops its own HTTP server; close a manually running MEU server on port 4174 first. It loads the real WebAssembly build and checks rendering, audio gating, keyboard movement, browser touch events, pause, input cleanup, resize, and responsive controls. A full keyboard/touch bridge–quarters–engineering–bridge route also checks lift gates, mid-ride pause, room heights and the engineering ramp. Reports include build/scene identity, simulation ticks, input events, screenshots, and failure traces. Read-only diagnostics are enabled by the development build; input tests follow actual keyboard/pointer/touch paths.
+The suite starts and stops its own HTTP server; close a manually running MEU server on port 4174 first. It loads the real WebAssembly build and checks rendering, audio gating, keyboard movement, browser touch events, pause, input cleanup, resize, and responsive controls. Keyboard/touch piloting scenarios check look/steer independence, parking while moving, helm release, pause/resume and automatic stops at structures and the causeway edge. A full keyboard/touch bridge–quarters–engineering–bridge route also checks lift gates, mid-ride pause, room heights and the engineering ramp. Reports include build/scene identity, simulation ticks, input events, screenshots, and failure traces. Read-only diagnostics are enabled by the development build; input tests follow actual keyboard/pointer/touch paths.
 
 For an optimized build without the test bridge:
 
@@ -99,7 +99,7 @@ cmake --build build/manual-core
 ctest --test-dir build/manual-core --output-on-failure
 ~~~
 
-The helper accepts `--build-dir` for an independent generated build directory. Never share a generated tree between native and Emscripten compilers. The `meu_core_tests` target checks simulation, timing, and camera math. The `meu_interior_tests` target checks collision, lift interlocks, remote calls, interactions, ramp continuity, transform inversion and a 60-second standing-motion fixture. The `meu_scenarios` target reads a replay fixture through the production command/update loop. CTest runs all four checks natively and, for web builds, as WebAssembly under Node.
+The helper accepts `--build-dir` for an independent generated build directory. Never share a generated tree between native and Emscripten compilers. The `meu_core_tests` target checks simulation, timing, and camera math. The `meu_interior_tests` target checks collision, lift interlocks, remote calls, interactions, ramp continuity, transform inversion and a 60-second standing-motion fixture. The `meu_scenarios` target reads a replay fixture through the production command/update loop. The new meu_travel_tests target checks stopping boundaries, reverse travel, complete foot support, swept turning clearance, overhead/arm clearance and context ownership. CTest runs all seven checks natively and, for web builds, as WebAssembly under Node.
 
 The Windows helper identifies the compiler from object/archive metadata rather than a disposable executable. Building and running the actual tests independently verifies linking/runtime behavior.
 
@@ -107,6 +107,6 @@ CI builds carry the full source commit from GITHUB_SHA, verified by the native s
 
 ## Evidence and limits
 
-See [M0b evidence](evidence/m0b-interior.md) for results and captures. CI artifacts contain binaries, the web distribution, reports, and images. The optimized runtime is published from main after checks pass; [GitHub Pages publishing](github-pages.md) describes the public package and live verification. The prototype is not a user-accepted release.
+See [M0c evidence](evidence/m0c-piloting.md) for results and captures. CI artifacts contain binaries, the web distribution, reports, and images. The optimized runtime is published from main after checks pass; [GitHub Pages publishing](github-pages.md) describes the public package and live verification. The prototype is not a user-accepted release.
 
-M0c–M0f remain open. The motion fixture proves coordinate ownership during interior traversal; player-controlled robot travel belongs to M0c. Saves, full touch settings, production graphics-context recovery, real-phone performance and the supported-browser matrix remain pending.
+M0d–M0f remain open. M0c uses authored flat support and conservative hull bands. It supplies continuous supported footprint travel; free physical balancing and generated terrain belong to later work. Saves, full touch settings, production graphics-context recovery, real-phone performance and the supported-browser matrix remain pending.

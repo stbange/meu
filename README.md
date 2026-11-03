@@ -6,7 +6,7 @@ The implementation target is **C17, SDL3, and OpenGL** on Windows and Linux, plu
 
 ## Current status
 
-M0b adds the bridge, living quarters, engineering hall and an 84-metre service lift inside a 240-metre robot. Furniture, reactors, visible hull and a monumental alien doorway establish scale. Walking, ramps, collision, contextual interactions and lift travel work with desktop and touch controls. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0b evidence](docs/evidence/m0b-interior.md).
+M0c adds bridge piloting to the connected 240-metre home: manual speed/heading, controlled braking, valid parking, and automatic stops before structures or unsupported ground. The bridge, living quarters, engineering hall, lift and interactions remain playable with desktop and touch controls. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0c evidence](docs/evidence/m0c-piloting.md).
 
 ## Start here
 
@@ -17,7 +17,7 @@ M0b adds the bridge, living quarters, engineering hall and an 84-metre service l
 - [Build and test](docs/build-and-test.md): pinned tools, launch commands, controls, and checks.
 - [First OpenSpec proposal](openspec/changes/establish-playable-foundation/proposal.md): M0 requirements, design, and unchecked tasks.
 
-The next step is **M0c: bridge piloting and supported travel**. The complete M0 experience remains in development.
+The next step is **M0d: complete touch and lifecycle behavior**. The complete M0 experience remains in development.
 
 ## Run the prototype
 
@@ -39,7 +39,7 @@ npm run build:web
 npm run serve:web
 ~~~
 
-Open `http://127.0.0.1:4174`. Begin exploration, then use WASD and mouse drag/arrows, or the movement buttons and look pad. The lift is behind the starting position: walk backward into its centre, select 1/2/3 (or tap a deck), then walk forward out at your destination. Use E or the contextual button at the dimensions plaque, reading lamp and inspection console. Focus loss, pause, or resizing stops simulation until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
+Open `http://127.0.0.1:4174`. Begin exploration, then use WASD and mouse drag/arrows, or the movement buttons and look pad. Approach the central bridge console and use E or the prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases the helm. Looking does not steer; releasing drive brakes. Touch controls adapt to piloting, with Brake, Park and Release helm buttons. The lift is behind the starting position: walk backward into its centre, select 1/2/3 (or tap a deck), then walk forward out at your destination. Use E or the contextual button at the dimensions plaque, reading lamp and inspection console. Focus loss, pause, or resizing stops simulation until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
 
 ## Specification tooling
 

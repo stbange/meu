@@ -25,7 +25,7 @@ typedef struct {
     double previous_time;
     unsigned frames, audio_attempts;
     int variation, exit_code;
-    bool running, smoke, tour, dragging, audio_ready;
+    bool running, smoke, tour, pilot, dragging, audio_ready;
     const char *capture;
 } Application;
 static Application app;
@@ -73,7 +73,7 @@ static void start_game(void)
         }
     }
     if (app.audio) app.audio_ready = SDL_ResumeAudioStreamDevice(app.audio);
-    SDL_SetWindowTitle(app.window, "MEU - M0b interior | WASD: move | drag / arrows: look | Esc: pause");
+    SDL_SetWindowTitle(app.window, "MEU - M0c bridge piloting | WASD: move | drag / arrows: look | Esc: pause");
 #ifdef __EMSCRIPTEN__
     emscripten_run_script("if (window.MEU) window.MEU.started();");
 #endif
@@ -99,14 +99,20 @@ WEB_EXPORT const char *meu_state_json(void)
         ",\"x\":%.6f,\"y\":%.6f,\"z\":%.6f,\"yaw\":%.6f,\"pitch\":%.6f,"
         "\"held\":%u,\"paused\":%s,\"started\":%s,\"frames\":%u,\"variation\":%d,"
         "\"audioAttempts\":%u,\"audioReady\":%s,\"room\":%d,\"liftY\":%.5f,"
-        "\"onLift\":%s,\"liftMoving\":%s,\"liftDoor\":%.3f,\"visited\":%u,\"grounded\":%s,\"use\":%d}",
+        "\"onLift\":%s,\"liftMoving\":%s,\"liftDoor\":%.3f,\"visited\":%u,\"grounded\":%s,\"use\":%d,"
+        "\"robotX\":%.6f,\"robotZ\":%.6f,\"robotYaw\":%.6f,\"speed\":%.6f,\"turnRate\":%.6f,"
+        "\"helm\":%s,\"parked\":%s,\"parking\":%s,\"travelReason\":%d,\"travelSafe\":%s}",
         MEU_BUILD_ID, MEU_SCENE_ID, MEU_CONTENT_VERSION, app.simulation.ticks,
         app.simulation.x, app.simulation.y, app.simulation.z, app.simulation.yaw, app.simulation.pitch,
         app.simulation.held, app.simulation.paused ? "true" : "false",
         app.simulation.started ? "true" : "false", app.frames, app.variation, app.audio_attempts,
         app.audio_ready ? "true" : "false", meu_sim_room(&app.simulation),app.simulation.lift_y,
         meu_sim_on_lift(&app.simulation)?"true":"false",meu_sim_lift_moving(&app.simulation)?"true":"false",
-        app.simulation.lift_door,app.simulation.visited,app.simulation.grounded?"true":"false",meu_sim_use_target(&app.simulation));
+        app.simulation.lift_door,app.simulation.visited,app.simulation.grounded?"true":"false",meu_sim_use_target(&app.simulation),
+        app.simulation.robot.x,app.simulation.robot.z,app.simulation.robot.yaw,
+        app.simulation.travel.speed,app.simulation.travel.turn_rate,app.simulation.travel.helm?"true":"false",
+        app.simulation.travel.parked?"true":"false",app.simulation.travel.park_requested?"true":"false",app.simulation.travel.reason,
+        meu_world_validate(app.simulation.world,app.simulation.robot,0)==MEU_ROUTE_CLEAR?"true":"false");
     return result;
 }
 #endif
@@ -115,6 +121,8 @@ WEB_EXPORT const char *meu_state_json(void)
 static int key_action(SDL_Scancode key)
 {
     switch (key) {
+        case SDL_SCANCODE_SPACE: return MEU_BRAKE;
+        case SDL_SCANCODE_P: return MEU_PARK;
         case SDL_SCANCODE_E: return MEU_INTERACT;
         case SDL_SCANCODE_1: return MEU_TO_BRIDGE;
         case SDL_SCANCODE_2: return MEU_TO_QUARTERS;
@@ -215,17 +223,62 @@ static void tour_check(int width,int height)
         app.running=false;
     }
 }
+static void pilot_input(void)
+{
+    unsigned f=app.frames;
+    if (f==0) { tour_key(SDL_SCANCODE_RETURN,true); tour_key(SDL_SCANCODE_RETURN,false); }
+    if (f==1 || f==102) tour_key(SDL_SCANCODE_W,true);
+    if (f==101) { tour_key(SDL_SCANCODE_W,false); tour_key(SDL_SCANCODE_E,true); tour_key(SDL_SCANCODE_E,false); }
+    if (f==140) tour_key(SDL_SCANCODE_RIGHT,true);
+    if (f==170) tour_key(SDL_SCANCODE_RIGHT,false);
+    if (f==400) tour_key(SDL_SCANCODE_D,true);
+    if (f==520) tour_key(SDL_SCANCODE_D,false);
+    if (f==1610) {
+        tour_key(SDL_SCANCODE_W,false); tour_key(SDL_SCANCODE_E,true); tour_key(SDL_SCANCODE_E,false);
+        tour_key(SDL_SCANCODE_S,true);
+    }
+    if (f==1730) tour_key(SDL_SCANCODE_S,false);
+}
+static void pilot_check(int width,int height)
+{
+    MeuSimulation *s=&app.simulation;
+    static double maximum_speed,previous_speed;
+    if ((fabs(previous_speed)-fabs(s->travel.speed))*60>MEU_BRAKE_DECELERATION+.0001) {
+        SDL_Log("PILOT uncontrolled stop"); app.exit_code=1; app.running=false;
+    }
+    previous_speed=s->travel.speed;
+    if (fabs(s->travel.speed)>maximum_speed) maximum_speed=fabs(s->travel.speed);
+    if (!s->grounded || meu_world_validate(s->world,s->robot,0)!=MEU_ROUTE_CLEAR ||
+        (s->travel.helm && (fabsf(s->x)>.001f || fabsf(s->z+12.1667f)>.01f))) {
+        SDL_Log("PILOT invalid footing/pose frame=%u",app.frames); app.exit_code=1; app.running=false;
+    }
+    if (app.frames==171 && fabs(s->robot.yaw)>.001) { SDL_Log("PILOT look changed heading"); app.exit_code=1; app.running=false; }
+    const char *name=app.frames==102?"helm":app.frames==600?"travel":app.frames==1600?"blocked":NULL;
+    if (name) {
+        char path[240]; snprintf(path,sizeof(path),"test-results/native-pilot-%s.bmp",name);
+        if (!meu_renderer_capture(path,width,height)) { app.exit_code=1; app.running=false; }
+    }
+    if (app.frames>=1800) {
+        if (maximum_speed<8 || s->robot.z>-70 || !s->travel.parked || s->travel.helm ||
+            s->travel.reason!=MEU_ROUTE_STRUCTURE) app.exit_code=1;
+        printf("PILOT build=%s scene=%s distance=%.3f peak=%.3f reason=%d parked=%d result=%s\n",
+            MEU_BUILD_ID,MEU_SCENE_ID,hypot(s->robot.x,s->robot.z),maximum_speed,s->travel.reason,
+            s->travel.parked,app.exit_code?"FAIL":"PASS");
+        app.running=false;
+    }
+}
 #endif
 
 static void frame(void)
 {
 #ifndef __EMSCRIPTEN__
     if (app.tour) tour_input();
+    if (app.pilot) pilot_input();
 #endif
     SDL_Event input;
     while (SDL_PollEvent(&input)) event(&input);
     double now = (double)SDL_GetTicksNS() / 1e9;
-    meu_sim_advance(&app.simulation, app.tour ? MEU_TICK_SECONDS : now - app.previous_time);
+    meu_sim_advance(&app.simulation, (app.tour || app.pilot) ? MEU_TICK_SECONDS : now - app.previous_time);
     app.previous_time = now;
     int width = 0, height = 0;
 #ifdef __EMSCRIPTEN__
@@ -234,17 +287,22 @@ static void frame(void)
     SDL_GetWindowSizeInPixels(app.window, &width, &height);
 #endif
     MeuSimulation render; meu_sim_render_state(&app.simulation,&render);
-    bool draw=!app.tour || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899;
+    bool draw=(!app.tour && !app.pilot) || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899 || (app.pilot && (app.frames==101 || app.frames==599 || app.frames==1599));
     if (draw && !meu_renderer_draw(&render, width, height)) {
         SDL_Log("OpenGL frame failed"); app.exit_code = EXIT_FAILURE; app.running = false;
     }
 #ifdef __EMSCRIPTEN__
     if (app.frames%6==0) {
-        char hud[240];
+        char hud[500];
         snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.hud(%d,%.1f,%d,%d,%d,%d,%d,%d,%d);",
             meu_sim_room(&app.simulation),app.simulation.y-MEU_EYE_HEIGHT,
             meu_sim_on_lift(&app.simulation),meu_sim_lift_moving(&app.simulation),
             app.simulation.lift_current,app.simulation.lift_target,meu_sim_use_target(&app.simulation),app.simulation.info_open,meu_sim_lift_ready(&app.simulation));
+        emscripten_run_script(hud);
+        snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.navigation(%d,%.2f,%.1f,%d,%d,%d,%.1f);",
+            app.simulation.travel.helm,app.simulation.travel.speed,app.simulation.robot.yaw*57.295779513,
+            app.simulation.travel.parked,app.simulation.travel.park_requested,app.simulation.travel.reason,
+            meu_travel_stop_distance(app.simulation.travel.speed));
         emscripten_run_script(hud);
     }
 #endif
@@ -268,6 +326,7 @@ static void frame(void)
     }
 #ifndef __EMSCRIPTEN__
     if (app.tour) tour_check(width,height);
+    if (app.pilot) pilot_check(width,height);
 #endif
     if (draw) SDL_GL_SwapWindow(app.window);
 #ifdef __EMSCRIPTEN__
@@ -287,6 +346,7 @@ int main(int argc, char **argv)
     meu_sim_init(&app.simulation);
     for (int i = 1; i < argc; ++i) {
         if (!strcmp(argv[i], "--smoke-test")) app.smoke = true;
+        else if (!strcmp(argv[i], "--pilot-test")) app.pilot=true;
         else if (!strcmp(argv[i], "--tour-test")) { app.tour=true; app.simulation.motion_fixture=true; }
         else if (!strcmp(argv[i], "--capture") && i + 1 < argc) app.capture = argv[++i];
         else { fprintf(stderr, "Unknown or incomplete argument: %s\n", argv[i]); return EXIT_FAILURE; }
@@ -309,7 +369,7 @@ int main(int argc, char **argv)
     if (!app.context || !meu_renderer_init()) {
         SDL_Log("Client initialization failed: %s", SDL_GetError()); cleanup(); return EXIT_FAILURE;
     }
-    SDL_GL_SetSwapInterval(app.tour?0:1);
+    SDL_GL_SetSwapInterval((app.tour || app.pilot)?0:1);
     SDL_Log("MEU build=%s scene=%s content=%d", MEU_BUILD_ID, MEU_SCENE_ID, MEU_CONTENT_VERSION);
     app.previous_time = (double)SDL_GetTicksNS() / 1e9;
     if (app.smoke) meu_sim_start(&app.simulation);
@@ -317,7 +377,7 @@ int main(int argc, char **argv)
     emscripten_run_script("if (window.MEU) window.MEU.ready();");
     emscripten_set_main_loop(frame, 0, 1);
 #else
-    while (app.running) { frame(); if (!app.tour) SDL_Delay(1); }
+    while (app.running) { frame(); if (!app.tour && !app.pilot) SDL_Delay(1); }
     cleanup();
 #endif
     return app.exit_code;
