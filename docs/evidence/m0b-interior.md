@@ -30,8 +30,8 @@ Scene: `m0b-unit-v1`; content version: 2; application version: 0.0.2.
 | Core unit tests | 31 assertions passed: timing, pause/input cleanup, movement and camera math |
 | Interior unit tests | 11,128 assertions passed: lift safety, pause, calls, collision, interaction, ramp continuity, transforms and interpolation |
 | Standing motion fixture | 3,600 ticks / 60 seconds; measured robot-local drift 0.000000000 m, below the 0.02 m limit; no loss of floor support |
-| Scripted interior tour | Production actions/update loop, 6,960 ticks; all four spaces visited, lift/ramp traversal and return to bridge passed |
-| Rendered native tour | SDL keyboard events through the normal handler during robot translation/turn/acceleration/braking; four captures; no ejection or floor penetration |
+| Scripted interior tour | Production actions/update loop, 6,940 ticks; all four spaces visited, lift/ramp traversal and return to bridge passed |
+| Rendered native tour | 6,960 ticks; SDL keyboard events through the normal handler during robot translation/turn/acceleration/braking; four captures; no ejection or floor penetration |
 | `python tools/build.py web --test` | All four compiled WebAssembly CTest checks passed |
 | `npm run test:web` | 12 passed; three inapplicable desktop/phone variants skipped; all three full interior routes passed |
 | Final desktop scale review | First-person captures of the hull and alien doorway, then the complete deck route through real input |
@@ -41,7 +41,7 @@ Scene: `m0b-unit-v1`; content version: 2; application version: 0.0.2.
 
 The desktop route also checks disabled destinations and the centring prompt at the cab edge. State and input history are attached even if a route fails. The browser route uses keyboard input on desktop and browser-dispatched touch events on phones, including destination taps, mid-ride pause/resume and inspection-console use. It observes read-only C state and never teleports or writes simulation state. The committed replay fixture is [m0b-tour.txt](../../tests/fixtures/m0b-tour.txt). CI retains per-input reports, screenshots, failure traces, CTest results, binaries and source/build identity.
 
-Initial local captures use the development working tree based on `d06e459`. Clean source revision, cross-platform CI and live publication are recorded after deployment below.
+Local captures were produced from M0b development working trees. The clean final source identity and cross-platform publication are recorded below.
 
 ## First-person captures
 
@@ -59,6 +59,12 @@ Initial local captures use the development working tree based on `d06e459`. Clea
 
 ## Publication and pending acceptance
 
-The update is prepared for the repository's existing checks-and-Pages pipeline. Clean CI, published source revision and live verification are recorded here after deployment.
+Final runtime source: [1b32a367f075ddfd25be7020edd759eb84d8fb29](https://github.com/stbange/meu/commit/1b32a367f075ddfd25be7020edd759eb84d8fb29). The [main publishing workflow](https://github.com/stbange/meu/actions/runs/41655285514) passed all six jobs: specifications, Windows, Linux, web, deployment and live verification. The [working branch checks](https://github.com/stbange/meu/actions/runs/41655274879) passed independently.
+
+Linux GCC 14.2.0 on the pinned Bookworm container passed all four native CTest checks, the real SDL/OpenGL interior tour under Mesa/llvmpipe, and all four AddressSanitizer/UndefinedBehaviorSanitizer checks. Windows passed all four native CTest checks. The web job passed all four debug and all four release WebAssembly checks, all 12 applicable browser cases (three platform-inapplicable variants skipped), and all three release launch cases. The interior renderer has 11,806 static interior triangles and 1,200 exterior triangles, plus the small dynamic lift/HUD mesh.
+
+[Play the published M0b build](https://stbange.github.io/meu/). Live desktop, portrait-phone and landscape-phone launches passed with diagnostics absent. A separate public HTTP check confirmed the exact revision, M0b HTML and WebAssembly MIME type. See [publishing details](../github-pages.md). Documentation-only follow-up commits do not change the published runtime revision.
+
+An [initial working-branch run](https://github.com/stbange/meu/actions/runs/41653324988) retains a failing desktop close-up-tour trace. The follow-up explicitly centres the route after moving away from the window pillar, tests cab-edge destination rejection and its prompt, and records input/state evidence even on failure. The final routes use the real production controls throughout.
 
 User review of size, novelty, comfort and room usefulness remains pending. Real-device mobile performance and Safari remain unverified; emulated viewports do not establish them. Player-controlled steering (M0c), full touch/settings work (M0d), saves (M0e), procedural city generation, repair gameplay and crafting remain future work. The foundation OpenSpec change stays open.

@@ -14,7 +14,7 @@ After deployment, a live verification job checks revision.txt against the source
 
 ## Play and update
 
-Select Begin exploration to start the room and sound. Use WASD and mouse drag/arrows, or touch movement buttons and the look pad. The current public build is the M0a platform prototype; the connected interior, mech steering, and saves are later work.
+Select Begin exploration. M0b includes the bridge, living quarters, engineering hall and connecting lift inside a 240 m robot. Use WASD and mouse drag/arrows, or touch movement buttons and the look pad. Walk backward from the starting position into the lift's centre, select 1/2/3 or tap a deck, then walk forward out when it stops. E or a contextual touch button uses nearby home objects. The bridge frames the robot's hull and a monumental alien city. Steering and saves remain later steps.
 
 Future source changes pushed to main rebuild, test, and redeploy automatically. Documentation-only commits do not rebuild the runtime. Use the repository's Pages settings with GitHub Actions as the publishing source.
 
@@ -28,6 +28,8 @@ The base URL must include its final slash. The tests retain that path and do not
 
 ## Verified publication
 
-Published on 3 November 2026 from [source commit d47f029](https://github.com/stbange/meu/commit/d47f029). The [publishing workflow](https://github.com/stbange/meu/actions/runs/41635105241) passed all six jobs: specifications, Windows, Linux, web, deployment, and live verification.
+Published on 3 November 2026 from [M0b source commit 1b32a36](https://github.com/stbange/meu/commit/1b32a367f075ddfd25be7020edd759eb84d8fb29). The [publishing workflow](https://github.com/stbange/meu/actions/runs/41655285514) passed all six jobs: specifications, Windows, Linux, web, deployment and live verification. Runtime identity is 0.0.2, scene m0b-unit-v1, content version 2.
 
-The public site passed all three launch checks: desktop, portrait phone, and landscape phone. An independent HTTP check confirmed the MEU page, the WebAssembly response with application/wasm content type, and the exact published source revision. Physical-phone performance and gameplay acceptance remain pending.
+The public site passed all three launch checks: desktop, portrait phone and landscape phone. An independent HTTP check confirmed the M0b page, the WebAssembly response with application/wasm content type and the exact published source revision. Physical-phone performance and gameplay acceptance remain pending. See [M0b evidence and captures](evidence/m0b-interior.md).
+
+The [initial M0b publication](https://github.com/stbange/meu/actions/runs/41653332287) also passed all six jobs. The follow-up clarifies safe lift boarding and checks the cab-edge message before the full route. Documentation-only commits after the source revision do not rebuild the runtime.

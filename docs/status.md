@@ -12,7 +12,7 @@ M0a and M0b have been implemented at the user's request. The bridge, living quar
 
 | Milestone | Implementation | Automated verification | User acceptance |
 | --- | --- | --- | --- |
-| M0 Moving home and platform proof | M0a–M0b complete; M0c–M0f pending | M0b native/WebAssembly tests, rendered SDL motion tour, desktop/phone routes, release launch and OpenSpec checks; final CI/publication recorded in evidence | Pending |
+| M0 Moving home and platform proof | M0a–M0b complete; M0c–M0f pending | M0b native/WebAssembly tests, rendered motion tour, desktop/phone routes, release launches, Windows/Linux CI, Linux sanitizers, OpenSpec and live Pages verification passed; see evidence | Pending |
 | M1 Complete authored expedition | Not started | Not run | Pending |
 | M2 Generated small city | Not started | Not run | Pending |
 | M3 Complete exploration arc | Not started | Not run | Pending |
@@ -20,6 +20,6 @@ M0a and M0b have been implemented at the user's request. The bridge, living quar
 
 ## Next action
 
-The [MEU web prototype](https://stbange.github.io/meu/) is published on GitHub Pages from main after checks pass. M0b publication uses the existing pipeline; exact source and workflow verification are recorded in [publishing evidence](github-pages.md) and the M0b evidence record. Publication does not change pending user acceptance.
+The [MEU web prototype](https://stbange.github.io/meu/) is published on GitHub Pages from main after checks pass. All six [M0b publishing workflow jobs](https://github.com/stbange/meu/actions/runs/41655285514) passed, including live checks on all three layouts. Exact source and verification are recorded in [publishing evidence](github-pages.md) and the M0b evidence record. Publication does not change pending user acceptance.
 
 The next task is M0c bridge piloting and supported travel in the [implementation plan](implementation-plan.md). The motion fixture supplies the pose interface for steering to drive. Review the M0b interior separately from acceptance of the full M0 experience. Commands and selected versions are in [build and test](build-and-test.md).
