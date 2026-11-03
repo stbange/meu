@@ -14,7 +14,7 @@ Implementation date: 3 November 2026. Scene: `m0a-room-v1`; content version 1. U
 
 ## Local verification
 
-The tested implementation tree is based on `b9eb193`; builds identify the uncommitted tree as `0.0.1-b9eb193-dirty`. CI independently checks the pushed implementation commit; its result will be linked here after completion.
+Local captures came from the implementation tree based on `b9eb193` and identify it as `0.0.1-b9eb193-dirty`. The completed implementation and portable setup are verified at [source commit b63850d](https://github.com/stbange/meu/commit/b63850d) by the [successful four-job CI run](https://github.com/stbange/meu/actions/runs/41627769097). CI diagnostics embed the full tested commit, including in the Linux container.
 
 Host: Windows 11, reported version 10.0.26200, x86-64. Tool versions are in [build and test](../build-and-test.md). Local Python is 3.14.3 and Node is 24.18.0. Native rendering reports AMD Radeon(TM) Graphics and OpenGL 3.3 core, driver context string 22.20.14.220712.
 
@@ -26,9 +26,16 @@ Host: Windows 11, reported version 10.0.26200, x86-64. Tool versions are in [bui
 | WebAssembly build and CTest under Node | Passed: both compiled tests |
 | Real Chromium browser checks | Passed: 9 applicable tests; 3 intentional desktop/phone skips |
 | Optimized web without diagnostic bridge | Passed: compiled C tests and 3 browser launch checks; diagnostic export absent |
-| Windows/Linux/web CI from pushed checkout | Pending first push |
+| Clean Windows CI | Passed: pinned bootstrap, native compile/link, core and scenario |
+| Clean Linux CI | Passed: native compile, core/scenario, Mesa/Xvfb render capture |
+| Linux address/undefined sanitizers | Passed: core and scenario |
+| Web CI | Passed: both WebAssembly test configurations, 9 browser checks, 3 release launch checks |
+| OpenSpec CI | Passed: strict validation |
+| Commit provenance | Passed: CI binary/browser revision checks; a deliberately mismatched local revision was rejected |
 
 Browser checks use Playwright 1.64.1 and Chromium 156.0.8078.4 with SwiftShader. Viewports are 1100 by 700, 360 by 640, and 640 by 360 CSS pixels. This verifies software-rendered behavior and browser input paths, not physical-phone performance.
+
+Linux uses the GCC 14.2.0 Bookworm container and Mesa 22.3.6 llvmpipe. Its rendered smoke also passed with sampled RGB-sum variation 159. The local optimized web files measured 764,912 bytes for WebAssembly and 202,231 bytes for JavaScript, before HTTP compression and excluding the small HTML/CSS/input adapter.
 
 ~~~text
 python tools/build.py native --test --smoke

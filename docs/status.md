@@ -12,7 +12,7 @@ M0a has been implemented at the user's request. The test room runs on Windows an
 
 | Milestone | Implementation | Automated verification | User acceptance |
 | --- | --- | --- | --- |
-| M0 Moving home and platform proof | M0a implemented; M0b–M0f pending | Native/WebAssembly/browser and release checks passed locally; remote CI pending | Pending |
+| M0 Moving home and platform proof | M0a complete; M0b–M0f pending | Native/WebAssembly/browser/release checks, clean Windows/Linux CI, Linux sanitizers, and OpenSpec passed; see evidence | Pending |
 | M1 Complete authored expedition | Not started | Not run | Pending |
 | M2 Generated small city | Not started | Not run | Pending |
 | M3 Complete exploration arc | Not started | Not run | Pending |
