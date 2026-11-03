@@ -21,6 +21,8 @@ The next step is **M0b: habitable interior and convincing scale**. The complete 
 
 ## Run the prototype
 
+The web prototype is being published to [GitHub Pages](https://stbange.github.io/meu/). See [publishing and live verification](docs/github-pages.md).
+
 On Windows, from this checkout:
 
 ~~~text

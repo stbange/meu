@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
       }, true);
     }
   });
-  await page.goto('/');
+  await page.goto('./');
   await expect(page.locator('body')).toHaveAttribute('data-ready', 'true');
   await expect(page.locator('body')).toHaveAttribute('data-rendered', 'true');
 });

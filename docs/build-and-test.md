@@ -106,6 +106,6 @@ CI builds carry the full source commit from GITHUB_SHA, verified by the native s
 
 ## Evidence and limits
 
-See [M0a evidence](evidence/m0a-foundation.md) for results and captures. CI artifacts contain binaries, the web distribution, reports, and images. They are development artifacts, not an accepted release; CI does not publish a website.
+See [M0a evidence](evidence/m0a-foundation.md) for results and captures. CI artifacts contain binaries, the web distribution, reports, and images. The optimized runtime is published from main after checks pass; [GitHub Pages publishing](github-pages.md) describes the public package and live verification. The prototype is not a user-accepted release.
 
 M0b–M0f remain open. M0a does not claim a moving interior, mech travel, saves, production graphics-context recovery, real-phone performance, or a complete supported-browser matrix.
