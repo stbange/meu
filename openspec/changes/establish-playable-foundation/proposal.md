@@ -2,7 +2,7 @@
 
 The game's central promise depends on feeling tiny inside a huge moving home while steering it through even larger architecture. Prove that experience and the phone controls before building salvage, procedural districts, or a campaign.
 
-Status: proposed M0. No implementation, automated verification, or user acceptance is complete.
+Status: M0 in progress. M0a supplies the native/web test room, pinned build setup, and initial checks. M0b–M0f and user acceptance remain pending. See [M0a evidence](../../../docs/evidence/m0a-foundation.md).
 
 ## What Changes
 

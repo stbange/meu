@@ -1,6 +1,6 @@
 # MEU Verification Strategy
 
-This strategy is planned for the implementation milestones. At the planning baseline, only documentation/specification validation is available. No C, client, generation, or browser game test has run because the game is not implemented.
+M0a implements the initial C, scenario, native render, and browser checks. Commands are in [build and test](build-and-test.md), and actual results/limits are in [M0a evidence](evidence/m0a-foundation.md). The broader strategy below grows with later milestones; generator, save, and full-interior tests are not yet implemented.
 
 ## Test boundaries
 
@@ -45,7 +45,7 @@ Streaming tests cover collision readiness, dirty-state publication before evicti
 
 ## CI and performance gates
 
-M0a creates the commands and workflows; they are not available at this baseline. Each code change must build affected targets and run relevant unit/scenario tests. Cross-platform compile/core checks and a browser launch smoke check run from the foundation. Add the full input/save browser suite as those behaviors land. Specification validation remains a separate required check.
+M0a supplies the build/test commands and Windows/Linux/web/specification workflow. Each code change must build affected targets and run relevant unit/scenario tests. Cross-platform compile/core checks and initial browser input/launch checks run from the foundation. Add the full interior/save browser suite as those behaviors land. Specification validation remains a separate check. Documentation-only commits do not rerun the runtime workflow.
 
 Larger seed sweeps, sanitizers, fuzzing, and long soaks run nightly or for release candidates as their systems exist. Compiler/sanitizer configurations must match supported native environments; software-rendered CI does not establish real GPU or phone performance.
 

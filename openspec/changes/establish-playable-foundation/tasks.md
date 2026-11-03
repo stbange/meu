@@ -1,6 +1,6 @@
 ## Implementation
 
-- [ ] 1. M0a: Establish isolated native, web, and headless CMake targets; pin dependencies, add initial CI, and record reproducible build commands. Maps to PORT-01.
+- [x] 1. M0a: Establish isolated native, web, and headless CMake targets; pin dependencies, add initial CI, and record reproducible build commands. Maps to PORT-01 and PORT-05. Local verification is in docs/evidence/m0a-foundation.md; remote CI verification is recorded separately.
 - [ ] 2. M0b: Build the authored scale scene, robot hull, four connected spaces, and lift/service spine. Maps to VIEW-01 and VIEW-02.
 - [ ] 3. M0b: Implement stable first-person locomotion, collision, interaction, touch/desktop actions, and coordinate ownership. Maps to VIEW-01 and VIEW-02.
 - [ ] 4. M0c: Implement helm input, look/steer separation, controlled stop, clearance rejection, and valid parking. Maps to CMD-01 and CMD-02.
@@ -22,4 +22,4 @@
 - [ ] 14. User reviews steering, interior motion comfort, and readable/useful home spaces.
 - [ ] 15. User reviews real-phone touch usability and the proposed direction for M1.
 
-All tasks are pending. Add and run the relevant checks as each step lands; M0f integrates the full evidence and playtest. Record automated results separately from user acceptance. Commit and push each completed implementation step as required by the repository workflow. The [implementation plan](../../../docs/implementation-plan.md) gives each step's scope and completion evidence.
+Task 1 is implemented. The remaining full-foundation checks and acceptance tasks are pending; initial M0a tests do not complete travel, interior, or save verification. Add checks as each step lands; M0f integrates the full evidence/playtest. Record automated results separately from user acceptance. Commit and push each completed step. The [implementation plan](../../../docs/implementation-plan.md) gives each step's scope and evidence.

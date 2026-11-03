@@ -8,6 +8,10 @@ The game SHALL run the same foundation behaviors on Windows, Linux, and the web,
 - **WHEN** a player launches a supported build and walks from the residence to the bridge, steers, parks, and visits engineering
 - **THEN** all actions complete through the supported input path without a platform-specific gameplay omission
 
+#### Scenario: Initial platform prototype
+- **WHEN** the M0a client starts on a supported native target or touch browser
+- **THEN** it renders a first-person test room, exposes basic movement/look/start/pause actions, and returns control between frames rather than blocking browser input
+
 ### Requirement: PORT-02 Touch interaction and readable layout
 
 The game SHALL expose every required foundation action without a keyboard, mouse, hover, pointer lock, or fullscreen at 360 by 640 and 640 by 360 CSS pixels.
@@ -47,3 +51,23 @@ The game test harness SHALL record the build/content versions, scene identity, i
 #### Scenario: Automated scenario failure
 - **WHEN** a scripted foundation scenario fails an assertion
 - **THEN** its report identifies the failed behavior and includes a replayable input trace and relevant state, with a screenshot when a rendered client is available
+
+### Requirement: PORT-05 Reproducible build and test entry points
+
+The project SHALL provide versioned native, headless C, and web build/test entry points using its own pinned tooling and dependency records.
+
+#### Scenario: Clean reference checkout
+- **WHEN** a developer or CI runner follows the documented reference setup from a clean MEU checkout
+- **THEN** it can build the native client, compile the web client, and run the production-loop core/scenario checks without files from a sibling game
+
+#### Scenario: Browser input verification
+- **WHEN** the browser suite runs against the served diagnostic build
+- **THEN** it exercises real input paths at desktop and phone viewport sizes, asserts the resulting C state through read-only diagnostics, and retains failure reproduction data
+
+#### Scenario: Build without test diagnostics
+- **WHEN** the optimized web configuration is built and launched
+- **THEN** the test-only diagnostic export is absent while normal player input and rendering still operate
+
+#### Scenario: Unavailable or mismatched tool
+- **WHEN** the reference setup has no required tool or selects an unsupported native compiler version
+- **THEN** the helper exits unsuccessfully with an actionable explanation instead of silently falling back to another project's tools

@@ -6,7 +6,7 @@ The implementation target is **C17, SDL3, and OpenGL** on Windows and Linux, plu
 
 ## Current status
 
-Repository setup and planning are complete. Game implementation has not started. The design and milestone proposals await review; no gameplay milestone or playtest is user-accepted. See the [status record](docs/status.md).
+M0a adds a running first-person room, native/web builds, touch/desktop input, and initial automated checks. The connected interior and steering come next. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0a evidence](docs/evidence/m0a-foundation.md).
 
 ## Start here
 
@@ -14,9 +14,30 @@ Repository setup and planning are complete. Game implementation has not started.
 - [Implementation plan](docs/implementation-plan.md): ordered steps, dependencies, scope limits, and completion gates.
 - [Development on the shared computer](docs/development-setup.md): independent checkout, Codex project, tooling, builds, and save data.
 - [Verification strategy](docs/verification.md): unit, generation, game, browser, performance, and manual checks.
+- [Build and test](docs/build-and-test.md): pinned tools, launch commands, controls, and checks.
 - [First OpenSpec proposal](openspec/changes/establish-playable-foundation/proposal.md): M0 requirements, design, and unchecked tasks.
 
-The next implementation step is **M0a: reproducible builds and a minimal running client**. There is no playable build or game-launch command yet.
+The next step is **M0b: habitable interior and convincing scale**. The complete M0 experience remains in development.
+
+## Run the prototype
+
+On Windows, from this checkout:
+
+~~~text
+npm ci --ignore-scripts
+npm run bootstrap
+npm run dev:native
+~~~
+
+For the mobile web build:
+
+~~~text
+npm run bootstrap:web
+npm run build:web
+npm run serve:web
+~~~
+
+Open `http://127.0.0.1:4174`. Begin exploration, then use WASD and mouse drag/arrows, or the movement buttons and look pad. Focus loss, pause, or resizing stops simulation until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
 
 ## Specification tooling
 
@@ -27,7 +48,7 @@ npm ci --ignore-scripts
 npm run spec:validate
 ```
 
-OpenSpec has its own lockfile here. It does not use another game's tooling installation. Compiler, SDL, Emscripten, build, and game-test setup belong to M0a.
+OpenSpec and Playwright use this repository's own lockfile. Compiler, SDL, Emscripten, build, and test setup are documented in [build and test](docs/build-and-test.md).
 
 ## Project boundaries
 

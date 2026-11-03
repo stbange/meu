@@ -4,7 +4,7 @@
 
 - Work in this repository and use its own origin, dependencies, documentation, tests, assets, and output folders. Do not rely on a sibling game checkout.
 - Keep C17, SDL, direct OpenGL, Windows/Linux, and mobile-first browser support as the implementation direction. Gameplay remains exclusively first person from the sole human Commander's perspective.
-- Read `docs/implementation-plan.md`, `docs/status.md`, and the relevant OpenSpec change before implementation. Follow dependency order; begin with M0a when runtime work is requested.
+- Read `docs/implementation-plan.md`, `docs/status.md`, and the relevant OpenSpec change before implementation. Follow dependency order and the next incomplete step recorded in status.
 - The game design is a draft. Do not convert proposed tuning, features, or acceptance criteria into claims of implemented or user-accepted behavior.
 
 ## Repository workflow

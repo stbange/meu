@@ -1,0 +1,100 @@
+name: MEU foundation
+on:
+  push:
+    paths-ignore: ['docs/**', 'README.md']
+  pull_request:
+    paths-ignore: ['docs/**', 'README.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  specifications:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24.18.0'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run spec:validate
+        env:
+          OPENSPEC_TELEMETRY: '0'
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Prepare checksum-pinned tools
+        run: python tools/bootstrap.py
+      - name: Compile and run pure C tests and scripted scenario
+        run: python tools/build.py native --test
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: windows-foundation
+          path: |
+            build/native/bin/
+            build/native/Testing/
+          if-no-files-found: warn
+
+  linux:
+    runs-on: ubuntu-24.04
+    container: gcc:14.2.0-bookworm
+    steps:
+      - name: Install window, OpenGL, audio, and headless display dependencies
+        run: |
+          apt-get update
+          apt-get install -y python3 ca-certificates git libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxss-dev libasound2-dev libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev xvfb xauth
+      - uses: actions/checkout@v7.0.1
+      - run: python3 tools/bootstrap.py
+      - name: Native build, C tests and actual software-OpenGL frame capture
+        run: xvfb-run -a python3 tools/build.py native --test --smoke
+        env:
+          SDL_AUDIODRIVER: dummy
+          LIBGL_ALWAYS_SOFTWARE: '1'
+      - name: Address and undefined behavior checks on core and scenario
+        run: python3 tools/build.py core --test --sanitizers
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: linux-foundation
+          path: |
+            build/native/bin/
+            build/native/Testing/
+            build/core-sanitizers/Testing/
+            test-results/
+          if-no-files-found: warn
+
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24.18.0'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: python3 tools/bootstrap.py --web
+      - name: Compile WebAssembly client and run compiled core/scenario tests
+        run: python3 tools/build.py web --test
+      - run: npx playwright install --with-deps chromium
+      - name: Real browser desktop and phone input tests
+        run: npm run test:web
+      - name: Build without browser test diagnostics
+        run: python3 tools/build.py web --release --test
+      - name: Shipping-like browser launch
+        run: npm run test:web -- --grep "renders the C/OpenGL room"
+        env:
+          MEU_RELEASE: '1'
+      - uses: actions/upload-artifact@v7.0.2
+        if: always()
+        with:
+          name: web-foundation
+          path: |
+            build/web-release/bin/
+            build/web/Testing/
+            test-results/
+            playwright-report/
+          if-no-files-found: warn

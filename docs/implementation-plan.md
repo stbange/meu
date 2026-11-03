@@ -1,6 +1,6 @@
 # Mechanized Exploration Unit Implementation Plan
 
-Planning baseline: 3 November 2026. Repository setup is complete; every game implementation milestone below is pending. The [design draft](game-design-draft.md) describes the intended experience, and [status](status.md) records actual progress and acceptance.
+Planning baseline: 3 November 2026. M0a is implemented; later steps remain pending. The [design draft](game-design-draft.md) describes the experience, [status](status.md) records progress/acceptance, and [M0a evidence](evidence/m0a-foundation.md) records verification and limits.
 
 ## Delivery approach
 
@@ -34,7 +34,7 @@ openspec/changes/  proposed behavior and implementation work
 openspec/specs/    verified behavior promoted after change completion
 ```
 
-These runtime directories and build targets are planned, not already implemented. Keep a small number of explicit state owners instead of building a general engine framework first. Use a 60 Hz fixed simulation tick initially, with interpolated presentation and bounded catch-up; backgrounded time does not become accumulated simulation work.
+M0a establishes the core/platform/render source, CMake targets, fixtures, browser shell, and tools. Other directories/systems remain planned. Keep a small number of explicit state owners instead of building a general engine framework first. Use a 60 Hz fixed tick with bounded catch-up, then add presentation interpolation as motion develops; backgrounded time does not become accumulated simulation work.
 
 ## M0 Moving home and platform proof
 
@@ -183,4 +183,4 @@ Only mark a user acceptance item complete after explicit user feedback. If a pla
 
 ## First implementation handoff
 
-Start M0a from this checkout on a `codex/` working branch. Read the foundation proposal/design/scenarios, inspect installed toolchains, and produce the smallest native and phone-browser client plus test entry points. Do not start procedural generation, inventory, or a generalized engine framework in that step. Record the result and push it before proceeding to M0b.
+M0a is implemented on `codex/m0a-foundation`. Next, read its evidence and the foundation proposal/design/scenarios, then implement M0b's four connected spaces and scale scene. Preserve the working native/web paths and add the relevant collision, lift, and coordinate tests. Keep user acceptance pending until explicitly reviewed.

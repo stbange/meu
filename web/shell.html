@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#131e20">
+  <title>Mechanized Exploration Unit</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-ready="false" data-paused="true" data-rendered="false">
+  <canvas id="canvas" tabindex="0" aria-label="First-person view inside the exploration unit"></canvas>
+  <header>
+    <div><span class="eyebrow">MECHANIZED EXPLORATION UNIT</span><h1>Observation room</h1></div>
+    <button id="pause" disabled>Pause</button>
+  </header>
+  <div id="reticle" aria-hidden="true">+</div>
+  <section id="welcome" aria-label="Start exploration">
+    <span class="eyebrow">FOUNDATION PROTOTYPE</span>
+    <h2>Your machine. Your home.</h2>
+    <p>Walk through the test room and look out over the silent city.</p>
+    <button id="begin" disabled>Loading…</button>
+    <p id="status" role="status">Preparing the exploration unit…</p>
+    <p class="hint">WASD to move · Drag or arrow keys to look<br>On a phone, use the movement buttons and look pad.</p>
+  </section>
+  <section id="controls" aria-label="Touch controls">
+    <div id="movement" aria-label="Move">
+      <button data-action="0" aria-label="Move forward">↑</button>
+      <button data-action="2" aria-label="Move left">←</button>
+      <button data-action="1" aria-label="Move backward">↓</button>
+      <button data-action="3" aria-label="Move right">→</button>
+    </div>
+    <div id="look" role="group" aria-label="Drag to look"><span>LOOK<br><small>drag here</small></span></div>
+  </section>
+  <footer>MEU / M0a <span>First-person platform prototype</span></footer>
+  <script>
+    var Module = {
+      canvas: document.getElementById('canvas'),
+      print: function (text) { console.log(text); },
+      printErr: function (text) { console.error(text); },
+      onAbort: function (reason) { window.MEU.fail('The unit could not start. ' + reason); },
+      onExit: function (code) { if (code) window.MEU.fail('The unit stopped unexpectedly. Please reload.'); }
+    };
+  </script>
+  <script src="input.js"></script>
+  {{{ SCRIPT }}}
+</body>
+</html>

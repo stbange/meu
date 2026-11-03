@@ -2,14 +2,24 @@
   "name": "mechanized-exploration-unit",
   "version": "0.0.0",
   "private": true,
-  "description": "Development-only specification tooling for Mechanized Exploration Unit",
+  "description": "Independent build, browser-test and specification tooling for Mechanized Exploration Unit",
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
+    "bootstrap": "node tools/run-python.cjs tools/bootstrap.py",
+    "bootstrap:web": "node tools/run-python.cjs tools/bootstrap.py --web",
+    "build:native": "node tools/run-python.cjs tools/build.py native",
+    "test:native": "node tools/run-python.cjs tools/build.py native --test",
+    "smoke:native": "node tools/run-python.cjs tools/build.py native --test --smoke",
+    "dev:native": "node tools/run-python.cjs tools/build.py native --run",
+    "build:web": "node tools/run-python.cjs tools/build.py web --test",
+    "serve:web": "node tools/run-python.cjs tools/serve.py",
+    "test:web": "playwright test",
     "spec:validate": "openspec validate --all --strict --no-interactive"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "1.14.3"
+    "@fission-ai/openspec": "1.14.3",
+    "@playwright/test": "1.64.1"
   }
 }

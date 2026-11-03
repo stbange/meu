@@ -2,7 +2,8 @@ schema: spec-driven
 
 context: |
   Mechanized Exploration Unit is a separate single-player game concept.
-  Implementation is not started; game design and all change artifacts are drafts.
+  M0a implements the initial platform prototype; the rest of M0 and later milestones are pending.
+  Game design and unimplemented change requirements remain proposals; acceptance is recorded separately.
   The player is the sole human, always viewed in first person, including piloting.
   A skyscraper-sized robot is vehicle, explorable maintenance space, and home.
   Robotic assistants may help; no human crew or present alien population.

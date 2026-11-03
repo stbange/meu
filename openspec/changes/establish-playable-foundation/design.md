@@ -1,6 +1,6 @@
 ## Scope
 
-Implement the proposed M0 described in the [game design draft](../../../docs/game-design-draft.md) and steps M0a–M0f of the [implementation plan](../../../docs/implementation-plan.md). This artifact is a technical proposal; no selected approach has been validated by a running prototype.
+Implement M0 as described in the [game design draft](../../../docs/game-design-draft.md) and [implementation plan](../../../docs/implementation-plan.md). M0a now validates the initial native/web platform path; remaining interior/travel/save behavior is still proposed. See [M0a evidence](../../../docs/evidence/m0a-foundation.md) and [build instructions](../../../docs/build-and-test.md).
 
 ## Platform and state boundaries
 

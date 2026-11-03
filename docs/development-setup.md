@@ -48,7 +48,7 @@ npm run spec:validate
 
 Use MEU-local `node_modules/`, ignored `.tools/` or an explicitly configured SDK path, and `build/` subdirectories for Windows, Linux, web, and tests. Do not resolve SDL, assets, scripts, or Node packages through a sibling game folder. Do not change global tool settings merely to make one game build.
 
-At migration, the machine exposes Git 2.55.0.windows.5, Node 24.18.0, and npm 11.6.1 on PATH. CMake, Ninja, a C compiler, and Emscripten were not found on PATH during the initial check. That does not establish that they are absent from the computer. M0a must inspect existing installations, choose compatible versions, and document setup before installing anything new. The native/browser build commands do not exist yet.
+At migration, the machine exposed Git 2.55.0.windows.5, Node 24.18.0, and npm 11.6.1 on PATH. M0a inspected the available tools and installed pinned CMake, Ninja, GCC, and Emscripten locally under MEU's ignored `.tools/`. The [build and test guide](build-and-test.md) records the selected versions and working commands. Other games and global tool settings remain independent.
 
 Windows is the primary local development environment. Use independent Linux CI for native portability from M0a. A later local WSL workflow, if useful, uses its own MEU checkout/build tree and the same GitHub repository; installing WSL is not required by this planning setup.
 
@@ -62,8 +62,8 @@ For the web, use MEU-specific storage and cache names, such as `meu-saves-v1` an
 
 ## Start implementation
 
-The next requested runtime task should identify **M0a** in the [implementation plan](implementation-plan.md). A suitable first prompt is:
+M0a is implemented. The next runtime task is **M0b** in the [implementation plan](implementation-plan.md). A suitable next prompt is:
 
-> Implement M0a from docs/implementation-plan.md. Read AGENTS.md, docs/status.md, and the foundation OpenSpec change. Establish reproducible C17/SDL/OpenGL native and web builds, a minimal first-person room, and the initial automated checks. Record evidence, commit, and push the completed step; leave user acceptance pending.
+> Implement M0b from docs/implementation-plan.md. Read AGENTS.md, docs/status.md, the M0a evidence, and the foundation OpenSpec change. Build the four connected interior spaces and scale scene while preserving native/web builds and touch controls. Add collision, lift, and motion tests. Record evidence, commit, and push; leave user acceptance pending.
 
-This setup creates the independent workspace and planning baseline. It does not install the game toolchain, implement gameplay, accept a milestone, or publish a playable release.
+The independent workspace now includes the M0a toolchain and test room. Design/playtest acceptance, the remaining M0 work, and release publishing are still separate decisions.
