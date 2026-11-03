@@ -63,3 +63,19 @@ The game SHALL pause single-player simulation on menu pause or focus/background 
 #### Scenario: Paused time
 - **WHEN** a paused application remains inactive and is then resumed
 - **THEN** simulation has not advanced through the inactive period and no accumulated movement is applied
+
+#### Scenario: Open and close settings during travel
+- **WHEN** the Commander opens settings while steering, walking, or riding the lift
+- **THEN** the simulation freezes, held input clears, helm control is released with a parking request, and closing settings leaves the game paused until explicit resume
+
+#### Scenario: Old fingers after a context transition
+- **WHEN** a held gesture spans a helm, lift, station-panel, pause, or settings transition
+- **THEN** it cannot command movement in the new context, and fresh input remains usable even while the old fingers are still touching the screen
+
+#### Scenario: Cancellation and overlapping sources
+- **WHEN** a held pointer is cancelled or loses capture while another pointer or key holds the same action
+- **THEN** only the cancelled source is removed, and releasing the final owner stops that action without sticking input
+
+#### Scenario: Independent camera comfort options
+- **WHEN** the Commander changes sensitivity, vertical drag inversion, walking bob, or machine sway in settings
+- **THEN** the bounded setting applies immediately for the session, both motion effects can be independently disabled and default off, and cosmetic camera changes do not alter footing, player position, or robot heading

@@ -24,16 +24,16 @@ test.afterEach(async ({ page }, info) => {
   await info.attach('interior-state-and-inputs', { body: JSON.stringify(report,null,2), contentType: 'application/json' });
 });
 
-test('walks the connected decks using the real keyboard or touch lift controls', async ({ page, isMobile }, info) => {
+test('walks residence to helm and engineering using real keyboard or touch controls', async ({ page, isMobile }, info) => {
   test.skip(release, 'The full route observes read-only C diagnostics.');
-  test.setTimeout(100000);
+  test.setTimeout(120000);
   const errors = [];
   page.on('pageerror', error => errors.push(String(error)));
   await page.goto('./');
   await expect(page.locator('body')).toHaveAttribute('data-ready', 'true');
   const press = async locator => isMobile ? locator.tap() : locator.click();
   await press(page.getByRole('button', { name: 'Begin exploration', exact: true }));
-  expect((await state(page)).scene).toBe('m0c-travel-v1');
+  expect((await state(page)).scene).toBe('m0d-controls-v1');
   const session = isMobile ? await page.context().newCDPSession(page) : null;
   const replay = [];
   const move = async (forward, until) => {
@@ -97,6 +97,23 @@ test('walks the connected decks using the real keyboard or touch lift controls',
   await expect(page.locator('#room')).toHaveText('Living quarters');
   await page.screenshot({ path: info.outputPath('quarters.png') });
   await move(false, s => s.z > -.65);
+  await choose(0); await arrive(196);
+  await move(true, s => s.use === 5);
+  await press(page.getByRole('button', { name:'Take bridge helm · E', exact:true }));
+  expect((await state(page)).helm).toBe(true);
+  if (isMobile) {
+    const b=await page.getByRole('button',{name:'Drive forward',exact:true}).boundingBox();
+    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2,id:1}]});
+  } else await page.keyboard.down('KeyW');
+  await expect.poll(async()=>(await state(page)).speed).toBeGreaterThan(2.5);
+  if (isMobile) await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  else await page.keyboard.up('KeyW');
+  await press(page.getByRole('button',{name:'Park robot',exact:true}));
+  await expect.poll(async()=>(await state(page)).parked).toBe(true);
+  replay.push({action:'residence to helm, drive and park',state:await state(page)});
+  await page.screenshot({path:info.outputPath('route-helm.png')});
+  await press(page.getByRole('button',{name:'Release helm',exact:true}));
+  await move(false,s=>s.z>-.65);
   await choose(2); await arrive(112);
   await move(true, s => s.z < -9);
   await expect(page.locator('#room')).toHaveText('Engineering hall');

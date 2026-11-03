@@ -4,7 +4,7 @@
 - [x] 2. M0b: Build the authored scale scene, robot hull, four connected spaces, and lift/service spine. Maps to VIEW-01 and VIEW-02.
 - [x] 3. M0b: Implement stable first-person locomotion, collision, interaction, touch/desktop actions, and coordinate ownership. Maps to VIEW-01 and VIEW-02.
 - [x] 4. M0c: Implement helm input, look/steer separation, controlled stop, clearance rejection, and valid parking. Maps to CMD-01 and CMD-02.
-- [ ] 5. M0d: Complete touch layouts, input-context cleanup, lifecycle pause, and explicit resume. Maps to VIEW-03 and PORT-02.
+- [x] 5. M0d: Complete touch layouts, settings, input-context cleanup, lifecycle pause, and explicit resume. Maps to VIEW-03 and PORT-02.
 - [ ] 6. M0e: Implement versioned basic saves, durable browser completion, previous-snapshot recovery, and export/import. Maps to PORT-03.
 
 ## Automated verification
@@ -22,4 +22,4 @@
 - [ ] 14. User reviews steering, interior motion comfort, and readable/useful home spaces.
 - [ ] 15. User reviews real-phone touch usability and the proposed direction for M1.
 
-Tasks 1–4 are implemented. M0c travel and context verification is recorded in docs/evidence/m0c-piloting.md. M0b adds native/WebAssembly collision, lift, transform, standing-motion and rendered keyboard/touch tour checks; see docs/evidence/m0b-interior.md. Items 7–12 remain unchecked because they cover the full M0 experience, including durable saves, complete lifecycle/settings coverage and real devices. User acceptance remains pending. Add checks as each step lands; M0f integrates the full evidence/playtest. Record automated results separately from user acceptance. Commit and push each completed step. The [implementation plan](../../../docs/implementation-plan.md) gives each step's scope and evidence.
+Tasks 1–5 are implemented. M0d settings, lifecycle, multi-finger input and the residence–helm–engineering route are recorded in docs/evidence/m0d-controls.md. Physical Android/iPhone checks remain pending. M0c travel and context verification is recorded in docs/evidence/m0c-piloting.md. M0b adds native/WebAssembly collision, lift, transform, standing-motion and rendered keyboard/touch tour checks; see docs/evidence/m0b-interior.md. Items 7–12 remain unchecked because they cover the full M0 experience, including durable saves and real devices. The non-save portion of item 10 is covered by the M0d automated route and interruption tests; confirmed-save reload still belongs to M0e. User acceptance remains pending. Add checks as each step lands; M0f integrates the full evidence/playtest. Record automated results separately from user acceptance. Commit and push each completed step. The [implementation plan](../../../docs/implementation-plan.md) gives each step's scope and evidence.

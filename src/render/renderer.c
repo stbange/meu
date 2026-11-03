@@ -136,12 +136,14 @@ bool meu_renderer_init(void)
     return glGetError() == GL_NO_ERROR;
 }
 
-bool meu_renderer_draw(const MeuSimulation *state, int width, int height)
+bool meu_renderer_draw(const MeuSimulation *state, int width, int height,int selection)
 {
+    (void)selection;
     if (width<=0 || height<=0) return true;
     float projection[16],view[16],mvp[16],inverse[16],world_mvp[16];
     meu_matrix_perspective(projection,(float)width/(float)height);
-    meu_matrix_view(view,state->x,state->y,state->z,state->yaw,state->pitch);
+    MeuCamera eye=meu_sim_camera(state);
+    meu_matrix_view(view,eye.x,eye.y,eye.z,eye.yaw,eye.pitch);
     meu_matrix_multiply(mvp,projection,view);
     meu_pose_inverse_matrix(state->robot,inverse);
     meu_matrix_multiply(world_mvp,mvp,inverse);
@@ -154,21 +156,21 @@ bool meu_renderer_draw(const MeuSimulation *state, int width, int height)
     if (meu_sim_room(state)==MEU_ENGINEERING && !state->inspection_light) light=.60f;
     pUniform3f(lighting_uniform,light,.0009f,0);
     pUniformMatrix4fv(matrix_uniform,1,GL_FALSE,mvp);
-    pUniform3f(eye_uniform,state->x,state->y,state->z);
+    pUniform3f(eye_uniform,eye.x,eye.y,eye.z);
     glDrawArrays(GL_TRIANGLES,0,(GLsizei)interior_count);
-    double world_eye[3]; meu_pose_to_world(state->robot,state->x,state->y,state->z,world_eye);
+    double world_eye[3]; meu_pose_to_world(state->robot,eye.x,eye.y,eye.z,world_eye);
     pUniform3f(eye_uniform,(float)world_eye[0],(float)world_eye[1],(float)world_eye[2]);
     pUniformMatrix4fv(matrix_uniform,1,GL_FALSE,world_mvp);
     pUniform3f(lighting_uniform,1,.0009f,0);
     glDrawArrays(GL_TRIANGLES,(GLint)interior_count,(GLsizei)exterior_count);
     meu_vertex_count=0; meu_mesh_lift(state); unsigned lift_count=meu_vertex_count;
 #ifndef __EMSCRIPTEN__
-    meu_mesh_hud(state,width,height);
+    meu_mesh_hud(state,width,height,selection);
 #endif
     bind_mesh(dynamic_buffer);
     pBufferData(GL_ARRAY_BUFFER,(GLsizeiptr)(meu_vertex_count*sizeof(MeuVertex)),meu_vertices,GL_STREAM_DRAW);
     pUniformMatrix4fv(matrix_uniform,1,GL_FALSE,mvp);
-    pUniform3f(eye_uniform,state->x,state->y,state->z);
+    pUniform3f(eye_uniform,eye.x,eye.y,eye.z);
     glDrawArrays(GL_TRIANGLES,0,(GLsizei)lift_count);
 #ifndef __EMSCRIPTEN__
     float ortho[16]={0}; ortho[0]=2.0f/(float)width; ortho[5]=2.0f/(float)height;

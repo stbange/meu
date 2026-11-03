@@ -8,22 +8,38 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-ready="false" data-helm="false" data-paused="true" data-rendered="false">
+<body data-ready="false" data-context="paused" data-helm="false" data-paused="true" data-rendered="false">
   <canvas id="canvas" tabindex="0" aria-label="First-person view inside the exploration unit"></canvas>
   <header>
-    <div><span class="eyebrow">MECHANIZED EXPLORATION UNIT</span><h1 id="room">Bridge</h1><div id="altitude">Deck 196 m · Unit height 240 m</div></div>
-    <button id="pause" disabled>Pause</button>
+    <div class="location"><span class="eyebrow">MEU / COMMANDER</span><h1 id="room">Bridge</h1><div id="altitude">Deck 196 m · Unit height 240 m</div></div>
+    <div class="toolbar"><button id="settings" aria-expanded="false" aria-controls="settings-panel" disabled>Settings</button><button id="pause" disabled>Pause</button></div>
   </header>
   <div id="reticle" aria-hidden="true">+</div>
-  <section id="welcome" aria-label="Start exploration">
-    <span class="eyebrow">M0c · BRIDGE PILOTING</span>
+  <section id="welcome" class="card" aria-label="Start exploration">
+    <span class="eyebrow">MECHANIZED EXPLORATION UNIT</span>
     <h2>Your machine. Your home.</h2>
-    <p>Pilot your 240-metre machine through the silent city, then explore the home inside it.</p>
+    <p>Pilot a 240-metre machine through the silent city. Explore the home inside it.</p>
     <button id="begin" disabled>Loading…</button>
     <p id="status" role="status">Preparing the exploration unit…</p>
-    <p class="hint">WASD to walk · Drag or arrows to look · E to use<br>The helm is at the central console ahead: approach and use it. At the helm, W/S drives, A/D turns, Space brakes and P parks. The lift is behind you. Touch controls adapt to each station.</p>
+    <p class="hint">Use the arrows to walk and drag LOOK to turn your view. The central console is the helm; the lift is behind you.<br>Keyboard: WASD · E use · Space brake · P park · F1 settings.</p>
   </section>
-  <section id="navigation" aria-label="Robot navigation">
+  <section id="settings-panel" class="card" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <h2 id="settings-title" tabindex="-1">Settings</h2>
+    <div id="settings-fields">
+      <label class="setting slider" for="sensitivity"><span>Look sensitivity <output id="sensitivity-value">1.00×</output></span>
+        <input id="sensitivity" data-setting="0" type="range" min="0.25" max="3" step="0.05" value="1">
+      </label>
+      <label class="setting check" for="invert-y"><span>Invert vertical drag</span><input id="invert-y" data-setting="1" type="checkbox"></label>
+      <label class="setting check" for="walk-bob"><span>Walking bob <small>Gentle movement while walking</small></span><input id="walk-bob" data-setting="2" type="checkbox"></label>
+      <label class="setting check" for="machine-sway"><span>Machine sway <small>Gentle movement while travelling</small></span><input id="machine-sway" data-setting="3" type="checkbox"></label>
+      <label class="setting slider" for="volume"><span>Sound volume <output id="volume-value">60%</output></span>
+        <input id="volume" data-setting="4" type="range" min="0" max="1" step="0.05" value="0.6">
+      </label>
+    </div>
+    <p class="hint">Changes apply immediately for this session. Close settings, then resume when ready.</p>
+    <div class="dialog-actions"><button id="reset-settings">Reset defaults</button><button id="close-settings">Close settings</button></div>
+  </section>
+  <section id="navigation" class="station" aria-label="Robot navigation">
     <div id="telemetry"><span id="speed">0.0 m/s</span><span id="heading">Heading 000°</span><span id="stopping">Stop 0 m</span></div>
     <p id="travel-status" role="status">Parked · support verified</p>
     <div id="pilot-actions" hidden>
@@ -32,33 +48,37 @@
       <button data-action="8" aria-label="Release helm">Release helm<small>E</small></button>
     </div>
   </section>
-  <section id="lift-panel" aria-label="Lift destinations" hidden>
+  <section id="lift-panel" class="station" aria-label="Lift destinations" hidden>
     <p id="lift-status">Choose a deck</p>
     <div>
-      <button data-action="9" aria-label="Lift to bridge">1 · Bridge<small>196 m</small></button>
-      <button data-action="10" aria-label="Lift to living quarters">2 · Quarters<small>156 m</small></button>
-      <button data-action="11" aria-label="Lift to engineering">3 · Engineering<small>112 m</small></button>
+      <button data-action="9" aria-label="Lift to bridge">Bridge<small>196 m · 1</small></button>
+      <button data-action="10" aria-label="Lift to living quarters">Quarters<small>156 m · 2</small></button>
+      <button data-action="11" aria-label="Lift to engineering">Engineering<small>112 m · 3</small></button>
     </div>
   </section>
-  <aside id="unit-info" hidden>MEU / 240 m tall<br>Bridge 196 m · Quarters 156 m<br>Engineering 112 m · Lift travel 84 m</aside>
+  <section id="unit-info" class="card" role="dialog" aria-modal="true" aria-labelledby="dimensions-title" hidden>
+    <h2 id="dimensions-title">Unit dimensions</h2>
+    <p>MEU / 240 m tall<br>Bridge 196 m · Quarters 156 m<br>Engineering 112 m · Lift travel 84 m</p>
+    <button id="close-info">Close dimensions</button>
+  </section>
   <button id="use" data-action="8" hidden>Use</button>
   <section id="controls" aria-label="Touch controls">
-    <div id="movement" aria-label="Move">
-      <button data-action="0" aria-label="Move forward">↑</button>
-      <button data-action="2" aria-label="Move left">←</button>
-      <button data-action="1" aria-label="Move backward">↓</button>
-      <button data-action="3" aria-label="Move right">→</button>
-    </div>
-    <div id="look" role="group" aria-label="Drag to look"><span>LOOK<br><small>drag here</small></span></div>
+    <div><div id="move-label" class="control-caption">WALK</div><div id="movement" aria-label="Move">
+      <button data-action="0" aria-label="Move forward"><span>↑</span><small>Forward</small></button>
+      <button data-action="2" aria-label="Move left"><span>←</span><small>Left</small></button>
+      <button data-action="1" aria-label="Move backward"><span>↓</span><small>Back</small></button>
+      <button data-action="3" aria-label="Move right"><span>→</span><small>Right</small></button>
+    </div></div>
+    <div id="look" role="group" aria-label="Drag to look"><span>LOOK<small>drag to turn</small></span></div>
   </section>
-  <footer>MEU / M0c <span>One commander. Three decks. One enormous home.</span></footer>
+  <footer><span>MEU / 240 m</span><span>One commander. One enormous home.</span></footer>
   <script>
     var Module = {
       canvas: document.getElementById('canvas'),
-      print: function (text) { console.log(text); },
-      printErr: function (text) { console.error(text); },
-      onAbort: function (reason) { window.MEU.fail('The unit could not start. ' + reason); },
-      onExit: function (code) { if (code) window.MEU.fail('The unit stopped unexpectedly. Please reload.'); }
+      print: function(text) { console.log(text); },
+      printErr: function(text) { console.error(text); },
+      onAbort: function(reason) { window.MEU.fail('The unit could not start. ' + reason); },
+      onExit: function(code) { if (code) window.MEU.fail('The unit stopped unexpectedly. Reload to continue.'); }
     };
   </script>
   <script src="input.js"></script>

@@ -1,0 +1,28 @@
+# Settings are production core commands; no pose mutation.
+start
+press forward
+frames 10
+settings-open
+expect context 4 0
+expect held 0 0
+frames 600
+expect ticks 10 0
+setting 0 2
+setting 1 1
+setting 2 1
+setting 3 1
+setting 4 0
+expect sensitivity 2 0.00001
+expect volume 0 0.00001
+settings-close
+expect context 3 0
+frames 600
+expect ticks 10 0
+start
+frames 1
+expect held 0 0
+pointer-look 50 25
+expect yaw 0.4 0.00001
+pause
+pointer-look 500 500
+expect yaw 0.4 0.00001

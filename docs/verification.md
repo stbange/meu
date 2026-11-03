@@ -1,6 +1,6 @@
 # MEU Verification Strategy
 
-M0a implements the initial C, scenario, native render, and browser checks. Commands are in [build and test](build-and-test.md), and actual results/limits are in [M0a evidence](evidence/m0a-foundation.md). The broader strategy below grows with later milestones; generator, save, and full-interior tests are not yet implemented.
+M0a–M0d provide C unit/command scenarios, native interior/piloting/lifecycle replays, and actual WebAssembly desktop/touch checks. Commands are in [build and test](build-and-test.md), and current results/limits are in [M0d evidence](evidence/m0d-controls.md). The broader strategy below grows with later milestones; generation, durable save tests, real-phone verification and performance acceptance remain pending.
 
 ## Test boundaries
 
@@ -30,7 +30,8 @@ Map checks to VIEW-01/02/03, CMD-01/02, and PORT-01/02/03/04 in the [foundation 
 - Exercise standing and walking aboard during translation, turning, acceleration, and braking. Measure unintended standing drift against the 2 cm over 60 second target; reject ejection and floor penetration independently.
 - Look at the helm without steering, reject travel away from the helm, stop on helm release, and reject an obstructed/unsupported route before reaching it.
 - Complete the route using touch only at 360 by 640 and 640 by 360 CSS pixels. Check controls and text at browser safe areas and with device pixel ratios distinct from CSS sizing.
-- Interrupt held movement/look/travel with pause, focus loss, backgrounding, resize, and rotation. Resume explicitly without stale input or accumulated simulation ticks.
+- Interrupt held movement/look/travel with pause, settings, focus loss, backgrounding, resize, and rotation. Resume explicitly without stale input or accumulated simulation ticks. Exercise cancelled capture, overlapping action owners, context changes and resuming with old fingers still down.
+- Adjust sensitivity, vertical drag inversion, independent camera effects and volume through actual controls. Reset defaults, preserve footing/heading, test menu keyboard access, and prove settings before Begin do not initialize audio.
 - Save and reload in a fresh process/page, confirm settings and poses, and resume stopped. Inject unavailable storage, quota failure, interrupted publication, malformed latest snapshot, and unsupported schema. Preserve the last confirmed valid data.
 
 Browser automation loads the built game through an HTTP server. Use Playwright browser projects for Chromium, Firefox, and WebKit where the execution host supports them; include a compatible macOS/Linux CI job for the WebKit project. Supplement with actual Android Chrome and iPhone Safari. Test a shipping-like build without mutation/debug endpoints as well as a test build with read-only assertions and controlled fault injection.

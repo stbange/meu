@@ -181,14 +181,33 @@ void meu_mesh_lift(const MeuSimulation *s)
         }
     }
 }
-void meu_mesh_hud(const MeuSimulation *s,int width,int height)
+void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection)
 {
     char line[120]; float size=width<700?1.5f:2;
     const float left=22,top=(float)height-35;
     snprintf(line,sizeof(line),"%s - %.0f M",meu_room_name(meu_sim_room(s)),s->y-MEU_EYE_HEIGHT);
     meu_mesh_text(line,left,top,0,size,1,.86f,.91f,.79f);
-    if (s->paused) {
-        meu_mesh_text("ENTER TO EXPLORE",left,top-25,0,size,1,.94f,.76f,.43f);
+    if (s->settings_open) {
+        float w=fminf((float)width-40,680),h=fminf((float)height-40,430);
+        float x=((float)width-w)*.5f,y=((float)height-h)*.5f;
+        float font=fminf(2,(w-40)/330),row=(h-140)/5;
+        quad(x,y,0,w,h,.08f,.14f,.15f);
+        meu_mesh_text("SETTINGS",x+20,y+h-32,0,font,1,.91f,.81f,.54f);
+        for (int i=0;i<MEU_SETTING_COUNT;++i) {
+            float value=meu_settings_value(&s->settings,i);
+            char option[100],setting[25];
+            if (i==MEU_SETTING_SENSITIVITY) snprintf(setting,sizeof(setting),"%.2f X",value);
+            else if (i==MEU_SETTING_VOLUME) snprintf(setting,sizeof(setting),"%.0f PCT",value*100);
+            else snprintf(setting,sizeof(setting),"%s",value?"ON":"OFF");
+            snprintf(option,sizeof(option),"%s  %s",meu_settings_name(i),setting);
+            meu_mesh_text(option,x+20,y+h-75-(float)i*row,0,font,1,
+                i==selection?.98f:.76f,i==selection?.79f:.84f,i==selection?.43f:.73f);
+        }
+        meu_mesh_text("UP DOWN CHOOSE - LEFT RIGHT ADJUST",x+20,y+57,0,font*.7f,1,.73f,.81f,.72f);
+        meu_mesh_text("SPACE TOGGLE - R RESET - F1 CLOSE",x+20,y+34,0,font*.7f,1,.73f,.81f,.72f);
+        meu_mesh_text("SESSION SETTINGS - CLOSE THEN ENTER TO RESUME",x+20,y+14,0,font*.55f,1,.73f,.81f,.72f);
+    } else if (s->paused) {
+        meu_mesh_text("ENTER EXPLORE - F1 SETTINGS",left,top-25,0,size,1,.94f,.76f,.43f);
     } else if (s->travel.helm) {
         snprintf(line,sizeof(line),"HELM - %.1f M/S - HEADING %.0f",s->travel.speed,s->robot.yaw*57.295779513);
         meu_mesh_text(line,left,top-25,0,size,1,.94f,.76f,.43f);

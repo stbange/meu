@@ -1,6 +1,6 @@
 # Mechanized Exploration Unit Implementation Plan
 
-Planning baseline: 3 November 2026. M0a–M0c are implemented; later steps remain pending. The [design draft](game-design-draft.md) describes the experience, [status](status.md) records progress/acceptance, and [M0a evidence](evidence/m0a-foundation.md) records verification and limits.
+Planning baseline: 3 November 2026. M0a–M0d are implemented; later steps remain pending. Physical-phone checks and user acceptance remain pending. The [design draft](game-design-draft.md) describes the experience, [status](status.md) records progress/acceptance, and [M0a evidence](evidence/m0a-foundation.md) records verification and limits.
 
 ## Delivery approach
 
@@ -68,7 +68,7 @@ Implement speed, heading, brake, helm entry/release, and valid parking. Keep vie
 
 Finish the full on-foot and helm contexts in landscape and portrait, including 360 by 640 and 640 by 360 CSS-pixel layouts. Keep readable text and large touch targets; respect display safe areas. Station interaction retains the first-person surroundings. Pointer lock, hover, fullscreen, and a hardware keyboard are optional.
 
-Pause on focus/background loss, viewport rotation during held input, and menu pause. Clear held actions and require explicit resume after interruption. Avoid audio playback before a gesture. Add adjustable sensitivity and independent camera-motion options.
+Pause on focus/background loss, viewport rotation during held input, and menu pause. Clear held actions and require explicit resume after interruption. Avoid audio playback before a gesture. Add adjustable sensitivity and independent camera-motion options. M0d supplies session settings for sensitivity, vertical drag inversion, separate walking bob and machine sway (both off by default), and sound volume. M0e owns their durable restoration.
 
 **Evidence:** VIEW-03 and PORT-02 running-client/browser scenarios, a touch-only route from residence to helm and engineering, resize/rotation tests, and real-phone interaction checks. Tests must include cancellation and context changes rather than only direct invocation of game commands.
 
@@ -183,4 +183,4 @@ Only mark a user acceptance item complete after explicit user feedback. If a pla
 
 ## First implementation handoff
 
-M0a–M0c are implemented; see their evidence records. Next, read the foundation proposal/design/scenarios and implement M0d touch settings and complete lifecycle behavior. Preserve the helm/on-foot contexts, supported travel, connected interior and native/web paths. Keep user acceptance pending until explicitly reviewed.
+M0a–M0d are implemented; see their evidence records. Next, read the foundation proposal/design/scenarios and implement M0e durable local saves, including session settings. Preserve context cleanup, explicit resume, supported travel and the connected native/web interior. Physical Android/iPhone checks and user acceptance remain pending; M0f integrates the device review and complete foundation evidence.

@@ -33,6 +33,17 @@ int main(int argc, char **argv)
         printf("line=%u tick=%" PRIu64 " command=%s", line_number, state.ticks, line);
         if (!strcmp(command, "start")) meu_sim_start(&state);
         else if (!strcmp(command, "motion")) state.motion_fixture = true;
+        else if (!strcmp(command, "settings-open")) meu_sim_open_settings(&state);
+        else if (!strcmp(command, "settings-close")) meu_sim_close_settings(&state);
+        else if (!strcmp(command, "setting")) {
+            int id; float value;
+            if (sscanf(line,"%*s %d %f",&id,&value)!=2 || !meu_sim_setting(&state,id,value)) goto fail;
+        }
+        else if (!strcmp(command, "pointer-look")) {
+            float dx,dy;
+            if (sscanf(line,"%*s %f %f",&dx,&dy)!=2 || !isfinite(dx) || !isfinite(dy)) goto fail;
+            meu_sim_pointer_look(&state,dx,dy);
+        }
         else if (!strcmp(command, "pause")) meu_sim_pause(&state);
         else if (!strcmp(command, "press") || !strcmp(command, "release")) {
             if (sscanf(line, "%*s %31s", key) != 1 || action_id(key) < 0) goto fail;
@@ -50,6 +61,10 @@ int main(int argc, char **argv)
             if (!strcmp(key, "x")) actual = state.x;
             else if (!strcmp(key, "z")) actual = state.z;
             else if (!strcmp(key, "y")) actual = state.y;
+            else if (!strcmp(key, "yaw")) actual = state.yaw;
+            else if (!strcmp(key, "context")) actual = meu_sim_context(&state);
+            else if (!strcmp(key, "sensitivity")) actual = state.settings.sensitivity;
+            else if (!strcmp(key, "volume")) actual = state.settings.volume;
             else if (!strcmp(key, "robot-x")) actual = state.robot.x;
             else if (!strcmp(key, "robot-z")) actual = state.robot.z;
             else if (!strcmp(key, "heading")) actual = state.robot.yaw;

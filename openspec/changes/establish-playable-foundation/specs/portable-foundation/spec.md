@@ -24,6 +24,22 @@ The game SHALL expose every required foundation action without a keyboard, mouse
 - **WHEN** the browser viewport changes orientation or size during a held input
 - **THEN** the layout reflows without clipping required controls, held inputs cancel, and gameplay pauses until explicit resume
 
+#### Scenario: Phone settings and safe areas
+- **WHEN** the player opens settings at either required phone size with display safe-area insets
+- **THEN** every option is reachable through touch, settings remain within the safe area, and the close/reset actions remain visible with targets at least 48 CSS pixels high
+
+#### Scenario: Contextual touch controls
+- **WHEN** the Commander walks from residence to the helm, drives and parks, then visits engineering using only touch
+- **THEN** movement labels and station actions match the active context, required gameplay buttons are at least 48 by 48 CSS pixels, and first-person surroundings remain visible
+
+#### Scenario: Audio before beginning
+- **WHEN** the player opens settings and adjusts or mutes volume before beginning exploration
+- **THEN** no audio device is started until an explicit Begin gesture, and the selected gain applies before playback
+
+#### Scenario: Keyboard access to the same settings
+- **WHEN** a desktop player opens settings with the keyboard
+- **THEN** controls can be reached and adjusted, keyboard focus remains in the open dialog, reset restores defaults, and closing the dialog requires a separate explicit resume to restart play
+
 ### Requirement: PORT-03 Recoverable local saves
 
 The game SHALL preserve basic player and robot state in versioned local saves, retain a previous complete snapshot during publication, and report saved status only after persistent storage confirms completion.

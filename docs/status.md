@@ -4,15 +4,15 @@ Status baseline: 3 November 2026.
 
 ## Repository and planning
 
-The independent project is `stbange/meu`, checked out as the `meu` sibling folder on the existing Windows development computer. It has a fresh Git history, its own instructions, design draft, implementation plan, verification strategy, and proposed OpenSpec foundation.
+The independent project is `stbange/meu`, checked out as the `meu` sibling folder on the existing Windows development computer. It has its own Git history, instructions, design, implementation plan, tests and proposed OpenSpec foundation.
 
-M0a–M0c have been implemented at the user's request. The connected interior now has physical bridge piloting, controlled braking, validated parking and collision/support checks for robot travel. See [M0c evidence](evidence/m0c-piloting.md) for controls, tests and pending acceptance, and the earlier M0a/M0b evidence for the platform and interior foundation.
+M0a–M0d have been implemented at the user's request. The connected 240-metre home has bridge piloting, controlled stops, validated travel, complete touch contexts, session settings and explicit pause/resume. See [M0d evidence](evidence/m0d-controls.md) for verification and pending acceptance; earlier records cover the platform, interior and travel foundation.
 
 ## Gameplay milestones
 
 | Milestone | Implementation | Automated verification | User acceptance |
 | --- | --- | --- | --- |
-| M0 Moving home and platform proof | M0a–M0c complete; M0d–M0f pending | Native/WebAssembly tests, both rendered tours, 21 browser cases, release launches, Windows/Linux CI, Linux sanitizers, OpenSpec and live Pages verification passed; see M0c evidence | Pending |
+| M0 Moving home and platform proof | M0a–M0d complete; M0e–M0f pending | 9 native/headless/debug/optimized WebAssembly groups, all SDL replays, 34 browser cases and 5 release launches passed; clean remote checks pending; see evidence | Pending; physical-phone interaction and performance review pending |
 | M1 Complete authored expedition | Not started | Not run | Pending |
 | M2 Generated small city | Not started | Not run | Pending |
 | M3 Complete exploration arc | Not started | Not run | Pending |
@@ -20,6 +20,6 @@ M0a–M0c have been implemented at the user's request. The connected interior no
 
 ## Next action
 
-The [MEU web prototype](https://stbange.github.io/meu/) is published on GitHub Pages from main after checks pass. All six [M0c publishing workflow jobs](https://github.com/stbange/meu/actions/runs/41672789694) passed, including live checks on all three layouts. Exact source and verification are recorded in [publishing evidence](github-pages.md) and the M0c evidence record. Publication does not change pending user acceptance.
+The [MEU web prototype](https://stbange.github.io/meu/) publishes from main after checks pass. M0d publication is being verified; the current publishing record is in [GitHub Pages evidence](github-pages.md). Publication does not change pending user acceptance.
 
-The next task is M0d complete touch/settings and lifecycle behavior in the [implementation plan](implementation-plan.md). Preserve the on-foot/helm contexts, predictable stops and connected interior while adding settings and completing device coverage. Review M0c separately from acceptance of the full M0 experience. Commands and selected versions are in [build and test](build-and-test.md).
+The next implementation task is M0e durable local saves in the [implementation plan](implementation-plan.md). Persist the basic parked journey and settings, confirm durable browser completion, preserve a previous complete snapshot and test fresh-page restoration and failure recovery. Settings currently last only for the session. Preserve context cleanup, explicit resume, predictable stops and the connected interior. Physical Android/iPhone interaction checks and the M0f scale/comfort review remain pending. Commands and selected versions are in [build and test](build-and-test.md).

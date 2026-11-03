@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--smoke", action="store_true", help="render and capture three native frames")
     parser.add_argument("--tour", action="store_true", help="render a full SDL interior input replay and motion fixture")
     parser.add_argument("--pilot", action="store_true", help="render an SDL bridge-piloting and collision replay")
+    parser.add_argument("--lifecycle", action="store_true", help="render the settings/focus/resize/resume SDL replay")
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--release", action="store_true", help="omit the read-only browser test bridge")
     parser.add_argument("--sanitizers", action="store_true", help="native ASan/UBSan (Linux)")
@@ -74,21 +75,17 @@ def main():
     subprocess.run([str(cmake), "--build", str(build), "--parallel", "4"], cwd=ROOT, env=env, check=True)
     if args.test:
         subprocess.run([str(ctest), "--test-dir", str(build), "--output-on-failure"], cwd=ROOT, env=env, check=True)
-    if args.smoke or args.tour or args.pilot or args.run:
+    if args.smoke or args.tour or args.pilot or args.lifecycle or args.run:
         if args.target != "native":
-            raise SystemExit("--smoke/--tour/--pilot/--run are native-only; serve the web build with tools/serve.py.")
-        command = [str(build / "bin" / ("meu" + suffix))]
-        if args.smoke or args.tour:
-            captures = ROOT / "test-results"
-            captures.mkdir(exist_ok=True)
-            command += ["--tour-test"] if args.tour else ["--smoke-test", "--capture", str(captures / "native-room.bmp")]
-        if args.pilot and not (args.smoke or args.tour or args.run):
-            (ROOT / "test-results").mkdir(exist_ok=True)
-            command += ["--pilot-test"]
-        subprocess.run(command, cwd=ROOT, env=env, check=True, timeout=90 if args.tour or args.pilot else 30 if args.smoke else None)
-        if args.pilot and (args.smoke or args.tour or args.run):
-            subprocess.run([str(build / "bin" / ("meu" + suffix)), "--pilot-test"],
-                           cwd=ROOT, env=env, check=True, timeout=90)
+            raise SystemExit("--smoke/--tour/--pilot/--lifecycle/--run are native-only; serve the web build with tools/serve.py.")
+        captures = ROOT / "test-results"
+        captures.mkdir(exist_ok=True)
+        executable = str(build / "bin" / ("meu" + suffix))
+        if args.smoke:
+            subprocess.run([executable,"--smoke-test","--capture",str(captures/"native-room.bmp")],cwd=ROOT,env=env,check=True,timeout=30)
+        for enabled,flag in ((args.tour,"--tour-test"),(args.pilot,"--pilot-test"),(args.lifecycle,"--lifecycle-test")):
+            if enabled: subprocess.run([executable,flag],cwd=ROOT,env=env,check=True,timeout=90)
+        if args.run: subprocess.run([executable],cwd=ROOT,env=env,check=True)
 
 
 if __name__ == "__main__":

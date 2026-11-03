@@ -1,6 +1,6 @@
 ## Scope
 
-Implement M0 as described in the [game design draft](../../../docs/game-design-draft.md) and [implementation plan](../../../docs/implementation-plan.md). M0a now validates the initial native/web platform path; remaining interior/travel/save behavior is still proposed. See [M0a evidence](../../../docs/evidence/m0a-foundation.md) and [build instructions](../../../docs/build-and-test.md).
+Implement M0 as described in the [game design draft](../../../docs/game-design-draft.md) and [implementation plan](../../../docs/implementation-plan.md). M0a–M0d implement the initial native/web platform, connected interior, supported travel, session settings and lifecycle behavior. Durable saves and integrated real-device acceptance remain pending. See [M0a evidence](../../../docs/evidence/m0a-foundation.md) and [build instructions](../../../docs/build-and-test.md).
 
 ## Platform and state boundaries
 
@@ -29,6 +29,16 @@ Drive release brakes. Brake clears the old throttle; Park clears travel inputs a
 Map mouse/keyboard, touch, and later controllers to actions and contexts: on foot, helm, station panel, and pause. Looking around at the helm must not steer. Release or context loss cancels held actions. Use CSS-pixel-aware touch sizing and safe areas; never infer touch layout from framebuffer resolution alone.
 
 Keep a first-person viewport visible behind station interactions. Test 360 by 640 and 640 by 360 CSS-pixel layouts, resize/rotation, focus loss, and explicit resume. Browser audio begins after the initial user gesture. Touch play requires neither pointer lock nor fullscreen.
+
+### M0d settings and context ownership
+
+The pure C simulation owns the foot, helm, station panel, pause and settings contexts, plus an input generation. Context-changing commands clear held actions and advance that generation. The platform synchronously reports changes to the DOM adapter; it discards old key/pointer owners before releasing capture. Look has a single pointer owner, and multiple sources of the same action are reference-counted by ownership rather than releasing each other. Brake removes prior drive owners while retaining the brake gesture; Park, helm changes, lift destination selection and panels quarantine the previous gestures. New gameplay input requires a fresh press.
+
+Settings contain bounded sensitivity (0.25–3), inverted vertical pointer drag, separate walking bob and machine sway, and bounded volume (0–1). Both camera effects default off. Their small cosmetic offsets affect only the rendered eye, never collision, player-local coordinates, robot heading or footing; there is no camera roll. Preferences remain in memory until M0e implements durable snapshots.
+
+The web uses semantic DOM buttons/ranges/checkboxes over the first-person view, a scrollable settings body, fixed dialog actions and CSS safe-area insets. Native F1 opens the same C settings with keyboard selection. Settings pause, release the helm and request parking; closing the dialog stays paused. Only explicit Begin/Resume initializes or resumes audio, after applying volume.
+
+The browser adapter owns all web keyboard input; SDL keyboard binding is disabled there so HTML range/checkbox/button defaults and menu focus remain functional. Capture cancellation, focus/background/freeze events and CSS viewport changes clear gameplay input. Canvas drawing resolution follows CSS size and a capped pixel ratio. Resume resets the frame timer and simulation accumulator, and focus return never resumes automatically.
 
 ## Basic persistence
 

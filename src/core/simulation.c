@@ -12,20 +12,61 @@ void meu_sim_init(MeuSimulation *s)
     memset(s,0,sizeof(*s)); s->y=196+MEU_EYE_HEIGHT; s->z=-8; s->pitch=-.08f;
     s->lift_y=196; s->lift_door=1; s->paused=true; s->grounded=true;
     s->world=meu_world_default(); meu_travel_init(&s->travel);
+    meu_settings_default(&s->settings); s->input_epoch=1;
     s->quarters_light=true; s->inspection_light=true; s->visited=1; previous(s);
 }
+MeuContext meu_sim_context(const MeuSimulation *s)
+{
+    if (s->settings_open) return MEU_CONTEXT_SETTINGS;
+    if (s->paused) return MEU_CONTEXT_PAUSED;
+    if (s->info_open) return MEU_CONTEXT_PANEL;
+    return s->travel.helm?MEU_CONTEXT_HELM:MEU_CONTEXT_FOOT;
+}
+void meu_sim_clear_input(MeuSimulation *s) { s->held=0; ++s->input_epoch; }
 void meu_sim_start(MeuSimulation *s)
 {
+    if (s->settings_open) return;
+    meu_sim_clear_input(s);
     s->started=true; s->paused=false; s->held=0; s->accumulator=0; previous(s);
 }
 void meu_sim_release_helm(MeuSimulation *s)
 {
-    s->travel.helm=false; s->held=0; meu_travel_stop(&s->travel);
+    s->travel.helm=false; meu_sim_clear_input(s); meu_travel_stop(&s->travel);
 }
 void meu_sim_pause(MeuSimulation *s)
 {
     meu_sim_release_helm(s);
-    s->paused=true; s->held=0; s->accumulator=0; previous(s);
+    s->paused=true; s->info_open=false; s->held=0; s->accumulator=0; previous(s);
+}
+void meu_sim_open_settings(MeuSimulation *s)
+{
+    meu_sim_pause(s); s->settings_open=true; meu_sim_clear_input(s);
+}
+void meu_sim_close_settings(MeuSimulation *s)
+{
+    s->settings_open=false; meu_sim_clear_input(s);
+}
+bool meu_sim_setting(MeuSimulation *s,int id,float value)
+{
+    return s->settings_open && meu_settings_set(&s->settings,id,value);
+}
+void meu_sim_pointer_look(MeuSimulation *s,float dx,float dy)
+{
+    if (!isfinite(dx) || !isfinite(dy)) return;
+    float scale=.004f*s->settings.sensitivity;
+    meu_sim_look(s,dx*scale,dy*scale*(s->settings.invert_y?1:-1));
+}
+MeuCamera meu_sim_camera(const MeuSimulation *s)
+{
+    MeuCamera eye={s->x,s->y,s->z,s->yaw,s->pitch};
+    if (s->settings.walk_bob) eye.y+=.025f*sinf(s->walk_phase)*s->walk_amount;
+    if (s->settings.machine_sway) {
+        float amount=fminf(1,(float)(fabs(s->travel.speed)/MEU_MAX_SPEED+fabs(s->travel.turn_rate)/MEU_MAX_TURN*.3));
+        float phase=(float)((double)s->ticks*MEU_TICK_SECONDS);
+        eye.x+=sinf(phase*1.7f)*.006f*amount;
+        eye.y+=sinf(phase*2.3f)*.012f*amount;
+    }
+    return eye;
 }
 bool meu_sim_on_lift(const MeuSimulation *s)
 {
@@ -48,7 +89,7 @@ bool meu_sim_lift_ready(const MeuSimulation *s)
 bool meu_sim_request_lift(MeuSimulation *s,int deck)
 {
     if (s->travel.helm || deck<0 || deck>2 || !meu_sim_lift_ready(s)) return false;
-    s->lift_target=deck; return true;
+    s->lift_target=deck; meu_sim_clear_input(s); return true;
 }
 MeuUse meu_sim_use_target(const MeuSimulation *s)
 {
@@ -75,10 +116,14 @@ bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
 {
     if (action<0 || action>=MEU_ACTION_COUNT) return false;
     if (pressed && (!s->started || s->paused)) return false;
+    if (s->info_open && action!=MEU_INTERACT) {
+        if (!pressed) s->held&=~(UINT32_C(1)<<action);
+        return !pressed;
+    }
     if (action==MEU_PARK) {
         if (!pressed) return true;
         if (!s->travel.helm) return false;
-        s->held=0; meu_travel_stop(&s->travel); return true;
+        meu_sim_clear_input(s); meu_travel_stop(&s->travel); return true;
     }
     if (action==MEU_BRAKE) {
         if (pressed && !s->travel.helm) return false;
@@ -93,9 +138,9 @@ bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
         switch (meu_sim_use_target(s)) {
             case MEU_USE_HELM:
                 if (s->travel.helm) meu_sim_release_helm(s);
-                else { s->travel.helm=true; s->held=0; s->info_open=false; }
+                else { s->travel.helm=true; meu_sim_clear_input(s); s->info_open=false; }
                 break;
-            case MEU_USE_PLACARD: s->info_open=!s->info_open; break;
+            case MEU_USE_PLACARD: s->info_open=!s->info_open; meu_sim_clear_input(s); break;
             case MEU_USE_LAMP: s->quarters_light=!s->quarters_light; break;
             case MEU_USE_INSPECTION: s->inspection_light=!s->inspection_light; break;
             case MEU_USE_CALL:
@@ -118,7 +163,7 @@ bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
 }
 void meu_sim_look(MeuSimulation *s,float yaw,float pitch)
 {
-    if (s->paused || !isfinite(yaw) || !isfinite(pitch)) return;
+    if (s->paused || s->info_open || !isfinite(yaw) || !isfinite(pitch)) return;
     s->yaw=remainderf(s->yaw+clampf(yaw,-6.2831853f,6.2831853f),6.2831853f);
     s->pitch=clampf(s->pitch+pitch,-1.4f,1.4f);
 }
@@ -175,10 +220,14 @@ static void tick(MeuSimulation *s)
     float right=(float)(held(s,MEU_RIGHT)-held(s,MEU_LEFT));
     float length=sqrtf(forward*forward+right*right);
     if (length>1 && !s->travel.helm) { forward/=length; right/=length; }
-    meu_sim_look(s,(float)(held(s,MEU_LOOK_RIGHT)-held(s,MEU_LOOK_LEFT))*1.5f*dt,
-        (float)(held(s,MEU_LOOK_UP)-held(s,MEU_LOOK_DOWN))*1.5f*dt);
-    if (!s->travel.helm) meu_sim_move(s,(sinf(s->yaw)*forward+cosf(s->yaw)*right)*MEU_WALK_SPEED*dt,
+    meu_sim_look(s,(float)(held(s,MEU_LOOK_RIGHT)-held(s,MEU_LOOK_LEFT))*1.5f*dt*s->settings.sensitivity,
+        (float)(held(s,MEU_LOOK_UP)-held(s,MEU_LOOK_DOWN))*1.5f*dt*s->settings.sensitivity);
+    float old_x=s->x,old_z=s->z;
+    if (!s->travel.helm && !s->info_open) meu_sim_move(s,(sinf(s->yaw)*forward+cosf(s->yaw)*right)*MEU_WALK_SPEED*dt,
         (-cosf(s->yaw)*forward+sinf(s->yaw)*right)*MEU_WALK_SPEED*dt);
+    float distance=hypotf(s->x-old_x,s->z-old_z);
+    s->walk_phase=remainderf(s->walk_phase+distance*5.5f,6.2831853f);
+    s->walk_amount=clampf(s->walk_amount+(distance>.0001f?1:-1)*dt*8,0,1);
     if (!s->motion_fixture)
         meu_travel_tick(&s->travel,&s->robot,s->world,(int)forward,(int)right,held(s,MEU_BRAKE)!=0);
     ++s->ticks; s->visited|=UINT32_C(1)<<meu_sim_room(s);

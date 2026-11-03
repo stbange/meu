@@ -1,6 +1,6 @@
 # Build and Test MEU
 
-M0c adds bridge piloting, controlled braking, parking and swept travel/support validation to the first-person bridge at 196 m, living quarters at 156 m, engineering at 112 m, and a service lift inside a 240 m robot. Approach the central console and use E or the touch prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases control. Looking is independent of steering. Releasing drive brakes; releasing the helm requests a parked stop. The exterior is an authored scale fixture; seeded city generation, repair gameplay and saves come later.
+M0d adds complete touch contexts, session settings and interruption handling to the connected 240 m home and its supported bridge travel. The bridge is at 196 m, living quarters at 156 m, engineering at 112 m, with a service lift connecting them. Approach the central bridge console and use E or the touch prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases control. Looking is independent of steering. Releasing drive brakes; releasing the helm requests a parked stop. The exterior is an authored scale fixture; seeded city generation, repair gameplay and saves come later.
 
 ## Reference versions
 
@@ -15,7 +15,7 @@ M0c adds bridge piloting, controlled braking, parking and swept travel/support v
 | SDL | 3.4.18, built from checksum-pinned source |
 | Emscripten | 6.0.10 |
 | Emscripten SDK manifest | d7b4130688bfa348392b921ab04015aa15c4f154 |
-| Browser automation | Playwright 1.64.1 with its matching Chromium |
+| Browser automation | Playwright 1.64.1 with its matching Chromium and WebKit |
 | CI Node | 24.18.0 |
 | OpenSpec | 1.14.3 |
 
@@ -33,15 +33,15 @@ npm run bootstrap
 npm run dev:native
 ~~~
 
-Enter or click begins exploration and sound. WASD walks; mouse drag or arrows look; E uses a nearby object; Escape pauses; Enter resumes. The lift is behind the starting position. Walk backward into its centre, press 1 (bridge), 2 (quarters), or 3 (engineering), wait for the gates, then walk forward out. Furniture, windows and walls block movement. Engineering's central ramp leads to the reactor catwalk.
+Enter or click begins exploration and sound. WASD walks; mouse drag or arrows look; E uses a nearby object; Escape pauses; Enter resumes. F1 opens/closes Settings: Up/Down selects, Left/Right adjusts, Space toggles, R resets. Closing settings leaves the game paused; Enter explicitly resumes. Sensitivity, vertical drag inversion, walking bob, machine sway and volume apply immediately for this session. Both camera effects default off; saved settings arrive in M0e. The lift is behind the starting position. Walk backward into its centre, press 1 (bridge), 2 (quarters), or 3 (engineering), wait for the gates, then walk forward out. Furniture, windows and walls block movement. Engineering's central ramp leads to the reactor catwalk.
 
 ~~~text
 npm run test:native
 npm run smoke:native
-python tools/build.py native --test --tour --pilot
+python tools/build.py native --test --tour --pilot --lifecycle
 ~~~
 
-The smoke command creates a real OpenGL context, compiles shaders, renders three frames, checks framebuffer variation, writes `test-results/native-room.bmp`, and exits nonzero on failure. It needs a working OpenGL 3.3 driver and windowing session. The tour injects SDL keyboard events through the production input handler, stands for 60 simulated seconds, walks all decks, rides the lift and climbs the ramp while a motion fixture translates, turns, accelerates and brakes the robot. It captures four first-person views and rejects standing drift beyond 2 cm, loss of support or an incomplete route. The separate piloting tour uses the actual helm: it reaches full speed, looks without steering, turns toward a visible buttress and checks a controlled safety stop while throttle remains held. Its captures are named native-pilot-helm/travel/blocked.bmp. The fixture drives the normal robot pose input; player coordinates remain robot-local. Windows CI compiles and runs core tests; Linux CI additionally renders the tour with Mesa/Xvfb.
+The smoke command creates a real OpenGL context, compiles shaders, renders three frames, checks framebuffer variation, writes `test-results/native-room.bmp`, and exits nonzero on failure. It needs a working OpenGL 3.3 driver and windowing session. The tour injects SDL keyboard events through the production input handler, stands for 60 simulated seconds, walks all decks, rides the lift and climbs the ramp while a motion fixture translates, turns, accelerates and brakes the robot. It captures four first-person views and rejects standing drift beyond 2 cm, loss of support or an incomplete route. The separate piloting tour uses the actual helm: it reaches full speed, looks without steering, turns toward a visible buttress and checks a controlled safety stop while throttle remains held. Its captures are named native-pilot-helm/travel/blocked.bmp. The lifecycle replay edits settings before audio starts, pauses held input through settings/focus loss/resize, checks frozen time, explicit resume and fresh look input, and captures native-settings/resumed.bmp. The fixture drives the normal robot pose input; player coordinates remain robot-local. Windows CI compiles and runs core tests; Linux CI additionally renders the tour with Mesa/Xvfb.
 
 ## Web and phone layout
 
@@ -53,14 +53,14 @@ npm run serve:web
 
 Open `http://127.0.0.1:4174` in a WebGL 2 browser. Select Begin exploration. Use the movement buttons and drag the look pad, or use desktop controls. Walk backward into the lift and tap a destination. Contextual buttons provide the same actions as E. Portrait and landscape work without pointer lock or fullscreen. Focus loss, backgrounding, or resizing pauses and clears held input; resume explicitly.
 
-The server binds to this computer by default. To test a physical phone on the same network, use `npm run serve:web -- --host 0.0.0.0` and open this computer's LAN address on port 4174. Actual phone performance and Safari compatibility remain separate checks; viewport emulation does not establish them.
+The server binds to this computer by default. To test a physical phone on the same network, use `npm run serve:web -- --host 0.0.0.0` and open this computer's LAN address on port 4174. Physical Android/iPhone interaction, performance and Safari compatibility remain pending; Chromium/WebKit viewport tests do not establish them.
 
 ~~~text
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run test:web
 ~~~
 
-The suite starts and stops its own HTTP server; close a manually running MEU server on port 4174 first. It loads the real WebAssembly build and checks rendering, audio gating, keyboard movement, browser touch events, pause, input cleanup, resize, and responsive controls. Keyboard/touch piloting scenarios check look/steer independence, parking while moving, helm release, pause/resume and automatic stops at structures and the causeway edge. A full keyboard/touch bridge–quarters–engineering–bridge route also checks lift gates, mid-ride pause, room heights and the engineering ramp. Reports include build/scene identity, simulation ticks, input events, screenshots, and failure traces. Read-only diagnostics are enabled by the development build; input tests follow actual keyboard/pointer/touch paths.
+The suite starts and stops its own HTTP server; close a manually running MEU server on port 4174 first. It loads the real WebAssembly build and checks rendering, audio gating, keyboard movement, browser touch events, pause, input cleanup, resize, and responsive controls. Keyboard/touch piloting scenarios check look/steer independence, parking while moving, helm release, pause/resume and automatic stops at structures and the causeway edge. A continuous keyboard/touch route visits quarters, returns to the bridge helm to drive and park, visits engineering, and returns to the bridge. It also checks lift gates, mid-ride pause, room heights and the engineering ramp. Settings checks cover every option, audio gain, no pre-gesture audio, reset, keyboard access and safe-area bounds. Multi-finger tests cover simultaneous walk/look, cancellation, capture loss, duplicate owners, context changes and resume while old fingers stay down. Browser-driven minimization and freezing verify focus interruption and no catch-up after explicit resume. WebKit phone-layout tests render the real WebGL client and operate settings/start/pause/resume through touch; they are engine tests rather than physical iPhone evidence. Reports include build/scene identity, simulation ticks, input events, screenshots, and failure traces. Read-only diagnostics are enabled by the development build; input tests follow actual keyboard/pointer/touch paths.
 
 For an optimized build without the test bridge:
 
@@ -77,7 +77,7 @@ The automated reference is the official `gcc:14.2.0-bookworm` container. Install
 ~~~text
 python3 tools/bootstrap.py
 python3 tools/build.py native --test
-xvfb-run -a python3 tools/build.py native --test --tour
+xvfb-run -a python3 tools/build.py native --test --tour --pilot --lifecycle
 python3 tools/build.py core --test --sanitizers
 ~~~
 
@@ -99,7 +99,7 @@ cmake --build build/manual-core
 ctest --test-dir build/manual-core --output-on-failure
 ~~~
 
-The helper accepts `--build-dir` for an independent generated build directory. Never share a generated tree between native and Emscripten compilers. The `meu_core_tests` target checks simulation, timing, and camera math. The `meu_interior_tests` target checks collision, lift interlocks, remote calls, interactions, ramp continuity, transform inversion and a 60-second standing-motion fixture. The `meu_scenarios` target reads a replay fixture through the production command/update loop. The new meu_travel_tests target checks stopping boundaries, reverse travel, complete foot support, swept turning clearance, overhead/arm clearance and context ownership. CTest runs all seven checks natively and, for web builds, as WebAssembly under Node.
+The helper accepts `--build-dir` for an independent generated build directory. Never share a generated tree between native and Emscripten compilers. The `meu_core_tests` target checks simulation, timing, and camera math. The `meu_interior_tests` target checks collision, lift interlocks, remote calls, interactions, ramp continuity, transform inversion and a 60-second standing-motion fixture. The `meu_scenarios` target reads a replay fixture through the production command/update loop. The new meu_travel_tests target checks stopping boundaries, reverse travel, complete foot support, swept turning clearance, overhead/arm clearance and context ownership. The meu_settings_tests target checks validation, settings/panel contexts, camera isolation and pause/resume through moving-helm settings. A deterministic settings fixture exercises the production commands. CTest runs all nine groups natively and, for web builds, as WebAssembly under Node.
 
 The Windows helper identifies the compiler from object/archive metadata rather than a disposable executable. Building and running the actual tests independently verifies linking/runtime behavior.
 
@@ -107,6 +107,6 @@ CI builds carry the full source commit from GITHUB_SHA, verified by the native s
 
 ## Evidence and limits
 
-See [M0c evidence](evidence/m0c-piloting.md) for results and captures. CI artifacts contain binaries, the web distribution, reports, and images. The optimized runtime is published from main after checks pass; [GitHub Pages publishing](github-pages.md) describes the public package and live verification. The prototype is not a user-accepted release.
+See [M0d evidence](evidence/m0d-controls.md) for results and captures. CI artifacts contain binaries, the web distribution, reports, and images. The optimized runtime is published from main after checks pass; [GitHub Pages publishing](github-pages.md) describes the public package and live verification. The prototype is not a user-accepted release.
 
-M0d–M0f remain open. M0c uses authored flat support and conservative hull bands. It supplies continuous supported footprint travel; free physical balancing and generated terrain belong to later work. Saves, full touch settings, production graphics-context recovery, real-phone performance and the supported-browser matrix remain pending.
+M0e–M0f remain open. M0d implementation and automated checks are recorded separately from pending physical-phone checks and user acceptance. M0c uses authored flat support and conservative hull bands. It supplies continuous supported footprint travel; free physical balancing and generated terrain belong to later work. Saves and persistent settings, production graphics-context recovery, real-phone performance and the final supported-browser matrix remain pending.

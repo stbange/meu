@@ -17,9 +17,11 @@ module.exports = defineConfig({
     launchOptions: { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }
   },
   projects: [
-    { name: 'desktop', use: { viewport: { width: 1100, height: 700 } } },
-    { name: 'phone-portrait', use: { viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true } },
-    { name: 'phone-landscape', use: { viewport: { width: 640, height: 360 }, isMobile: true, hasTouch: true } }
+    { name: 'desktop', testIgnore: '**/webkit.spec.cjs', use: { viewport: { width: 1100, height: 700 } } },
+    { name: 'phone-portrait', testIgnore: '**/webkit.spec.cjs', use: { viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true } },
+    { name: 'phone-landscape', testIgnore: '**/webkit.spec.cjs', use: { viewport: { width: 640, height: 360 }, isMobile: true, hasTouch: true } },
+    { name: 'webkit-portrait', testMatch: '**/webkit.spec.cjs', use: { browserName: 'webkit', launchOptions: { args: [] }, viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true } },
+    { name: 'webkit-landscape', testMatch: '**/webkit.spec.cjs', use: { browserName: 'webkit', launchOptions: { args: [] }, viewport: { width: 640, height: 360 }, isMobile: true, hasTouch: true } }
   ],
   webServer: deployedURL ? undefined : {
     command: (process.platform === 'win32' ? 'python' : 'python3') + ' tools/serve.py' +
