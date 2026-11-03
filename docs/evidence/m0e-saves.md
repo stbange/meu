@@ -16,7 +16,7 @@ The journey dialog has touch targets of at least 48 CSS pixels, a scrollable bod
 
 ## Build and scene identity
 
-Working branch: `codex/m0e-durable-saves`, based on `3845a1a8ad988fa4390211de4a169c8c7e10e2c4`. Local captures/reports identify the implementation working tree as `0.0.5-3845a1a-dirty`, scene `m0e-saves-v1`, runtime content version 5, save schema 1 and authored-world compatibility ID 1. Clean published source/CI identity will be recorded after publication.
+Working branch: `codex/m0e-durable-saves`, based on `3845a1a8ad988fa4390211de4a169c8c7e10e2c4`. Local captures/reports identify the implementation working tree as `0.0.5-3845a1a-dirty`, scene `m0e-saves-v1`, runtime content version 5, save schema 1 and authored-world compatibility ID 1. Implementation source: [b3733881d3c7886c4160f51e4629983d6ca22f93](https://github.com/stbange/meu/commit/b3733881d3c7886c4160f51e4629983d6ca22f93). That exact source is published and verified. Later documentation-only commits do not alter the runtime revision.
 
 Tools remain C17, CMake 3.31.6, Ninja 1.12.1, GCC 14.2.0 (w64devkit 2.1.0 locally), SDL 3.4.18, Emscripten 6.0.10 from manifest `d7b4130688bfa348392b921ab04015aa15c4f154`, Node 24.18.0, Python 3.14.3, Playwright 1.64.1, Chromium 156, WebKit 27.2/revision 2370 and OpenSpec 1.14.3. Native Windows rendering uses OpenGL 3.3 on AMD Radeon(TM) Graphics, driver `22.20.14.220712`; browser checks use software graphics. These are verification configurations, not phone performance measurements.
 
@@ -29,11 +29,12 @@ Tools remain C17, CMake 3.31.6, Ninja 1.12.1, GCC 14.2.0 (w64devkit 2.1.0 locall
 | Native file journal | 50 Windows assertions passed; injected write/flush/replace/interruption, missing/corrupt latest, recovery, source preservation, unsupported import and UTF-8 path coverage |
 | Rendered native replays | Interior, piloting, lifecycle and separate persistence write/read/export/import processes passed; personal save paths are not used |
 | Debug WebAssembly CTest | All 11 groups passed |
-| Full development browser regression | 49 cases passed, 6 platform-inapplicable variants skipped; includes both touch-only engineering save/reload routes |
+| Full development browser regression | 49 cases passed locally and in clean CI; final CI skips 6 platform-inapplicable and 3 shipping-only variants; both touch-only engineering save/reload routes passed |
 | Final save/control parser and focus checks | 26 cases passed, 3 platform-inapplicable variants skipped; oversized damaged data and pending-operation keyboard focus included |
 | Optimized WebAssembly and shipping saved journeys | All 11 compiled groups and all 10 Chromium/WebKit launch/save/export/import cases passed; diagnostics absent |
 | Strict OpenSpec validation | Passed |
-| Clean Windows/Linux CI, sanitizers and Pages | Pending publication |
+| Clean Windows/Linux CI and sanitizers | Both passed all 12 groups; Linux passed all rendered replays and all 12 ASan/UBSan groups |
+| Remote web and Pages | All 11 debug/release WebAssembly groups, 49 browser cases, 10 optimized cases, deployment and all 10 live launch/save cases passed |
 
 Commands from a prepared MEU checkout:
 
@@ -68,7 +69,11 @@ Reports include source/scene/tick identity, input traces, resulting C state, vie
 
 ## Publication and pending review
 
-M0e publication is pending verification. The prototype remains at [play MEU](https://stbange.github.io/meu/); the exact runtime source and workflow will be recorded after deployment and live checks pass.
+[Play the published M0e build](https://stbange.github.io/meu/). Runtime source: [b3733881d3c7886c4160f51e4629983d6ca22f93](https://github.com/stbange/meu/commit/b3733881d3c7886c4160f51e4629983d6ca22f93). All six jobs in the [main publishing workflow](https://github.com/stbange/meu/actions/runs/41703685599) passed: specifications, Windows, Linux, web, deployment and live verification. The [working-branch run](https://github.com/stbange/meu/actions/runs/41703678136) independently passed all four applicable jobs; publishing is skipped on that branch.
+
+Windows passed all 12 native groups. Linux GCC 14.2.0 in the pinned Bookworm container passed all 12 native groups, all rendered interior/piloting/lifecycle and separate-process persistence checks with Mesa 22.3.6/llvmpipe, and all 12 AddressSanitizer/UndefinedBehaviorSanitizer groups. The clean web job passed all 11 debug and all 11 optimized WebAssembly groups, 49 browser cases (six platform-inapplicable and three shipping-only debug variants skipped), and ten optimized launch/save/reload/export/import cases. All ten corresponding public-page cases passed with diagnostics absent in Chromium desktop/portrait/landscape and WebKit portrait/landscape.
+
+An independent [public HTTP report](m0e/public-http.json) confirmed the exact source revision, journey menu, storage script, bounded host-to-Wasm data validation, strict transaction publication and an `application/wasm` response with a valid header (819,263 bytes). The public saved-journey tests used ordinary controls, fresh pages, downloads and file selection. [Publishing details](../github-pages.md) describe the package and source checks. Documentation-only follow-up commits do not rebuild this runtime.
 
 Physical Android Chrome/iPhone Safari interaction, actual browser/OS interruption and file-picker behavior, reference-machine performance, scale/comfort and explicit user acceptance remain pending. Engine/viewport automation and software rendering do not establish those results. M0f integrates the full foundation evidence and selected reference-device review; the OpenSpec proposal remains open. No migration from an earlier save schema exists because this is the first save format. Settings are saved with an explicit journey, not automatically when edited.
 

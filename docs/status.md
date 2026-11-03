@@ -12,7 +12,7 @@ M0a–M0e have been implemented at the user's request. The connected 240-metre h
 
 | Milestone | Implementation | Automated verification | User acceptance |
 | --- | --- | --- | --- |
-| M0 Moving home and platform proof | M0a–M0e complete; M0f pending | 12 native/headless and 11 debug/optimized WebAssembly groups, all native replays, 49 browser cases, final parser/focus checks and 10 shipping cases passed; clean remote checks pending; see evidence | Pending; physical-phone interaction and performance review pending |
+| M0 Moving home and platform proof | M0a–M0e complete; M0f pending | 12 native/headless groups, Linux sanitizers and rendered replays, 11 debug/optimized WebAssembly groups, 49 browser cases, and 10 optimized/live cases passed; clean Windows/Linux CI green; see evidence | Pending; physical-phone interaction and performance review pending |
 | M1 Complete authored expedition | Not started | Not run | Pending |
 | M2 Generated small city | Not started | Not run | Pending |
 | M3 Complete exploration arc | Not started | Not run | Pending |
@@ -20,6 +20,6 @@ M0a–M0e have been implemented at the user's request. The connected 240-metre h
 
 ## Next action
 
-The [MEU web prototype](https://stbange.github.io/meu/) publishes from main after checks pass. M0e publication is being verified; the current published-source record is in [GitHub Pages evidence](github-pages.md). Publication does not change pending user acceptance.
+The [MEU web prototype](https://stbange.github.io/meu/) publishes from main after checks pass. All six [M0e publishing jobs](https://github.com/stbange/meu/actions/runs/41703685599) passed. The exact source, runtime and live save verification are in [M0e evidence](evidence/m0e-saves.md) and [GitHub Pages evidence](github-pages.md). Publication does not change pending user acceptance.
 
 Next is M0f integrated verification and focused playtest in the [implementation plan](implementation-plan.md): select actual Windows/Linux and Android/iPhone reference devices, measure the defined performance budgets, review scale/comfort/discoverability and record explicit user feedback. Preserve validated save publication, source recovery, context cleanup and supported travel. Settings are kept when included in an explicit saved journey. Commands are in [build and test](build-and-test.md); [save format and recovery](save-format.md) records storage behavior and compatibility.

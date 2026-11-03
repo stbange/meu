@@ -1,0 +1,14 @@
+{
+  "url": "https://stbange.github.io/meu/",
+  "revision": "b3733881d3c7886c4160f51e4629983d6ca22f93",
+  "checkedAt": "2026-11-03T21:47:27.379622+00:00",
+  "wasmBytes": 819263,
+  "wasmMime": "application/wasm",
+  "checks": [
+    "exact published source revision",
+    "journey menu and storage script present",
+    "bounded host-to-Wasm validation and strict transaction publication present",
+    "valid WebAssembly MIME and header"
+  ],
+  "result": "PASS"
+}
