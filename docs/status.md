@@ -20,4 +20,6 @@ M0a has been implemented at the user's request. The test room runs on Windows an
 
 ## Next action
 
+The [M0a web prototype](https://stbange.github.io/meu/) is published on GitHub Pages from main. All six [publishing workflow jobs](https://github.com/stbange/meu/actions/runs/41635105241) passed, including live desktop/phone launch checks. See [publishing evidence](github-pages.md). Publication does not change pending user acceptance.
+
 The next task is M0b in the [implementation plan](implementation-plan.md). Review the M0a prototype separately from acceptance of the full M0 experience. Commands and selected versions are in [build and test](build-and-test.md).

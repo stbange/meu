@@ -1,6 +1,6 @@
 # MEU on GitHub Pages
 
-Publication target: [the web prototype](https://stbange.github.io/meu/). The initial deployment is being configured; verification is recorded here after it completes.
+Live prototype: [play Mechanized Exploration Unit](https://stbange.github.io/meu/).
 
 ## Build and publish
 
@@ -25,3 +25,9 @@ npm run test:web -- --grep "renders the C/OpenGL room"
 ~~~
 
 The base URL must include its final slash. The tests retain that path and do not start a local server when MEU_BASE_URL is supplied.
+
+## Verified publication
+
+Published on 3 November 2026 from [source commit d47f029](https://github.com/stbange/meu/commit/d47f029). The [publishing workflow](https://github.com/stbange/meu/actions/runs/41635105241) passed all six jobs: specifications, Windows, Linux, web, deployment, and live verification.
+
+The public site passed all three launch checks: desktop, portrait phone, and landscape phone. An independent HTTP check confirmed the MEU page, the WebAssembly response with application/wasm content type, and the exact published source revision. Physical-phone performance and gameplay acceptance remain pending.
