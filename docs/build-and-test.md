@@ -102,6 +102,8 @@ The helper accepts `--build-dir` for an independent generated build directory. N
 
 The Windows helper identifies the compiler from object/archive metadata rather than a disposable executable. Building and running the actual tests independently verifies linking/runtime behavior.
 
+CI builds carry the full source commit from GITHUB_SHA, verified by the native scenario and browser checks. Other checkouts use Git's revision/dirty marker. A source archive can explicitly supply CMake's MEU_REVISION value when no Git metadata is available.
+
 ## Evidence and limits
 
 See [M0a evidence](evidence/m0a-foundation.md) for results and captures. CI artifacts contain binaries, the web distribution, reports, and images. They are development artifacts, not an accepted release; CI does not publish a website.

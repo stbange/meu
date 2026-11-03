@@ -15,8 +15,15 @@ option(MEU_BUILD_CLIENT "Build the SDL/OpenGL client" ON)
 option(MEU_DIAGNOSTICS "Expose read-only browser diagnostics for automated tests" OFF)
 option(MEU_SANITIZERS "Enable address/undefined sanitizers for native core tests" OFF)
 include(CTest)
-execute_process(COMMAND git describe --always --dirty WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  OUTPUT_VARIABLE MEU_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+if(NOT MEU_REVISION)
+  if(DEFINED ENV{GITHUB_SHA} AND "$ENV{GITHUB_SHA}" MATCHES "^[0-9a-fA-F]+$")
+    # Container checkouts may not be visible to git under the build user's HOME.
+    set(MEU_REVISION "$ENV{GITHUB_SHA}")
+  else()
+    execute_process(COMMAND git describe --always --dirty WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+      OUTPUT_VARIABLE MEU_REVISION OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+  endif()
+endif()
 if(NOT MEU_REVISION)
   set(MEU_REVISION "source")
 endif()

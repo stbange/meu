@@ -16,6 +16,11 @@ int main(int argc, char **argv)
     char line[160], command[32], key[32];
     unsigned line_number = 0;
     MeuSimulation state;
+    const char *ci_revision = getenv("GITHUB_SHA");
+    if (ci_revision && ci_revision[0] && !strstr(MEU_BUILD_ID, ci_revision)) {
+        fprintf(stderr, "FAIL revision provenance: expected=%s build=%s\n", ci_revision, MEU_BUILD_ID);
+        return EXIT_FAILURE;
+    }
     if (argc != 2) { fprintf(stderr, "Usage: meu_scenarios <fixture>\n"); return 2; }
     FILE *fixture = fopen(argv[1], "r");
     if (!fixture) { perror(argv[1]); return 2; }
