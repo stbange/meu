@@ -12,7 +12,7 @@ M0a–M0c have been implemented at the user's request. The connected interior no
 
 | Milestone | Implementation | Automated verification | User acceptance |
 | --- | --- | --- | --- |
-| M0 Moving home and platform proof | M0a–M0c complete; M0d–M0f pending | Native/WebAssembly travel tests and rendered tours pass; final browser, CI and publication records are in M0c evidence | Pending |
+| M0 Moving home and platform proof | M0a–M0c complete; M0d–M0f pending | Native/WebAssembly tests, both rendered tours, 21 browser cases, release launches, Windows/Linux CI, Linux sanitizers, OpenSpec and live Pages verification passed; see M0c evidence | Pending |
 | M1 Complete authored expedition | Not started | Not run | Pending |
 | M2 Generated small city | Not started | Not run | Pending |
 | M3 Complete exploration arc | Not started | Not run | Pending |
@@ -20,6 +20,6 @@ M0a–M0c have been implemented at the user's request. The connected interior no
 
 ## Next action
 
-The [MEU web prototype](https://stbange.github.io/meu/) is published on GitHub Pages from main after checks pass. M0c uses the existing pipeline; exact source and verification are recorded in [publishing evidence](github-pages.md) and the M0c evidence record. Publication does not change pending user acceptance.
+The [MEU web prototype](https://stbange.github.io/meu/) is published on GitHub Pages from main after checks pass. All six [M0c publishing workflow jobs](https://github.com/stbange/meu/actions/runs/41672789694) passed, including live checks on all three layouts. Exact source and verification are recorded in [publishing evidence](github-pages.md) and the M0c evidence record. Publication does not change pending user acceptance.
 
 The next task is M0d complete touch/settings and lifecycle behavior in the [implementation plan](implementation-plan.md). Preserve the on-foot/helm contexts, predictable stops and connected interior while adding settings and completing device coverage. Review M0c separately from acceptance of the full M0 experience. Commands and selected versions are in [build and test](build-and-test.md).

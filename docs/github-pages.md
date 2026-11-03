@@ -14,7 +14,9 @@ After deployment, a live verification job checks revision.txt against the source
 
 ## Play and update
 
-Select Begin exploration. M0b includes the bridge, living quarters, engineering hall and connecting lift inside a 240 m robot. Use WASD and mouse drag/arrows, or touch movement buttons and the look pad. Walk backward from the starting position into the lift's centre, select 1/2/3 or tap a deck, then walk forward out when it stops. E or a contextual touch button uses nearby home objects. The bridge frames the robot's hull and a monumental alien city. Steering and saves remain later steps.
+Select Begin exploration. M0c adds physical bridge piloting to the connected 240 m home. Approach the central console and use E or the touch prompt. At the helm W/S drives, A/D turns, Space brakes, P parks and E releases control. Mouse/arrow/touch look does not steer. Releasing drive brakes; leaving the helm requests a parked stop. Touch controls adapt to drive/turn with Brake, Park and Release helm buttons. The bridge reports speed, heading, braking distance and any structure/support rejection.
+
+On foot, WASD or touch buttons walk through the bridge, quarters, engineering hall and lift. The lift is behind the start position: walk into its centre, choose 1/2/3 or tap a deck, then walk forward out after arrival. E or a contextual button uses nearby home objects. Saves remain M0e.
 
 Future source changes pushed to main rebuild, test, and redeploy automatically. Documentation-only commits do not rebuild the runtime. Use the repository's Pages settings with GitHub Actions as the publishing source.
 
@@ -28,8 +30,8 @@ The base URL must include its final slash. The tests retain that path and do not
 
 ## Verified publication
 
-Published on 3 November 2026 from [M0b source commit 1b32a36](https://github.com/stbange/meu/commit/1b32a367f075ddfd25be7020edd759eb84d8fb29). The [publishing workflow](https://github.com/stbange/meu/actions/runs/41655285514) passed all six jobs: specifications, Windows, Linux, web, deployment and live verification. Runtime identity is 0.0.2, scene m0b-unit-v1, content version 2.
+Published on 3 November 2026 from [M0c source commit 02eb7c8](https://github.com/stbange/meu/commit/02eb7c8c51885b5b8a3787f7f33f539e97f0a712). The [publishing workflow](https://github.com/stbange/meu/actions/runs/41672789694) passed all six jobs: specifications, Windows, Linux, web, deployment and live verification. Runtime identity is 0.0.3, scene m0c-travel-v1, content version 3.
 
-The public site passed all three launch checks: desktop, portrait phone and landscape phone. An independent HTTP check confirmed the M0b page, the WebAssembly response with application/wasm content type and the exact published source revision. Physical-phone performance and gameplay acceptance remain pending. See [M0b evidence and captures](evidence/m0b-interior.md).
+The public site passed all three launch checks: desktop, portrait phone and landscape phone. An independent HTTP check confirmed the exact published revision, M0c shell/helm controls, the updated input adapter and an application/wasm response with a valid WebAssembly header. See [M0c evidence and captures](evidence/m0c-piloting.md). User acceptance and physical-phone performance remain pending.
 
-The [initial M0b publication](https://github.com/stbange/meu/actions/runs/41653332287) also passed all six jobs. The follow-up clarifies safe lift boarding and checks the cab-edge message before the full route. Documentation-only commits after the source revision do not rebuild the runtime.
+The [M0b publication](https://github.com/stbange/meu/actions/runs/41655285514) remains recorded in its evidence. Documentation-only commits after the M0c source revision do not rebuild the runtime.

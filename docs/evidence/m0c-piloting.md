@@ -68,6 +68,12 @@ Local native rendering used AMD Radeon Graphics/OpenGL 3.3 Core 22.20.14.220712 
 
 ## Publication and acceptance
 
-The code is prepared for the existing checks-and-Pages pipeline. Final source identity, clean Windows/Linux/web results and live publication are recorded after deployment. Local captures come from M0c development working trees.
+Final runtime source: [02eb7c8c51885b5b8a3787f7f33f539e97f0a712](https://github.com/stbange/meu/commit/02eb7c8c51885b5b8a3787f7f33f539e97f0a712). The [main publishing workflow](https://github.com/stbange/meu/actions/runs/41672789694) passed all six jobs: specifications, Windows, Linux, web, deployment and live verification. The [working branch checks](https://github.com/stbange/meu/actions/runs/41672781833) passed independently.
+
+Linux GCC 14.2.0 in the pinned Bookworm container passed all seven native CTest groups, both SDL/OpenGL tours with Mesa 22.3.6/llvmpipe, and all seven AddressSanitizer/UndefinedBehaviorSanitizer groups. Windows passed all seven native CTest groups. The web job passed all seven debug and all seven optimized WebAssembly groups, 21 browser cases (three platform-inapplicable variants skipped), and three release launch cases.
+
+[Play the published M0c build](https://stbange.github.io/meu/). Live desktop, portrait-phone and landscape-phone launches passed with diagnostics absent. A separate public HTTP check confirmed the exact source revision, M0c shell/helm controls, updated input adapter and WebAssembly MIME/header. Local screenshots come from M0c development working trees; clean CI artifacts retain exact source/build identity and input histories. [Publishing details](../github-pages.md) describe the runtime package. Documentation-only follow-up commits do not alter the published runtime revision.
+
+The [first M0c main publication](https://github.com/stbange/meu/actions/runs/41670273474) also passed all six jobs. A live touch-only check of that production build took the helm, drove, parked, reversed to the unsupported-ground safety stop and released control with diagnostics absent. The subsequent source change only keeps the interior regression replay on the direct deck route. An [initial working-branch run](https://github.com/stbange/meu/actions/runs/41670264208) retains the timing-sensitive close-up-detour trace; scale images remain in the M0b evidence and all room/lift/ramp/interaction assertions remain in the replay.
 
 Scale, steering feel, motion comfort and real-phone usability remain awaiting user review. M0d–M0f and full-foundation acceptance tasks remain open.
