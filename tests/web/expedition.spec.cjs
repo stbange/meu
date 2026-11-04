@@ -3,6 +3,26 @@ const fs=require('node:fs/promises');
 const path=require('node:path');
 const {state,button,tap,ready,menu,save,imported}=require('./save-helpers.cjs');
 const release=process.env.MEU_RELEASE==='1';
+test.afterEach(async({page},info)=>{
+  if(info.status!==info.expectedStatus && !release)console.error('M1 failure state:',JSON.stringify(await state(page).catch(()=>null)));
+});
+async function aimCoupler(page,mobile,session){
+  for(let i=0;i<16;i++){
+    const s=await state(page);
+    const yaw=Math.atan2(27.8-s.x,-(-10-s.z)),pitch=Math.atan2(113.3-s.y,Math.hypot(27.8-s.x,-10-s.z));
+    const angle=Math.atan2(Math.sin(yaw-s.yaw),Math.cos(yaw-s.yaw));
+    if(Math.abs(angle)<.02 && Math.abs(pitch-s.pitch)<.02)return;
+    const dx=Math.max(-32,Math.min(32,angle/.004/s.sensitivity));
+    const dy=Math.max(-32,Math.min(32,-(pitch-s.pitch)/.004/s.sensitivity));
+    const b=await page.locator('#look').boundingBox(),x=b.x+b.width/2,y=b.y+b.height/2;
+    if(mobile){
+      await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:2}]});
+      await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx,y:y+dy,id:2}]});
+      await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    }else{await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+dx,y+dy);await page.mouse.up();}
+  }
+  throw new Error('Coupler aim did not converge: '+JSON.stringify(await state(page)));
+}
 async function fixture(page,mobile,name){
   await ready(page);await menu(page,mobile);
   await imported(page,mobile,await fs.readFile(path.join(__dirname,'../fixtures/m1-'+name+'.meu')));
@@ -30,8 +50,12 @@ test('uses real desktop or touch airlock controls, walks the conduit, bypasses a
     const b=await button(page,'Move forward').boundingBox();
     await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2,id:1}]});
   }else await page.keyboard.down('KeyW');
-  try{await expect.poll(async()=>{const s=await state(page);return s.x>24 && s.use===10;},{timeout:10000,intervals:[30,50]}).toBe(true);}
+  try{await expect.poll(async()=>{const s=await state(page);return s.x>25.1;},{timeout:15000,intervals:[30,50]}).toBe(true);}
   finally{if(isMobile)await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});else await page.keyboard.up('KeyW');}
+  // Stop at the physical approach, then aim through real look gestures.
+  // Polling an interaction while still walking can miss its viewing cone under a busy software renderer.
+  await aimCoupler(page,isMobile,session);
+  await expect.poll(async()=>(await state(page)).use).toBe(10);
   await station(page,isMobile,'Phase coupler and bypass');
   await option(page,isMobile,/Install shelter bypass/);await option(page,isMobile,/Extract phase coupler/);
   expect((await state(page)).coupler).toBe(true);expect((await state(page)).bypass).toBe(true);
