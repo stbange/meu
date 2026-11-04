@@ -2,7 +2,7 @@
 
 The game's central promise depends on feeling tiny inside a huge moving home while steering it through even larger architecture. Prove that experience and the phone controls before building salvage, procedural districts, or a campaign.
 
-Status: M0 in progress. M0a supplies the native/web test room, pinned build setup, and initial checks. M0b–M0f and user acceptance remain pending. See [M0a evidence](../../../docs/evidence/m0a-foundation.md).
+Status: M0a–M0e are implemented and their automated verification is integrated with M1. M0f reference-device/performance checks and combined user acceptance remain pending. See [M0a evidence](../../../docs/evidence/m0a-foundation.md).
 
 ## What Changes
 
@@ -31,4 +31,4 @@ None. This foundation introduces MEU's initial capabilities.
 
 Creates the M0 foundation at this repository's root. No milestone dependency. Excludes procedural generation, salvage/crafting, power economics, faults/repair jobs, active helper AI, exterior egress, unrestricted construction, combat, and campaign content. M0's robot moves through a fixed test scene; its energy budget is not yet gameplay. The [implementation plan](../../../docs/implementation-plan.md) divides M0 into steps M0a–M0f and defines the dependent milestones.
 
-Automated checks establish correctness. A separate user review decides whether scale, comfort, and phone usability support proceeding to M1. Commits and pushes do not imply acceptance.
+Automated checks establish correctness. On 4 November 2026 the user authorized implementation through M1 before any human review. The deferred combined review still decides scale, comfort, phone usability and expedition acceptance. Commits and pushes do not imply acceptance.

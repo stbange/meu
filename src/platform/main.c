@@ -33,7 +33,7 @@ typedef struct {
     SDL_FingerID move_finger,look_finger;
     bool move_touch,look_touch;
     int variation, exit_code;
-    bool running, smoke, tour, pilot, lifecycle, dragging, audio_ready;
+    bool running, smoke, tour, pilot, lifecycle, expedition_replay, mouse_captured, audio_ready;
     const char *capture;
     char storage_status[180];
 #ifndef __EMSCRIPTEN__
@@ -56,11 +56,33 @@ static void browser_log(void *userdata, int category, SDL_LogPriority priority, 
 }
 #endif
 
+#ifndef __EMSCRIPTEN__
+static bool mouse_playing(void)
+{
+    MeuContext c=meu_sim_context(&app.simulation);return c==MEU_CONTEXT_FOOT || c==MEU_CONTEXT_HELM;
+}
+static void release_mouse(void)
+{
+    if(app.mouse_captured)SDL_SetWindowRelativeMouseMode(app.window,false);
+    app.mouse_captured=false;
+}
+static void capture_mouse(void)
+{
+    if(!app.mouse_captured && mouse_playing()) {
+        app.mouse_captured=SDL_SetWindowRelativeMouseMode(app.window,true);
+        if(!app.mouse_captured)SDL_Log("Mouse capture unavailable: %s",SDL_GetError());
+    }
+}
+#endif
+
 static void sync_input_context(void)
 {
     MeuSimulation *s=&app.simulation;
     if (app.input_epoch_seen==s->input_epoch) return;
-    app.input_epoch_seen=s->input_epoch; app.dragging=false;
+    app.input_epoch_seen=s->input_epoch;
+#ifndef __EMSCRIPTEN__
+    if(!mouse_playing())release_mouse();
+#endif
     app.move_touch=app.look_touch=false;
 #ifdef __EMSCRIPTEN__
     char script[160];
@@ -83,7 +105,9 @@ static void sync_preferences(void)
 static void pause_game(void)
 {
     meu_sim_pause(&app.simulation);
-    app.dragging = false;
+#ifndef __EMSCRIPTEN__
+    release_mouse();
+#endif
     if (app.audio) SDL_PauseAudioStreamDevice(app.audio);
     SDL_SetWindowTitle(app.window, "MEU - Paused | Enter: resume | F1: settings");
 #ifdef __EMSCRIPTEN__
@@ -119,7 +143,7 @@ static void start_game(void)
     }
     sync_preferences();
     if (app.audio) app.audio_ready = SDL_ResumeAudioStreamDevice(app.audio);
-    SDL_SetWindowTitle(app.window, "MEU - Exploration | F1: settings | WASD: move | drag / arrows: look | Esc: pause");
+    SDL_SetWindowTitle(app.window, "MEU - Exploration | F1: settings | WASD: move | click: capture mouse | Esc: release and pause");
 #ifdef __EMSCRIPTEN__
     emscripten_run_script("if (window.MEU) window.MEU.started();");
 #endif
@@ -130,6 +154,25 @@ WEB_EXPORT int meu_web_action(int action, int pressed)
 {
     bool accepted=meu_sim_action(&app.simulation,action,pressed!=0);
     sync_input_context(); return accepted;
+}
+WEB_EXPORT int meu_web_station(int row)
+{
+    bool accepted=meu_sim_station_command(&app.simulation,row);
+    sync_input_context();
+#ifdef __EMSCRIPTEN__
+    emscripten_run_script("if(window.MEU)window.MEU.station();");
+#endif
+    return accepted;
+}
+WEB_EXPORT const char *meu_web_station_text(int row)
+{
+    static char text[256];
+    if (row==-4) return meu_sim_objective(&app.simulation);
+    if (row==-3) return meu_sim_station_title(&app.simulation);
+    if (row==-2) return app.simulation.message;
+    if (row==-1) meu_sim_station_status(&app.simulation,text,sizeof(text));
+    else meu_sim_station_line(&app.simulation,row,text,sizeof(text));
+    return text;
 }
 WEB_EXPORT void meu_web_look(float x, float y)
 {
@@ -169,7 +212,7 @@ WEB_EXPORT void meu_web_journeys(int operation)
 #ifdef __EMSCRIPTEN__
 WEB_EXPORT const char *meu_web_snapshot(uint32_t generation)
 {
-    static char response[340]; char hex[MEU_SAVE_HEX_BYTES]={0}; uint8_t data[MEU_SAVE_BYTES];
+    static char response[MEU_SAVE_HEX_BYTES+80]; char hex[MEU_SAVE_HEX_BYTES]={0}; uint8_t data[MEU_SAVE_BYTES];
     MeuSaveResult result=meu_snapshot_encode(&app.simulation,generation,data);
     if (result==MEU_SAVE_OK) meu_snapshot_hex(data,hex);
     snprintf(response,sizeof(response),"{\"result\":%d,\"data\":\"%s\"}",result,hex);
@@ -254,7 +297,7 @@ static void initialize_storage(void)
     }
     if (!meu_file_mkdir(app.storage_directory)) { storage_message(meu_save_message(MEU_SAVE_IO));return; }
     SDL_Log("MEU save directory: %s",app.storage_directory);
-    if (app.persistence_test==1) { storage_message("Persistence replay ready.");return; }
+    if (app.persistence_test==1 || app.expedition_replay) { storage_message("Persistence replay ready.");return; }
     MeuJournal journal;
     if (!meu_file_inspect(app.storage_directory,&journal)) storage_message(meu_save_message(MEU_SAVE_IO));
     else if (journal.latest.result==MEU_SAVE_OK) storage_action(1,NULL);
@@ -294,6 +337,14 @@ WEB_EXPORT const char *meu_state_json(void)
         meu_sim_context(&app.simulation),app.simulation.input_epoch,app.simulation.settings_open?"true":"false",
         app.simulation.settings.sensitivity,app.simulation.settings.invert_y?"true":"false",
         app.simulation.settings.walk_bob?"true":"false",app.simulation.settings.machine_sway?"true":"false",app.simulation.settings.volume,app.audio?SDL_GetAudioStreamGain(app.audio):-1);
+    size_t used=strlen(result);
+    if(used && used<sizeof(result)-600) {
+        MeuSimulation *s=&app.simulation;MeuExpedition *e=&s->expedition;
+        snprintf(result+used-1,sizeof(result)-used+1,",\"energy\":%u,\"heat\":%u,\"station\":%d,\"fault\":%s,\"job\":%u,\"jobTicks\":%u,\"bulk\":%s,\"coupler\":%s,\"bypass\":%s,\"suit\":%s,\"suitTicks\":%u,\"exposure\":%u,\"installed\":%s,\"completed\":%s}",
+            s->power.energy,s->power.heat,s->station,e->fault?"true":"false",e->job,e->job_ticks,e->bulk?"true":"false",
+            e->coupler?"true":"false",e->bypass?"true":"false",e->suit?"true":"false",e->suit_ticks,e->exposure,
+            e->installed?"true":"false",e->completed?"true":"false");
+    }
     return result;
 }
 #endif
@@ -373,14 +424,20 @@ static void event(const SDL_Event *input)
             }
         } else if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_RETURN) start_game();
         else if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_ESCAPE) pause_game();
+        else if (app.simulation.station) {
+            if (down && !input->key.repeat) {
+                SDL_Scancode key=input->key.scancode;
+                if (key==SDL_SCANCODE_E || key==SDL_SCANCODE_0) meu_web_station(-1);
+                else if (key>=SDL_SCANCODE_1 && key<=SDL_SCANCODE_8) meu_web_station(key-SDL_SCANCODE_1);
+            }
+        }
         else if (!input->key.repeat) meu_sim_action(&app.simulation,key_action(input->key.scancode),down);
     }
-    if (input->type == SDL_EVENT_MOUSE_BUTTON_DOWN && input->button.button == SDL_BUTTON_LEFT) {
+    if (input->type == SDL_EVENT_MOUSE_BUTTON_DOWN && input->button.button == SDL_BUTTON_LEFT && input->button.which!=SDL_TOUCH_MOUSEID) {
         if (app.simulation.paused) start_game();
-        else app.dragging = true;
+        capture_mouse();
     }
-    if (input->type == SDL_EVENT_MOUSE_BUTTON_UP) app.dragging = false;
-    if (input->type == SDL_EVENT_MOUSE_MOTION && app.dragging)
+    if (input->type == SDL_EVENT_MOUSE_MOTION && app.mouse_captured && input->motion.which!=SDL_TOUCH_MOUSEID)
         meu_sim_pointer_look(&app.simulation,input->motion.xrel,input->motion.yrel);
     if (input->type==SDL_EVENT_FINGER_DOWN) {
         if (input->tfinger.x<.5f && !app.move_touch) {
@@ -405,6 +462,9 @@ static void event(const SDL_Event *input)
 
 static void cleanup(void)
 {
+#ifndef __EMSCRIPTEN__
+    release_mouse();
+#endif
     SDL_DestroyAudioStream(app.audio);
     if (app.context) meu_renderer_destroy();
     SDL_GL_DestroyContext(app.context);
@@ -512,8 +572,9 @@ static void lifecycle_input(void)
         case 7: case 9: case 11:key=SDL_SCANCODE_SPACE;break;
         case 13:key=SDL_SCANCODE_LEFT;break;
         case 14:key=SDL_SCANCODE_W;break;
+        case 142: case 144:key=SDL_SCANCODE_F2;break;
         case 20:key=SDL_SCANCODE_ESCAPE;break;
-        case 25: case 55: case 80: case 100: case 133:key=SDL_SCANCODE_RETURN;break;
+        case 25: case 55: case 80: case 100: case 133: case 137: case 145:key=SDL_SCANCODE_RETURN;break;
         case 52:key=SDL_SCANCODE_R;break;
         default:break;
     }
@@ -523,17 +584,17 @@ static void lifecycle_input(void)
     if (f==51) {
         SDL_Event e={0};e.type=SDL_EVENT_KEY_DOWN;e.key.scancode=SDL_SCANCODE_W;e.key.repeat=true;SDL_PushEvent(&e);
     }
-    if (f==70 || f==71 || f==90 || f==91) {
-        SDL_Event e={0}; e.type=(f==70)?SDL_EVENT_WINDOW_FOCUS_LOST:
+    if (f==70 || f==71 || f==90 || f==91 || f==135 || f==136) {
+        SDL_Event e={0}; e.type=(f==70 || f==135)?SDL_EVENT_WINDOW_FOCUS_LOST:
             (f==90)?SDL_EVENT_WINDOW_RESIZED:SDL_EVENT_WINDOW_FOCUS_GAINED;
         SDL_PushEvent(&e);
     }
-    if (f==110 || f==112) {
-        SDL_Event e={0};e.type=f==110?SDL_EVENT_MOUSE_BUTTON_DOWN:SDL_EVENT_MOUSE_BUTTON_UP;
+    if (f==110 || f==112 || f==134 || f==140) {
+        SDL_Event e={0};e.type=f==112?SDL_EVENT_MOUSE_BUTTON_UP:SDL_EVENT_MOUSE_BUTTON_DOWN;
         e.button.button=SDL_BUTTON_LEFT;SDL_PushEvent(&e);
     }
-    if (f==111) {
-        SDL_Event e={0};e.type=SDL_EVENT_MOUSE_MOTION;e.motion.xrel=30;e.motion.yrel=20;SDL_PushEvent(&e);
+    if (f==111 || f==114) {
+        SDL_Event e={0};e.type=SDL_EVENT_MOUSE_MOTION;e.motion.xrel=f==111?30:10;e.motion.yrel=f==111?20:-5;SDL_PushEvent(&e);
     }
 }
 static void lifecycle_check(int width,int height)
@@ -547,10 +608,13 @@ static void lifecycle_check(int width,int height)
     }
     if (f==22 || f==54 || f==73 || f==93) bad|=!s->paused || s->held!=0;
     if (f>=51) bad|=fabsf(s->z+9)>.01f || fabsf(s->x)>.001f || !s->grounded;
+    if (f==113 || f==115 || f==135 || f==141)bad|=!app.mouse_captured || !SDL_GetWindowRelativeMouseMode(app.window);
+    if (f==131 || f==136 || f==137 || f==138 || f==143 || f==146)
+        bad|=app.mouse_captured || SDL_GetWindowRelativeMouseMode(app.window);
     if (f==121) bad|=!meu_renderer_capture("test-results/native-resumed.bmp",width,height);
     if (f>=150) {
-        bad|=s->paused || s->settings_open || s->held!=0 || fabsf(s->yaw-.37f)>.005f ||
-            fabsf(s->pitch+.16f)>.005f || fabsf(s->settings.sensitivity-1.1f)>.001f || app.audio_attempts!=1;
+        bad|=s->paused || s->settings_open || s->held!=0 || fabsf(s->yaw-.41f)>.005f ||
+            fabsf(s->pitch+.14f)>.005f || fabsf(s->settings.sensitivity-1.1f)>.001f || app.audio_attempts!=1;
         printf("LIFECYCLE build=%s scene=%s settings=%.2f context=%d result=%s\n",MEU_BUILD_ID,MEU_SCENE_ID,
             s->settings.sensitivity,meu_sim_context(s),bad?"FAIL":"PASS");
         app.running=false;
@@ -560,7 +624,7 @@ static void lifecycle_check(int width,int height)
 static void persistence_input(void)
 {
     unsigned f=app.frames;SDL_Scancode key=SDL_SCANCODE_UNKNOWN;
-    if (app.persistence_test==1) {
+    if (app.persistence_test==1 || app.expedition_replay) {
         switch(f) {
             case 0:key=SDL_SCANCODE_RETURN;break;
             case 62:case 72:key=SDL_SCANCODE_F1;break;
@@ -606,11 +670,13 @@ static void persistence_check(int width,int height)
     }
     if (bad) {SDL_Log("PERSISTENCE failed frame=%u z=%.4f status=%s",f,s->z,app.storage_status);app.exit_code=1;app.running=false;}
 }
+#include "../../tests/client/expedition_replay.h"
 #endif
 
 static void frame(void)
 {
 #ifndef __EMSCRIPTEN__
+    if (app.expedition_replay) expedition_input();
     if (app.tour) tour_input();
     if (app.pilot) pilot_input();
     if (app.lifecycle) lifecycle_input();
@@ -619,7 +685,7 @@ static void frame(void)
     SDL_Event input;
     while (SDL_PollEvent(&input)) { event(&input); sync_input_context(); }
     double now = (double)SDL_GetTicksNS() / 1e9;
-    meu_sim_advance(&app.simulation, (app.tour || app.pilot || app.lifecycle || app.persistence_test) ? MEU_TICK_SECONDS : now - app.previous_time);
+    meu_sim_advance(&app.simulation, (app.tour || app.pilot || app.lifecycle || app.persistence_test || app.expedition_replay) ? MEU_TICK_SECONDS : now - app.previous_time);
     app.previous_time = now;
     int width = 0, height = 0;
 #ifdef __EMSCRIPTEN__
@@ -628,7 +694,7 @@ static void frame(void)
     SDL_GetWindowSizeInPixels(app.window, &width, &height);
 #endif
     MeuSimulation render; meu_sim_render_state(&app.simulation,&render);
-    bool draw=(!app.tour && !app.pilot && !app.lifecycle) || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899 || (app.pilot && (app.frames==101 || app.frames==599 || app.frames==1599)) || (app.lifecycle && (app.frames==15 || app.frames==120));
+    bool draw=(app.expedition_replay && (app.simulation.station || app.simulation.expedition.completed)) || (!app.tour && !app.pilot && !app.lifecycle && !app.expedition_replay) || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899 || (app.pilot && (app.frames==101 || app.frames==599 || app.frames==1599)) || (app.lifecycle && (app.frames==15 || app.frames==120));
     if (draw && !meu_renderer_draw(&render, width, height,app.settings_selection,app.storage_status)) {
         SDL_Log("OpenGL frame failed"); app.exit_code = EXIT_FAILURE; app.running = false;
     }
@@ -640,10 +706,11 @@ static void frame(void)
             meu_sim_on_lift(&app.simulation),meu_sim_lift_moving(&app.simulation),
             app.simulation.lift_current,app.simulation.lift_target,meu_sim_use_target(&app.simulation),app.simulation.info_open,meu_sim_lift_ready(&app.simulation));
         emscripten_run_script(hud);
-        snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.navigation(%d,%.2f,%.1f,%d,%d,%d,%.1f);",
+        emscripten_run_script("if(window.MEU)window.MEU.station();");
+        snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.navigation(%d,%.2f,%.1f,%d,%d,%d,%.1f,%.1f,%.1f);",
             app.simulation.travel.helm,app.simulation.travel.speed,app.simulation.robot.yaw*57.295779513,
             app.simulation.travel.parked,app.simulation.travel.park_requested,app.simulation.travel.reason,
-            meu_travel_stop_distance(app.simulation.travel.speed));
+            meu_travel_stop_distance(app.simulation.travel.speed),app.simulation.robot.x,app.simulation.robot.z);
         emscripten_run_script(hud);
     }
 #endif
@@ -666,6 +733,7 @@ static void frame(void)
         }
     }
 #ifndef __EMSCRIPTEN__
+    if (draw && app.expedition_replay) expedition_artifacts(width,height);
     if (app.tour) tour_check(width,height);
     if (app.pilot) pilot_check(width,height);
     if (app.lifecycle) lifecycle_check(width,height);
@@ -695,6 +763,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--pilot-test")) app.pilot=true;
         else if (!strcmp(argv[i], "--tour-test")) { app.tour=true; app.simulation.motion_fixture=true; }
 #ifndef __EMSCRIPTEN__
+        else if (!strcmp(argv[i], "--expedition-test")) app.expedition_replay=true;
         else if (!strcmp(argv[i], "--persistence-test") && i+1<argc) {
             const char *mode=argv[++i];app.persistence_test=!strcmp(mode,"write")?1:!strcmp(mode,"read")?2:0;
             if (!app.persistence_test) return EXIT_FAILURE;
@@ -722,7 +791,7 @@ int main(int argc, char **argv)
     if (!app.context || !meu_renderer_init()) {
         SDL_Log("Client initialization failed: %s", SDL_GetError()); cleanup(); return EXIT_FAILURE;
     }
-    SDL_GL_SetSwapInterval((app.tour || app.pilot || app.lifecycle || app.persistence_test)?0:1);
+    SDL_GL_SetSwapInterval((app.tour || app.pilot || app.lifecycle || app.persistence_test || app.expedition_replay)?0:1);
     SDL_Log("MEU build=%s scene=%s content=%d", MEU_BUILD_ID, MEU_SCENE_ID, MEU_CONTENT_VERSION);
     app.previous_time = (double)SDL_GetTicksNS() / 1e9;
     if (app.smoke) meu_sim_start(&app.simulation);
@@ -733,7 +802,7 @@ int main(int argc, char **argv)
 #else
     app.file_event=SDL_RegisterEvents(1);
     initialize_storage();
-    while (app.running) { frame(); if (!app.tour && !app.pilot && !app.lifecycle && !app.persistence_test) SDL_Delay(1); }
+    while (app.running) { frame(); if (!app.tour && !app.pilot && !app.lifecycle && !app.persistence_test && !app.expedition_replay) SDL_Delay(1); }
     cleanup();
 #endif
     return app.exit_code;

@@ -33,7 +33,7 @@ test('walks residence to helm and engineering using real keyboard or touch contr
   await expect(page.locator('body')).toHaveAttribute('data-ready', 'true');
   const press = async locator => isMobile ? locator.tap() : locator.click();
   await press(page.getByRole('button', { name: 'Begin exploration', exact: true }));
-  expect((await state(page)).scene).toBe('m0e-saves-v1');
+  expect((await state(page)).scene).toBe('m1-tower-v1');
   const session = isMobile ? await page.context().newCDPSession(page) : null;
   const replay = [];
   const move = async (forward, until) => {

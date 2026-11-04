@@ -1,6 +1,6 @@
 # MEU Project Status
 
-Status baseline: 3 November 2026.
+Status updated: 4 November 2026.
 
 ## Repository and planning
 
@@ -12,14 +12,24 @@ M0a–M0e have been implemented at the user's request. The connected 240-metre h
 
 | Milestone | Implementation | Automated verification | User acceptance |
 | --- | --- | --- | --- |
-| M0 Moving home and platform proof | M0a–M0e complete; M0f pending | 12 native/headless groups, Linux sanitizers and rendered replays, 11 debug/optimized WebAssembly groups, 49 browser cases, and 10 optimized/live cases passed; clean Windows/Linux CI green; see evidence | Pending; physical-phone interaction and performance review pending |
-| M1 Complete authored expedition | Not started | Not run | Pending |
+| M0 Moving home and platform proof | M0a–M0e complete; M0f device/performance work pending | Original platform evidence retained; current native regressions pass | Deferred to combined post-M1 playtest; real phones/performance pending |
+| M1 Complete authored expedition | M1a–M1e implemented, plus 0.1.1 input/surface corrections | 15 native/core groups; ASan/UBSan; rendered regressions; complete actual-SDL-input expedition and durable completed journey pass. CI ff694a8 passes Windows/Linux, 14 Wasm groups in both modes, 65 debug browser cases and 11 optimized cases; see correction evidence | Pending; user requested testing after M1 |
 | M2 Generated small city | Not started | Not run | Pending |
 | M3 Complete exploration arc | Not started | Not run | Pending |
 | M4 Release preparation | Not started | Not run | Pending |
 
+## Review schedule
+
+On 4 November 2026 the user requested implementation through M1 without interim reviews and will test after M1. Human acceptance and physical-device performance remain pending; this explicitly waives the M0 review dependency for M1 implementation, not its eventual acceptance.
+
+## M1 playtest corrections
+
+The user's mouse-capture and floor-flicker corrections are implemented in 0.1.1 ([evidence and current builds](evidence/mouse-surfaces.md)). Native capture/geometry/sanitizer and complete expedition checks pass. Windows/Linux, debug/optimized WebAssembly and the full desktop/phone browser configuration pass. The browser suite also verifies synchronous station-overlay removal before a fresh movement touch. User confirmation remains pending; M2 is untouched.
+
 ## Next action
 
-The [MEU web prototype](https://stbange.github.io/meu/) publishes from main after checks pass. All six [M0e publishing jobs](https://github.com/stbange/meu/actions/runs/41703685599) passed. The exact source, runtime and live save verification are in [M0e evidence](evidence/m0e-saves.md) and [GitHub Pages evidence](github-pages.md). Publication does not change pending user acceptance.
+M1 implementation is ready for the user’s deferred test. See [the complete route and commands](m1-expedition.md) and [M1e evidence/limits](evidence/m1e-expedition.md). The implementation is on `codex/m1-authored-expedition`; it is not merged into main or deployed. The public [web prototype](https://stbange.github.io/meu/) still reflects main, not this branch. Previous M0e publication remains documented separately.
 
-Next is M0f integrated verification and focused playtest in the [implementation plan](implementation-plan.md): select actual Windows/Linux and Android/iPhone reference devices, measure the defined performance budgets, review scale/comfort/discoverability and record explicit user feedback. Preserve validated save publication, source recovery, context cleanup and supported travel. Settings are kept when included in an explicit saved journey. Commands are in [build and test](build-and-test.md); [save format and recovery](save-format.md) records storage behavior and compatibility.
+The [verified 0.1.1 source CI run](https://github.com/stbange/meu/actions/runs/41825493264) passes all required development jobs; deployment was skipped. This machine has a working native build but matching Emscripten/Playwright browser downloads are policy-blocked. Finish M0f reference-system and physical Android/iPhone measurements and the combined M0/M1 scale, comfort, controls and expedition review when the user chooses to test. Provisional targets remain 60 fps desktop, 30 fps phone, under 256 MiB Wasm linear memory; none is a real-device result yet.
+
+The automated route completes in 8531 active ticks (about 142 seconds) with optimized input and no reading/exploration time. That is correctness evidence, not confirmation of the proposed 20–40-minute human loop or satisfying repair pacing. Do not start M2 generation or archive any active change as accepted until the remaining verification and required user decisions are recorded.

@@ -7,8 +7,8 @@ test('persists settings across a fresh WebKit page and exports/imports the same 
   await page.locator('label[for="invert-y"]').tap();
   await page.locator('label[for="walk-bob"]').tap();
   await button(page,'Close settings').tap();await menu(page,true);await save(page,true,1);
-  const written=await rows(page);expect(written.latest).toHaveLength(256);
-  const backup=await exported(page,true);expect(backup.length).toBe(128);
+  const written=await rows(page);expect(written.latest).toHaveLength(512);
+  const backup=await exported(page,true);expect(backup.length).toBe(256);
   expect(backup.subarray(0,8).toString('hex')).toBe('4d45555341564500');
   const next=await context.newPage();next.on('pageerror',e=>errors.push(String(e)));await page.close();page=next;
   await ready(page);

@@ -124,3 +124,33 @@ body[data-context="panel"] #controls,body[data-context="panel"] #use,body[data-c
   #journeys-panel { padding:12px 16px; }
   #journeys-title { font-size:23px; margin:0 0 6px; }
 }
+
+#expedition-panel { position:absolute; z-index:8; left:50%; top:50%; transform:translate(-50%,-50%); width:min(620px,94vw); max-height:72dvh; overflow-y:auto; padding:14px; touch-action:pan-y; }
+#expedition-panel h2 { font-size:20px; margin:0 0 8px; }
+#expedition-status,#expedition-message { font-size:13px; line-height:1.35; }
+#expedition-options { display:grid; gap:6px; }
+#expedition-options button { min-height:48px; text-align:left; font-size:14px; }
+body[data-context="station"] #controls,body[data-context="station"] #reticle,body[data-context="station"] #use { visibility:hidden; }
+
+#expedition-readout { position:fixed; z-index:3; left:max(12px,var(--safe-left)); top:max(100px,calc(var(--safe-top) + 88px)); max-width:calc(100vw - 24px); font-size:12px; color:#ead4a3; text-shadow:0 1px 4px #000; pointer-events:none; }
+@media(max-height:420px) { #expedition-readout { top:58px; font-size:11px; } }
+body[data-context="station"] #expedition-readout { visibility:hidden; }
+
+#expedition-objective { position:fixed; z-index:3; left:max(12px,var(--safe-left)); top:max(133px,calc(var(--safe-top) + 121px)); width:min(540px,calc(100vw - 24px)); font-size:12px; color:#d4dec8; text-shadow:0 1px 4px #000; pointer-events:none; }
+body[data-context="station"] #expedition-objective { visibility:hidden; }
+@media(max-height:420px) { #expedition-objective { top:78px; font-size:11px; width:50vw; } }
+
+/* Mission text occupies its own region instead of overlapping navigation. */
+#mission-hud { position:fixed; z-index:3; left:max(12px,var(--safe-left)); top:max(100px,calc(var(--safe-top) + 88px)); width:280px; pointer-events:none; display:grid; gap:6px; }
+#mission-hud #expedition-readout,#mission-hud #expedition-objective { position:static; transform:none; width:auto; max-width:none; font-size:12px; }
+#coordinates { text-align:center; font-size:12px; color:#c9dac2; font-variant-numeric:tabular-nums; }
+body[data-paused="true"] #mission-hud,body[data-context="station"] #mission-hud { visibility:hidden; }
+@media(max-width:900px) and (min-height:431px) {
+  #mission-hud { width:calc(100% - 24px - var(--safe-left) - var(--safe-right)); }
+  body[data-room="0"] #mission-hud { top:max(200px,calc(var(--safe-top) + 188px)); }
+  body[data-room="0"][data-helm="true"] #mission-hud { top:max(270px,calc(var(--safe-top) + 258px)); }
+}
+@media(max-height:430px) {
+  #mission-hud { top:auto; bottom:max(24px,calc(var(--safe-bottom) + 12px)); left:50%; transform:translateX(-50%); width:min(360px,calc(100% - 240px - var(--safe-left) - var(--safe-right))); gap:4px; }
+  #mission-hud #expedition-readout,#mission-hud #expedition-objective { font-size:11px; }
+}

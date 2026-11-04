@@ -1,0 +1,7 @@
+# M1c salvage and technology — 4 November 2026
+
+Source: commit containing this record. Host/tool versions match M1a. Workshop console: engineering, right of the central route at X7, Z-10.5. A parked repaired manipulator recovers one material cradle. The bench tests unfamiliar salvage, fabrication pays displayed stock/energy/heat costs atomically, and the one removable stabilizer socket changes grid behavior and physically supports a new west bridge. Removal requires returning to the primary tower socket, so it cannot retract occupied support. The bridge mesh and collision share dimensions; restore selects the installed world before validating the saved pose.
+
+`ASAN_OPTIONS=detect_leaks=0 python3 tools/build.py core --test --sanitizers`: 14/14 passed. `LIBGL_ALWAYS_SOFTWARE=1 SDL_AUDIODRIVER=dummy xvfb-run -a python3 tools/build.py native --test --smoke`: 14/14 plus OpenGL smoke passed. `OPENSPEC_TELEMETRY=0 npm run spec:validate`: four changes passed.
+
+Production-loop tests cover unique bulk output, missing salvage, repeated test/fabrication, insufficient power without partial stock loss, exact recipe costs, install/save/reload/remove/reinstall and a position unsupported before installation but supported afterward. Coupler acquisition in these isolated unit checks is a fixture; the real suit route arrives in M1d and the integrated replay in M1e. No physical-device or human acceptance is claimed. M1b push succeeded, publishing preceding commits too; remote builds still require separate observation.

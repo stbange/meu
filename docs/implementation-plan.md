@@ -1,6 +1,6 @@
 # Mechanized Exploration Unit Implementation Plan
 
-Planning baseline: 3 November 2026. M0a–M0e are implemented; M0f and later milestones remain pending. Physical-phone checks and user acceptance remain pending. The [design draft](game-design-draft.md) describes the experience, [status](status.md) records progress/acceptance, and [M0a evidence](evidence/m0a-foundation.md) records verification and limits.
+Planning baseline: 3 November 2026. M0a–M0e and M1a–M1e are implemented. M0f device/performance verification and combined human acceptance remain pending; M2–M4 are not started. Physical-phone checks and user acceptance remain pending. The [design draft](game-design-draft.md) describes the experience, [status](status.md) records progress/acceptance, and [M0a evidence](evidence/m0a-foundation.md) records verification and limits.
 
 ## Delivery approach
 
@@ -88,7 +88,7 @@ Integrate the scenarios, replay logs, and failure captures described in [verific
 
 ## M1 One complete authored expedition
 
-Depends on the verified M0 foundation and its scale/comfort review. Introduce each system against a fixed route before generating it. Create focused OpenSpec changes with the proposed capability names below before implementing their behavior.
+Depends on the automated M0 foundation. On 4 November 2026 the user authorized proceeding through M1 before any human review; M0 scale/comfort and physical-device acceptance are deferred to the combined post-M1 playtest. Introduce each system against a fixed route before generating it. Create focused OpenSpec changes with the proposed capability names below before implementing their behavior.
 
 ### M1a Power and infrastructure
 
@@ -183,4 +183,4 @@ Only mark a user acceptance item complete after explicit user feedback. If a pla
 
 ## First implementation handoff
 
-M0a–M0e are implemented; see their evidence records. Next, perform M0f integrated verification and the focused scale/comfort review. Select actual reference Windows/Linux systems and Android/iPhone devices, measure the defined performance budgets, and record explicit user feedback. Preserve validated saves, source recovery, context cleanup, explicit resume and supported travel. The foundation proposal remains open until its verification and acceptance conditions are met.
+M0a–M0e and M1a–M1e are implemented; see their evidence records, especially [M1e](evidence/m1e-expedition.md). M1 now connects the tower grid, repair helper, suit recess, coupler and powered west bridge. Windows/Linux and browser CI pass; complete reference-device measurements and the deferred combined playtest before starting M2. Defer all human reviews to the post-M1 playtest; do not infer acceptance. Select actual reference Windows/Linux systems and Android/iPhone devices, measure the defined performance budgets, and record explicit user feedback. Preserve validated saves, source recovery, context cleanup, explicit resume and supported travel. The foundation proposal remains open until its verification and acceptance conditions are met.

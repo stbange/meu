@@ -11,7 +11,7 @@ test('persists a saved journey through normal controls with diagnostics absent',
   await tap(button(page,'Close settings'),isMobile);
   await menu(page,isMobile);await save(page,isMobile,1);
   const original=await rows(page),backup=await exported(page,isMobile);
-  expect(backup.length).toBe(128);expect(backup.readUInt32LE(8)).toBe(1);expect(backup.readUInt32LE(92)&4).toBe(4);
+  expect(backup.length).toBe(256);expect(backup.readUInt32LE(8)).toBe(2);expect(backup.readUInt32LE(92)&4).toBe(4);
   const next=await context.newPage();await page.close();page=next;await ready(page);
   expect(await page.evaluate(()=>typeof window.MEU.readState)).toBe('undefined');
   await expect(page.locator('#save-note')).toContainText('Loaded saved journey 1');

@@ -24,13 +24,16 @@ static uint32_t checksum(const uint8_t *data,size_t size)
 static bool bounded(double value,double minimum,double maximum) { return isfinite(value) && value>=minimum && value<=maximum; }
 static MeuSaveResult valid(const MeuSimulation *s)
 {
-    if (s->world!=meu_world_default()) return MEU_SAVE_WORLD_UNSUPPORTED;
+    if (!meu_power_valid(&s->power) || !meu_expedition_valid(&s->expedition)) return MEU_SAVE_UNSAFE;
+    if (s->world!=meu_world_default() && s->world!=meu_world_with_bridge()) return MEU_SAVE_WORLD_UNSUPPORTED;
     if (!bounded(s->x,-100,100) || !bounded(s->y,100,250) || !bounded(s->z,-100,100) ||
         !bounded(s->yaw,-3.141594,3.141594) || !bounded(s->pitch,-1.400001,1.400001) ||
         !bounded(s->robot.x,-1000000,1000000) || !bounded(s->robot.z,-1000000,1000000) ||
         !bounded(s->robot.yaw,-1000000,1000000) || !bounded(s->settings.sensitivity,.25,3) ||
         !bounded(s->settings.volume,0,1) || s->ticks>UINT64_C(9007199254740991) ||
         (s->visited&~UINT32_C(15)) || !(s->visited&(UINT32_C(1)<<meu_sim_room(s)))) return MEU_SAVE_UNSAFE;
+    if (s->x>14 && (!s->expedition.suit || !s->expedition.scanned || !s->expedition.checkpoint ||
+        s->robot.z > -120 || s->robot.z < -175 || fabs(s->robot.x)>15 || fabs(remainder(s->robot.yaw,6.283185307179586))>=.05)) return MEU_SAVE_UNSAFE;
     if (!s->travel.parked || s->travel.speed!=0 || s->travel.turn_rate!=0 || s->travel.helm ||
         s->motion_fixture || s->lift_velocity!=0 || meu_sim_lift_moving(s)) return MEU_SAVE_BUSY;
     if (s->lift_current<0 || s->lift_current>2 || s->lift_target!=s->lift_current ||
@@ -54,14 +57,34 @@ MeuSaveResult meu_snapshot_encode(const MeuSimulation *s,uint32_t generation,uin
     uint32_t flags=32u | (s->quarters_light?1u:0) | (s->inspection_light?2u:0) |
         (s->settings.invert_y?4u:0) | (s->settings.walk_bob?8u:0) | (s->settings.machine_sway?16u:0);
     put32(data+92,flags); putf(data+96,s->settings.sensitivity); putf(data+100,s->settings.volume);
-    put32(data+124,checksum(data,124)); memcpy(out,data,sizeof(data)); return MEU_SAVE_OK;
+    put32(data+124,checksum(data,124));
+    put32(data+128,s->power.energy); put32(data+132,s->power.heat);
+    put32(data+136,s->power.clock); put32(data+140,s->power.phase);
+    put32(data+144,(s->power.collectors?1u:0)|(s->power.grid?2u:0)|(s->power.isolated?4u:0)|
+        (s->power.cooling_priority?8u:0)|(s->power.overload?16u:0));
+    put32(data+148,s->expedition.alloy);put32(data+152,s->expedition.conductor);put32(data+156,s->expedition.sealant);
+    put32(data+160,(s->expedition.fault?1u:0)|(s->expedition.diagnosed?2u:0));
+    put32(data+164,s->expedition.job);put32(data+168,s->expedition.job_ticks);
+    put32(data+172,meu_expedition_flags(&s->expedition));
+    put32(data+176,s->expedition.suit_ticks);put32(data+180,s->expedition.exposure);
+    if(s->expedition.checkpoint) {
+        put32(data+184,s->expedition.checkpoint_alloy);put32(data+188,s->expedition.checkpoint_conductor);
+        put32(data+192,s->expedition.checkpoint_sealant);put32(data+196,s->expedition.checkpoint_flags);
+        const MeuPower *cp=&s->expedition.checkpoint_power;
+        put32(data+200,cp->energy);put32(data+204,cp->heat);put32(data+208,cp->clock);put32(data+212,cp->phase);
+        put32(data+216,(cp->collectors?1u:0)|(cp->grid?2u:0)|(cp->isolated?4u:0)|(cp->cooling_priority?8u:0)|(cp->overload?16u:0));
+    }
+    put32(data+252,checksum(data,252)); memcpy(out,data,sizeof(data)); return MEU_SAVE_OK;
 }
 MeuSaveResult meu_snapshot_decode(const uint8_t *data,size_t size,MeuSimulation *out,uint32_t *generation)
 {
     if (!data || size<24 || memcmp(data,magic,8)) return MEU_SAVE_MALFORMED;
-    if (get32(data+8)!=MEU_SAVE_SCHEMA) return MEU_SAVE_SCHEMA_UNSUPPORTED;
-    if (size!=MEU_SAVE_BYTES || get32(data+20)!=MEU_SAVE_BYTES || !get32(data+16) ||
+    uint32_t schema=get32(data+8),bytes=schema==1?128:MEU_SAVE_BYTES;
+    if (schema!=1 && schema!=MEU_SAVE_SCHEMA) return MEU_SAVE_SCHEMA_UNSUPPORTED;
+    if ((size!=bytes && !(schema==1 && size==MEU_SAVE_BYTES)) || get32(data+20)!=bytes || !get32(data+16) ||
         get32(data+124)!=checksum(data,124)) return MEU_SAVE_MALFORMED;
+    if (schema==1 && size>128) for (size_t i=128;i<size;++i) if(data[i]) return MEU_SAVE_MALFORMED;
+    if (schema==2 && get32(data+252)!=checksum(data,252)) return MEU_SAVE_MALFORMED;
     if (get32(data+12)!=MEU_SAVE_WORLD) return MEU_SAVE_WORLD_UNSUPPORTED;
     for (int i=104;i<124;++i) if (data[i]) return MEU_SAVE_MALFORMED;
     uint32_t flags=get32(data+92);
@@ -74,6 +97,26 @@ MeuSaveResult meu_snapshot_decode(const uint8_t *data,size_t size,MeuSimulation 
     candidate.ticks=get64(data+80); candidate.visited=get32(data+88);
     candidate.quarters_light=(flags&1)!=0; candidate.inspection_light=(flags&2)!=0;
     candidate.settings=(MeuSettings){getf(data+96),getf(data+100),(flags&4)!=0,(flags&8)!=0,(flags&16)!=0};
+    if (schema==2) {
+        uint32_t bits=get32(data+144);
+        if (bits&~31u) return MEU_SAVE_MALFORMED;
+        for (int i=220;i<252;++i) if (data[i]) return MEU_SAVE_MALFORMED;
+        uint32_t progress=get32(data+160);if(progress&~3u) return MEU_SAVE_MALFORMED;
+        candidate.expedition=(MeuExpedition){.alloy=get32(data+148),.conductor=get32(data+152),.sealant=get32(data+156),
+            .fault=(progress&1)!=0,.diagnosed=(progress&2)!=0,.job=get32(data+164),.job_ticks=get32(data+168)};
+        uint32_t discovery=get32(data+172);if(discovery&~8191u)return MEU_SAVE_MALFORMED;
+        meu_expedition_set_flags(&candidate.expedition,discovery);
+        candidate.expedition.suit_ticks=get32(data+176);candidate.expedition.exposure=get32(data+180);
+        candidate.expedition.checkpoint_alloy=get32(data+184);candidate.expedition.checkpoint_conductor=get32(data+188);
+        candidate.expedition.checkpoint_sealant=get32(data+192);candidate.expedition.checkpoint_flags=get32(data+196);
+        uint32_t cpbits=get32(data+216);if(cpbits&~31u)return MEU_SAVE_MALFORMED;
+        if(!candidate.expedition.checkpoint) for(int i=184;i<220;++i)if(data[i])return MEU_SAVE_MALFORMED;
+        candidate.expedition.checkpoint_power=(MeuPower){get32(data+200),get32(data+204),get32(data+208),get32(data+212),
+            (cpbits&1)!=0,(cpbits&2)!=0,(cpbits&4)!=0,(cpbits&8)!=0,(cpbits&16)!=0};
+        candidate.power=(MeuPower){get32(data+128),get32(data+132),get32(data+136),get32(data+140),
+            (bits&1)!=0,(bits&2)!=0,(bits&4)!=0,(bits&8)!=0,(bits&16)!=0};
+    }
+    candidate.world=candidate.expedition.installed?meu_world_with_bridge():meu_world_default();
     candidate.started=true;
     MeuSaveResult result=valid(&candidate);
     if (result!=MEU_SAVE_OK) return result;
@@ -104,9 +147,9 @@ bool meu_snapshot_unhex(const char *text,uint8_t out[MEU_SAVE_BYTES])
 {
     if (!text) return false;
     size_t length=0; while (length<MEU_SAVE_HEX_BYTES && text[length]) ++length;
-    if (length!=MEU_SAVE_BYTES*2) return false;
-    uint8_t data[MEU_SAVE_BYTES];
-    for (int i=0;i<MEU_SAVE_BYTES;++i) {
+    if (length!=MEU_SAVE_BYTES*2 && length!=256) return false;
+    uint8_t data[MEU_SAVE_BYTES]={0};
+    for (size_t i=0;i<length/2;++i) {
         int a=nibble(text[i*2]),b=nibble(text[i*2+1]);
         if (a<0 || b<0) return false;
         data[i]=(uint8_t)(a*16+b);

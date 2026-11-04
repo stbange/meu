@@ -6,7 +6,11 @@ The implementation target is **C17, SDL3, and OpenGL** on Windows and Linux, plu
 
 ## Current status
 
-M0e adds durable local journeys with saved settings, previous-snapshot recovery and portable export/import to the connected 240-metre home. Explore, pilot and park, then pause and open Saved journeys to save. A confirmed journey restores paused and parked when the game opens again. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0e evidence](docs/evidence/m0e-saves.md).
+M1a–M1e now connect a complete authored tower expedition: pilot and park, isolate a pulsing grid, diagnose a fault, assign a repair helper, recover stock, enter a sheltered service conduit in a suit, fit a bypass, recover and adapt its coupler, then power a previously unsupported west route. All play remains first person. See [the M1 route](docs/m1-expedition.md), [status](docs/status.md) and [M1e evidence](docs/evidence/m1e-expedition.md).
+
+The implementation is on `codex/m1-authored-expedition`; main/public Pages are unchanged. Human reviews were deferred at the user’s request until M1. M0f device/performance work and combined M0/M1 acceptance remain pending. Windows/Linux and debug/optimized web checks pass in the recorded CI run.
+
+Version 0.1.1 adds click-captured mouse look and removes overlapping floor/wall surfaces. Current build downloads and verification are in the [playtest correction record](docs/evidence/mouse-surfaces.md).
 
 ## Start here
 
@@ -17,7 +21,7 @@ M0e adds durable local journeys with saved settings, previous-snapshot recovery 
 - [Build and test](docs/build-and-test.md): pinned tools, launch commands, controls, and checks.
 - [First OpenSpec proposal](openspec/changes/establish-playable-foundation/proposal.md): M0 requirements, design, and unchecked tasks.
 
-The next step is **M0f: integrated verification and focused playtest**, including physical-phone and performance review. The complete M0 experience remains in development.
+The next step is remaining platform/device verification and the deferred combined M0/M1 playtest; M2 generation has not started.
 
 ## Run the prototype
 
@@ -39,7 +43,7 @@ npm run build:web
 npm run serve:web
 ~~~
 
-Open `http://127.0.0.1:4174`. Begin exploration, then use WASD and mouse drag/arrows, or the movement buttons and look pad. Approach the central bridge console and use E or the prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases the helm. Looking does not steer; releasing drive brakes. Touch controls adapt to piloting, with Brake, Park and Release helm buttons. The lift is behind the starting position: walk backward into its centre, select 1/2/3 (or tap a deck), then walk forward out at your destination. Use E or the contextual button at the dimensions plaque, reading lamp and inspection console. Open Settings or press F1 to adjust controls, camera movement and sound; both camera effects start off. Close settings, then choose Resume exploration (Enter on desktop). Settings are kept when you Save journey: pause, open Saved journeys (F2 on desktop), and save after the unit is parked and the lift has finished. A saved journey loads paused on the next launch. Recover previous keeps a damaged source, and Export/Import moves a .meu backup between native and web builds. Import changes the running journey; Save here to keep it locally. Focus loss, backgrounding, pause, or resizing stops simulation and clears old input until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
+Open `http://127.0.0.1:4174`. Begin exploration, click the 3D view to capture the mouse (Esc releases and pauses), then use WASD and captured mouse/arrows, or the movement buttons and look pad. Approach the central bridge console and use E or the prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases the helm. Looking does not steer; releasing drive brakes. Touch controls adapt to piloting, with Brake, Park and Release helm buttons. The lift is behind the starting position: walk backward into its centre, select 1/2/3 (or tap a deck), then walk forward out at your destination. Use E or the contextual button at the dimensions plaque, reading lamp and inspection console. Open Settings or press F1 to adjust controls, camera movement and sound; both camera effects start off. Close settings, then choose Resume exploration (Enter on desktop). Settings are kept when you Save journey: pause, open Saved journeys (F2 on desktop), and save after the unit is parked and the lift has finished. A saved journey loads paused on the next launch. Recover previous keeps a damaged source, and Export/Import moves a .meu backup between native and web builds. Import changes the running journey; Save here to keep it locally. Focus loss, backgrounding, pause, or resizing stops simulation and clears old input until explicit resume. See [build and test](docs/build-and-test.md) for Linux and automated checks.
 
 ## Specification tooling
 

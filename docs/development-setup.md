@@ -60,10 +60,8 @@ Use `SDL_GetPrefPath("stbange", "meu")` for MEU user data and report the resolve
 
 For the web, use MEU-specific storage and cache names, such as `meu-saves-v1` and `meu-assets-<content-version>`, and a dedicated persistent filesystem mount. Paths on a shared website do not by themselves isolate browser storage, so choose explicit names and test them. Keep save export/import self-contained. A browser development URL or port change may change the storage origin; do not mistake that for a lost save.
 
-## Start implementation
+## Current handoff
 
-M0a is implemented. The next runtime task is **M0b** in the [implementation plan](implementation-plan.md). A suitable next prompt is:
+M0a–M0e and M1a–M1e are implemented. Read `docs/status.md`, `docs/m1-expedition.md` and `docs/evidence/m1e-expedition.md`. The user deferred human reviews until M1 was implemented. Windows/Linux/web CI pass. Remaining work is physical-device/performance checks and the combined M0/M1 playtest; M2 generation has not started.
 
-> Implement M0b from docs/implementation-plan.md. Read AGENTS.md, docs/status.md, the M0a evidence, and the foundation OpenSpec change. Build the four connected interior spaces and scale scene while preserving native/web builds and touch controls. Add collision, lift, and motion tests. Record evidence, commit, and push; leave user acceptance pending.
-
-The independent workspace now includes the M0a toolchain and test room. Design/playtest acceptance, the remaining M0 work, and release publishing are still separate decisions.
+On the Debian cloud computer, MEU is `/workspace/meu`, independent of `/workspace/WanderingCastle`. Source `.tools/activate.sh` before native development. GCC 14.2.0, pinned CMake/Ninja, SDL build dependencies and Xvfb are available without changing global settings. Local SDK/browser downloads are policy-blocked; see the evidence for what ran here. The implementation branch is `codex/m1-authored-expedition`; main/public Pages remain unchanged.

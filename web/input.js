@@ -8,7 +8,8 @@
   const keyMap = { KeyW:0, KeyS:1, KeyA:2, KeyD:3, ArrowLeft:4, ArrowRight:5, ArrowUp:6, ArrowDown:7, KeyE:8, Digit1:9, Digit2:10, Digit3:11, Space:12, KeyP:13 };
   let ready = false, storageReady=false, storageBusy=false, failed = false, context = 3, epoch = 0, looking = null;
   let settingsOpen = false, pauseReason = 'menu', layout = '';
-  const contexts = ['foot','helm','panel','paused','settings','journeys'];
+  let mouseLocked=false,lockPending=false,lockAllowed=false,mouseReleaseRequested=false,lockRequest=0;
+  const contexts = ['foot','helm','panel','paused','settings','journeys','station'];
   const call = (name, types = [], args = [], result = null) => Module.ccall(name,result,types,args);
   const playing = () => ready && (context === 0 || context === 1);
   const owner = id => [...pointers.values()].some(p => p.action === id) || [...keys].some(key => keyMap[key] === id);
@@ -17,6 +18,23 @@
   }
   function releaseCapture(element, id) {
     if (element?.hasPointerCapture(id)) element.releasePointerCapture(id);
+  }
+  function releaseMouse() {
+    ++lockRequest;lockPending=false;lockAllowed=false;
+    if(mouseLocked || document.pointerLockElement===canvas)mouseReleaseRequested=true;
+    if(document.pointerLockElement===canvas)document.exitPointerLock();
+  }
+  function lockMouse() {
+    if(!playing() || lockPending || document.pointerLockElement===canvas || !canvas.requestPointerLock)return;
+    const request=++lockRequest;lockPending=true;lockAllowed=true;
+    const denied=()=>{if(request===lockRequest){lockPending=false;lockAllowed=false;captureLook();}};
+    try { const result=canvas.requestPointerLock();result?.catch(denied); }
+    catch {denied();}
+  }
+  function captureLook() {
+    if(!looking || lockPending || document.pointerLockElement)return;
+    try { looking.element.setPointerCapture(looking.id); }
+    catch { looking=null; }
   }
   function clearInput() {
     const old = [...pointers.entries()];
@@ -97,12 +115,33 @@
       const leftJourneys=context===5 && id!==5;
       clearInput(); context = id; epoch = generation;
       body.dataset.context = contexts[id]; mode(id);
+      if(!playing())releaseMouse();
+      if(id!==6)$('#expedition-panel').hidden=true;
+      else this.station();
       $('#unit-info').hidden = id !== 2;
       $('#journeys-panel').hidden = id !== 5;
       $('#welcome').hidden = id === 5 || settingsOpen;
       if(id===5) $('#journeys-title').focus();
       else if(leftJourneys && id===3) begin.focus();
       if (id === 2) $('#close-info').focus();
+    },
+    station() {
+      $('#expedition-objective').textContent=call('meu_web_station_text',['number'],[-4],'string');
+      $('#expedition-readout').textContent=call('meu_web_station_text',['number'],[-1],'string');
+      const panel=$('#expedition-panel'),wasHidden=panel.hidden; panel.hidden=context!==6;
+      if(context!==6)return;
+      const text=row=>call('meu_web_station_text',['number'],[row],'string');
+      $('#expedition-title').textContent=text(-3);
+      if(wasHidden)$('#expedition-title').focus();
+      $('#expedition-status').textContent=text(-1);
+      $('#expedition-message').textContent=text(-2);
+      const host=$('#expedition-options');
+      for(let i=0;i<8;i++){
+        let button=host.children[i];
+        if(!button){button=document.createElement('button');host.append(button);press(button,()=>call('meu_web_station',['number'],[i]));}
+        const label=text(i);button.hidden=!label;
+        if(button.textContent!==label)button.textContent=label;
+      }
     },
     preferences(open, sensitivity, invert, bob, sway, volume) {
       const changed = settingsOpen !== !!open;
@@ -118,7 +157,8 @@
     },
     hud(room, height, aboard, moving, current, target, use, info, liftReady) {
       const names = ['Bridge','Living quarters','Engineering hall','Service lift'];
-      const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm'];
+      const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm','Expedition chart','Power and infrastructure','Salvage cradle and test bench','Wrist airlock','Phase coupler and bypass'];
+      body.dataset.room=String(room);
       $('#room').textContent = names[room];
       $('#altitude').textContent = (room === 3 ? 'Lift ' : 'Deck ') + Math.round(height) + ' m · Unit height 240 m';
       $('#navigation').hidden = room !== 0; $('#lift-panel').hidden = !aboard;
@@ -132,7 +172,8 @@
       $('#use').textContent = uses[use] + ' · E';
       $('#unit-info').hidden = !info;
     },
-    navigation(helm, speed, heading, parked, parking, reason, stopping) {
+    navigation(helm, speed, heading, parked, parking, reason, stopping, x, z) {
+      $('#coordinates').textContent='Position X '+Math.round(x)+' · Z '+Math.round(z)+' m';
       $('#speed').textContent = speed.toFixed(1) + ' m/s';
       $('#heading').textContent = 'Heading ' + String(Math.round((heading % 360 + 360) % 360)).padStart(3,'0') + '°';
       $('#stopping').textContent = 'Stop ' + stopping.toFixed(1) + ' m';
@@ -141,11 +182,11 @@
         parked ? 'Parked · support verified' : parking ? 'Braking to park…' : helm ? 'Manual travel · release drive to brake' : 'Stopping…';
     },
     paused() {
-      clearInput(); body.dataset.paused = 'true'; body.dataset.pauseReason = pauseReason;
+      releaseMouse();clearInput(); body.dataset.paused = 'true'; body.dataset.pauseReason = pauseReason;
       begin.textContent = body.dataset.started === 'true' ? 'Resume exploration' : 'Begin exploration';
       const reasons = { resize:'The screen changed. Resume when ready.', hidden:'Paused while away. Resume when ready.',
         focus:'The window lost focus. Resume when ready.', menu:'Take your time. The unit is waiting.',
-        pagehide:'Paused while away. Resume when ready.' };
+        pointer:"Mouse released. Resume when ready.", pagehide:'Paused while away. Resume when ready.' };
       $('#status').textContent = reasons[pauseReason] || reasons.menu;
       available();
     },
@@ -154,14 +195,15 @@
     },
     storageBusy(value) { storageBusy=!!value;available(); },
     restored() {
-      clearInput();body.dataset.started='true';body.dataset.paused='true';
+      releaseMouse();clearInput();body.dataset.started='true';body.dataset.paused='true';
       begin.textContent='Resume exploration';available();
     },
     fail(message) {
-      failed = true; clearInput(); body.dataset.paused = 'true'; body.dataset.error = 'true';
+      failed = true; releaseMouse();clearInput(); body.dataset.paused = 'true'; body.dataset.error = 'true';
       $('#status').textContent = message; begin.textContent = 'Reload to try again'; available();
     }
   };
+  press($('#close-expedition'),()=>call('meu_web_station',['number'],[-1]));
   press(begin,start);
   press(pauseButton,() => pause());
   press(settingsButton,() => { if (ready && !storageBusy) call('meu_web_settings',['number'],[settingsOpen ? 1 : 0]); });
@@ -217,6 +259,11 @@
       }
       return;
     }
+    if(context===6){
+      if(!event.repeat && /^Digit[1-8]$/.test(event.code)){call('meu_web_station',['number'],[Number(event.code.slice(-1))-1]);event.preventDefault();}
+      else if(!event.repeat && ['KeyE','Digit0'].includes(event.code)){call('meu_web_station',['number'],[-1]);event.preventDefault();}
+      return;
+    }
     if ((event.code === 'Enter' || event.code === 'Space') && event.target.closest?.('button')) return;
     if (event.code === 'Enter' && !playing() && context !== 2) { start(); event.preventDefault(); return; }
     if (!(event.code in keyMap) || event.repeat || (!playing() && !(context === 2 && keyMap[event.code] === 8))) return;
@@ -256,12 +303,18 @@
   });
   for (const element of [canvas,$('#look')]) {
     element.addEventListener('pointerdown',event => {
-      if (!playing() || looking) return;
+      if(element===canvas && event.pointerType==='mouse') {
+        if(context===3)start();
+        if(playing())lockMouse();
+      }
+      if (!playing() || looking || document.pointerLockElement===canvas) return;
       looking = { id:event.pointerId,element,x:event.clientX,y:event.clientY,epoch };
-      element.setPointerCapture(event.pointerId); event.preventDefault();
+      // A pending Pointer Lock can already prohibit pointer capture before
+      // pointerLockElement changes. Acquire fallback capture only after denial.
+      captureLook(); event.preventDefault();
     });
     element.addEventListener('pointermove',event => {
-      if (!looking || looking.id !== event.pointerId || looking.epoch !== epoch || !playing()) return;
+      if (document.pointerLockElement===canvas || !looking || looking.id !== event.pointerId || looking.epoch !== epoch || !playing()) return;
       call('meu_web_look',['number','number'],[event.clientX-looking.x,event.clientY-looking.y]);
       looking.x = event.clientX; looking.y = event.clientY;
     });
@@ -269,6 +322,22 @@
       if (looking?.id === event.pointerId) looking = null;
     });
   }
+  document.addEventListener('pointerlockchange',()=>{
+    const owned=document.pointerLockElement===canvas,previous=mouseLocked;
+    lockPending=false;mouseLocked=owned;body.dataset.mouseLocked=String(owned);
+    if(owned) {
+      if(!lockAllowed || !playing() || document.hidden || !document.hasFocus()) { releaseMouse();return; }
+      mouseReleaseRequested=false;
+      const old=looking;looking=null;if(old)releaseCapture(old.element,old.id);
+    } else {
+      lockAllowed=false;const intentional=mouseReleaseRequested;mouseReleaseRequested=false;
+      if(previous && playing() && !intentional)pause('pointer');
+    }
+  });
+  document.addEventListener('pointerlockerror',()=>{lockPending=false;lockAllowed=false;captureLook();});
+  document.addEventListener('mousemove',event=>{
+    if(mouseLocked && document.pointerLockElement===canvas && playing())call('meu_web_look',['number','number'],[event.movementX,event.movementY]);
+  });
   window.addEventListener('blur',() => pause('focus'));
   window.addEventListener('focus',available);
   document.addEventListener('visibilitychange',() => { if (document.hidden) pause('hidden'); available(); });

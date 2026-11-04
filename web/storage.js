@@ -7,7 +7,7 @@
   const call=(name,types=[],args=[],result=null)=>Module.ccall(name,result,types,args);
   // Bound the host-to-Wasm copy as well as the decoder itself. A damaged
   // IndexedDB row must not allocate an unbounded ccall string on the C stack.
-  const probe=data=>typeof data==='string' && data.length===256?
+  const probe=data=>typeof data==='string' && [256,512].includes(data.length)?
     JSON.parse(call('meu_web_probe',['string'],[data],'string')):{result:1,generation:0};
   const message=result=>call('meu_web_save_message',['number'],[result],'string');
   let database=null,opening=null,busy=false,records={};
@@ -151,7 +151,7 @@
     async import(file){
       if(!file)return;
       return operation('Reading journey file…',async()=>{
-        if(file.size!==128)throw new Error('Unsupported or incomplete journey file. The source was kept.');
+        if(![128,256].includes(file.size))throw new Error('Unsupported or incomplete journey file. The source was kept.');
         const data=new Uint8Array(await file.arrayBuffer());
         const hex=Array.from(data,b=>b.toString(16).padStart(2,'0')).join('');
         restore(hex);status('Journey imported. Save here to keep it. Local save unchanged.','imported');

@@ -41,7 +41,7 @@ test('recovers a previous snapshot, keeps damaged data and rejects incompatible 
   await expect(page.locator('#save-status')).toContainText('Recovered journey 1');
   expect((await state(page)).invertY).toBe(false);expect((await rows(page)).latest).toBe(corrupt);
   expect(await exported(page,isMobile,'Export damaged save')).toEqual(bytes);
-  const backup=await exported(page,isMobile);expect(backup.length).toBe(128);
+  const backup=await exported(page,isMobile);expect(backup.length).toBe(256);
   const unchanged=persisted(await state(page));
   const future=Buffer.from(backup);future.writeUInt32LE(99,8);
   await imported(page,isMobile,future,'future.meu');
@@ -123,7 +123,7 @@ test('keeps play and portable backup available when local storage is unavailable
   await ready(page);await expect(page.locator('#save-note')).toContainText('unavailable');
   await menu(page,isMobile);await tap(button(page,'Save journey'),isMobile);
   await expect(page.locator('body')).toHaveAttribute('data-save-state','error');
-  const backup=await exported(page,isMobile);expect(backup.length).toBe(128);
+  const backup=await exported(page,isMobile);expect(backup.length).toBe(256);
   const reference=await fs.readFile(path.join(__dirname,'../fixtures/save-v1.meu'));
   await imported(page,isMobile,reference);
   await expect(page.locator('body')).toHaveAttribute('data-save-state','imported');

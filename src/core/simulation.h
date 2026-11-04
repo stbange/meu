@@ -1,6 +1,8 @@
 #ifndef MEU_SIMULATION_H
 #define MEU_SIMULATION_H
 #include "core/pose.h"
+#include "game/power.h"
+#include "game/expedition.h"
 #include "game/interior.h"
 #include "game/travel.h"
 #include "core/settings.h"
@@ -14,8 +16,8 @@ typedef enum {
     MEU_LOOK_LEFT, MEU_LOOK_RIGHT, MEU_LOOK_UP, MEU_LOOK_DOWN,
     MEU_INTERACT, MEU_TO_BRIDGE, MEU_TO_QUARTERS, MEU_TO_ENGINEERING, MEU_BRAKE, MEU_PARK, MEU_ACTION_COUNT
 } MeuAction;
-typedef enum { MEU_USE_NONE, MEU_USE_PLACARD, MEU_USE_LAMP, MEU_USE_INSPECTION, MEU_USE_CALL, MEU_USE_HELM } MeuUse;
-typedef enum { MEU_CONTEXT_FOOT, MEU_CONTEXT_HELM, MEU_CONTEXT_PANEL, MEU_CONTEXT_PAUSED, MEU_CONTEXT_SETTINGS, MEU_CONTEXT_JOURNEYS } MeuContext;
+typedef enum { MEU_USE_NONE, MEU_USE_PLACARD, MEU_USE_LAMP, MEU_USE_INSPECTION, MEU_USE_CALL, MEU_USE_HELM, MEU_USE_NAVIGATION, MEU_USE_POWER, MEU_USE_WORKSHOP, MEU_USE_AIRLOCK, MEU_USE_COUPLER } MeuUse;
+typedef enum { MEU_CONTEXT_FOOT, MEU_CONTEXT_HELM, MEU_CONTEXT_PANEL, MEU_CONTEXT_PAUSED, MEU_CONTEXT_SETTINGS, MEU_CONTEXT_JOURNEYS, MEU_CONTEXT_STATION } MeuContext;
 typedef struct { float x,y,z,yaw,pitch; } MeuCamera;
 typedef struct {
     /* Authoritative player coordinates always remain in the robot's local frame. */
@@ -31,6 +33,10 @@ typedef struct {
     bool started,paused,grounded,quarters_light,inspection_light,info_open,motion_fixture;
     MeuRobotPose robot,previous_robot;
     MeuTravel travel;
+    MeuPower power;
+    MeuExpedition expedition;
+    int station;
+    char message[120];
     const MeuWorld *world;
 } MeuSimulation;
 void meu_sim_init(MeuSimulation *state);
@@ -58,5 +64,10 @@ MeuUse meu_sim_use_target(const MeuSimulation *state);
 const char *meu_sim_use_name(MeuUse use);
 int meu_sim_room(const MeuSimulation *state);
 void meu_sim_move(MeuSimulation *state,float dx,float dz);
+bool meu_sim_station_command(MeuSimulation *state,int row);
+const char *meu_sim_objective(const MeuSimulation *state);
+const char *meu_sim_station_title(const MeuSimulation *state);
+void meu_sim_station_line(const MeuSimulation *state,int row,char *line,unsigned size);
+void meu_sim_station_status(const MeuSimulation *state,char *line,unsigned size);
 void meu_sim_render_state(const MeuSimulation *state,MeuSimulation *render);
 #endif

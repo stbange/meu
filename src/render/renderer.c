@@ -56,7 +56,7 @@ GL_PROCEDURES(DECLARE)
 
 static GLuint program, buffer, dynamic_buffer, vertex_array;
 static GLint matrix_uniform, eye_uniform, lighting_uniform;
-static unsigned interior_count, exterior_count;
+static unsigned interior_count, exterior_count, marking_count;
 
 static void bind_mesh(GLuint id)
 {
@@ -125,6 +125,7 @@ bool meu_renderer_init(void)
     lighting_uniform = pGetUniformLocation(program, "lighting");
     meu_vertex_count=0; meu_mesh_interior(); interior_count=meu_vertex_count;
     meu_mesh_exterior(); exterior_count=meu_vertex_count-interior_count;
+    meu_mesh_route_markings(); marking_count=meu_vertex_count-interior_count-exterior_count;
     SDL_Log("Scene: %u interior triangles, %u exterior triangles",interior_count/3,exterior_count/3);
     pGenVertexArrays(1,&vertex_array); pBindVertexArray(vertex_array);
     pGenBuffers(1,&buffer); bind_mesh(buffer);
@@ -163,15 +164,26 @@ bool meu_renderer_draw(const MeuSimulation *state, int width, int height,int sel
     pUniformMatrix4fv(matrix_uniform,1,GL_FALSE,world_mvp);
     pUniform3f(lighting_uniform,1,.0009f,0);
     glDrawArrays(GL_TRIANGLES,(GLint)interior_count,(GLsizei)exterior_count);
-    meu_vertex_count=0; meu_mesh_lift(state); unsigned lift_count=meu_vertex_count;
+    /* Decorative paint must keep deterministic depth ownership at long range. */
+    glEnable(GL_POLYGON_OFFSET_FILL);glPolygonOffset(-1,-2);
+    glDrawArrays(GL_TRIANGLES,(GLint)(interior_count+exterior_count),(GLsizei)marking_count);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    meu_vertex_count=0;
+    if (state->expedition.installed) meu_mesh_world(meu_world_with_bridge(),meu_world_default()->count);
+    unsigned bridge_count=meu_vertex_count;
+    meu_mesh_lift(state); unsigned lift_count=meu_vertex_count;
 #ifndef __EMSCRIPTEN__
     meu_mesh_hud(state,width,height,selection,storage_status);
 #endif
     bind_mesh(dynamic_buffer);
     pBufferData(GL_ARRAY_BUFFER,(GLsizeiptr)(meu_vertex_count*sizeof(MeuVertex)),meu_vertices,GL_STREAM_DRAW);
+    if (bridge_count) {
+        pUniformMatrix4fv(matrix_uniform,1,GL_FALSE,world_mvp);
+        glDrawArrays(GL_TRIANGLES,0,(GLsizei)bridge_count);
+    }
     pUniformMatrix4fv(matrix_uniform,1,GL_FALSE,mvp);
     pUniform3f(eye_uniform,eye.x,eye.y,eye.z);
-    glDrawArrays(GL_TRIANGLES,0,(GLsizei)lift_count);
+    glDrawArrays(GL_TRIANGLES,(GLint)bridge_count,(GLsizei)(lift_count-bridge_count));
 #ifndef __EMSCRIPTEN__
     float ortho[16]={0}; ortho[0]=2.0f/(float)width; ortho[5]=2.0f/(float)height;
     ortho[10]=1; ortho[12]=-1; ortho[13]=-1; ortho[15]=1;

@@ -14,6 +14,7 @@
     <div class="location"><span class="eyebrow">MEU / COMMANDER</span><h1 id="room">Bridge</h1><div id="altitude">Deck 196 m · Unit height 240 m</div></div>
     <div class="toolbar"><button id="settings" aria-expanded="false" aria-controls="settings-panel" disabled>Settings</button><button id="pause" disabled>Pause</button></div>
   </header>
+  <div id="mission-hud"><div id="expedition-readout" aria-live="off"></div><div id="expedition-objective"></div></div>
   <div id="reticle" aria-hidden="true">+</div>
   <section id="welcome" class="card" aria-label="Start exploration">
     <span class="eyebrow">MECHANIZED EXPLORATION UNIT</span>
@@ -23,7 +24,12 @@
     <button id="journeys" disabled>Saved journeys</button>
     <p id="save-note" class="hint"></p>
     <p id="status" role="status">Preparing the exploration unit…</p>
-    <p class="hint">Use the arrows to walk and drag LOOK to turn your view. The central console is the helm; the lift is behind you.<br>Keyboard: WASD · E use · Space brake · P park · F1 settings · F2 saved journeys.</p>
+    <p class="hint">Click the 3D view to lock the mouse; Esc releases and pauses. On touch screens, use the arrows and drag LOOK. The central console is the helm; the lift is behind you.<br>Keyboard: WASD · E use · Space brake · P park · F1 settings · F2 saved journeys.</p>
+  </section>
+  <section id="expedition-panel" class="card" aria-label="Expedition station" hidden>
+    <h2 id="expedition-title" tabindex="-1"></h2><p id="expedition-status"></p>
+    <div id="expedition-options"></div><p id="expedition-message" role="status"></p>
+    <button id="close-expedition">Close station</button>
   </section>
   <section id="settings-panel" class="card" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
     <h2 id="settings-title" tabindex="-1">Settings</h2>
@@ -59,6 +65,7 @@
   </section>
   <section id="navigation" class="station" aria-label="Robot navigation">
     <div id="telemetry"><span id="speed">0.0 m/s</span><span id="heading">Heading 000°</span><span id="stopping">Stop 0 m</span></div>
+    <div id="coordinates">Position X 0 · Z 0 m</div>
     <p id="travel-status" role="status">Parked · support verified</p>
     <div id="pilot-actions" hidden>
       <button data-action="12" aria-label="Brake robot">Brake<small>Space</small></button>
