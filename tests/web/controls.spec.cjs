@@ -86,7 +86,8 @@ test('settings apply without starting sound and require an explicit resume',asyn
     await d.down(page.getByRole('group',{name:'Drag to look'}),1);
     await d.move(1,40,20); await d.end(); await d.session.detach();
   } else {
-    await page.mouse.move(500,300); await page.mouse.down(); await page.mouse.move(540,320); await page.mouse.up();
+    const b=await page.locator('#look').boundingBox();
+    await page.mouse.move(b.x+20,b.y+30); await page.mouse.down(); await page.mouse.move(b.x+60,b.y+50); await page.mouse.up();
   }
   const after=await state(page);
   expect(after.yaw-before.yaw).toBeCloseTo(.004*40*after.sensitivity,3);

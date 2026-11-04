@@ -94,8 +94,9 @@ test('pilots from the physical helm, looks independently, parks and releases saf
     await c.session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...p,x:p.x+35,y:p.y-15}]});
     await c.session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   } else {
-    await page.mouse.move(500,350); await page.mouse.down();
-    await page.mouse.move(550,330,{steps:5}); await page.mouse.up();
+    const b=await page.locator('#look').boundingBox();
+    await page.mouse.move(b.x+20,b.y+50); await page.mouse.down();
+    await page.mouse.move(b.x+70,b.y+30,{steps:5}); await page.mouse.up();
   }
   s = await state(page);
   expect(s.yaw).toBeGreaterThan(beforeLook.yaw+.1);

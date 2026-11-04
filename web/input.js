@@ -8,6 +8,7 @@
   const keyMap = { KeyW:0, KeyS:1, KeyA:2, KeyD:3, ArrowLeft:4, ArrowRight:5, ArrowUp:6, ArrowDown:7, KeyE:8, Digit1:9, Digit2:10, Digit3:11, Space:12, KeyP:13 };
   let ready = false, storageReady=false, storageBusy=false, failed = false, context = 3, epoch = 0, looking = null;
   let settingsOpen = false, pauseReason = 'menu', layout = '';
+  let mouseLocked=false,lockPending=false,lockAllowed=false,mouseReleaseRequested=false,lockRequest=0;
   const contexts = ['foot','helm','panel','paused','settings','journeys','station'];
   const call = (name, types = [], args = [], result = null) => Module.ccall(name,result,types,args);
   const playing = () => ready && (context === 0 || context === 1);
@@ -17,6 +18,18 @@
   }
   function releaseCapture(element, id) {
     if (element?.hasPointerCapture(id)) element.releasePointerCapture(id);
+  }
+  function releaseMouse() {
+    ++lockRequest;lockPending=false;lockAllowed=false;
+    if(mouseLocked || document.pointerLockElement===canvas)mouseReleaseRequested=true;
+    if(document.pointerLockElement===canvas)document.exitPointerLock();
+  }
+  function lockMouse() {
+    if(!playing() || lockPending || document.pointerLockElement===canvas || !canvas.requestPointerLock)return;
+    const request=++lockRequest;lockPending=true;lockAllowed=true;
+    const denied=()=>{if(request===lockRequest){lockPending=false;lockAllowed=false;}};
+    try { const result=canvas.requestPointerLock();result?.catch(denied); }
+    catch {denied();}
   }
   function clearInput() {
     const old = [...pointers.entries()];
@@ -97,6 +110,7 @@
       const leftJourneys=context===5 && id!==5;
       clearInput(); context = id; epoch = generation;
       body.dataset.context = contexts[id]; mode(id);
+      if(!playing())releaseMouse();
       $('#unit-info').hidden = id !== 2;
       $('#journeys-panel').hidden = id !== 5;
       $('#welcome').hidden = id === 5 || settingsOpen;
@@ -161,11 +175,11 @@
         parked ? 'Parked · support verified' : parking ? 'Braking to park…' : helm ? 'Manual travel · release drive to brake' : 'Stopping…';
     },
     paused() {
-      clearInput(); body.dataset.paused = 'true'; body.dataset.pauseReason = pauseReason;
+      releaseMouse();clearInput(); body.dataset.paused = 'true'; body.dataset.pauseReason = pauseReason;
       begin.textContent = body.dataset.started === 'true' ? 'Resume exploration' : 'Begin exploration';
       const reasons = { resize:'The screen changed. Resume when ready.', hidden:'Paused while away. Resume when ready.',
         focus:'The window lost focus. Resume when ready.', menu:'Take your time. The unit is waiting.',
-        pagehide:'Paused while away. Resume when ready.' };
+        pointer:"Mouse released. Resume when ready.", pagehide:'Paused while away. Resume when ready.' };
       $('#status').textContent = reasons[pauseReason] || reasons.menu;
       available();
     },
@@ -174,11 +188,11 @@
     },
     storageBusy(value) { storageBusy=!!value;available(); },
     restored() {
-      clearInput();body.dataset.started='true';body.dataset.paused='true';
+      releaseMouse();clearInput();body.dataset.started='true';body.dataset.paused='true';
       begin.textContent='Resume exploration';available();
     },
     fail(message) {
-      failed = true; clearInput(); body.dataset.paused = 'true'; body.dataset.error = 'true';
+      failed = true; releaseMouse();clearInput(); body.dataset.paused = 'true'; body.dataset.error = 'true';
       $('#status').textContent = message; begin.textContent = 'Reload to try again'; available();
     }
   };
@@ -282,12 +296,16 @@
   });
   for (const element of [canvas,$('#look')]) {
     element.addEventListener('pointerdown',event => {
-      if (!playing() || looking) return;
+      if(element===canvas && event.pointerType==='mouse') {
+        if(context===3)start();
+        if(playing())lockMouse();
+      }
+      if (!playing() || looking || document.pointerLockElement===canvas) return;
       looking = { id:event.pointerId,element,x:event.clientX,y:event.clientY,epoch };
       element.setPointerCapture(event.pointerId); event.preventDefault();
     });
     element.addEventListener('pointermove',event => {
-      if (!looking || looking.id !== event.pointerId || looking.epoch !== epoch || !playing()) return;
+      if (document.pointerLockElement===canvas || !looking || looking.id !== event.pointerId || looking.epoch !== epoch || !playing()) return;
       call('meu_web_look',['number','number'],[event.clientX-looking.x,event.clientY-looking.y]);
       looking.x = event.clientX; looking.y = event.clientY;
     });
@@ -295,6 +313,22 @@
       if (looking?.id === event.pointerId) looking = null;
     });
   }
+  document.addEventListener('pointerlockchange',()=>{
+    const owned=document.pointerLockElement===canvas,previous=mouseLocked;
+    lockPending=false;mouseLocked=owned;body.dataset.mouseLocked=String(owned);
+    if(owned) {
+      if(!lockAllowed || !playing() || document.hidden || !document.hasFocus()) { releaseMouse();return; }
+      mouseReleaseRequested=false;
+      const old=looking;looking=null;if(old)releaseCapture(old.element,old.id);
+    } else {
+      lockAllowed=false;const intentional=mouseReleaseRequested;mouseReleaseRequested=false;
+      if(previous && playing() && !intentional)pause('pointer');
+    }
+  });
+  document.addEventListener('pointerlockerror',()=>{lockPending=false;lockAllowed=false;});
+  document.addEventListener('mousemove',event=>{
+    if(document.pointerLockElement===canvas && playing())call('meu_web_look',['number','number'],[event.movementX,event.movementY]);
+  });
   window.addEventListener('blur',() => pause('focus'));
   window.addEventListener('focus',available);
   document.addEventListener('visibilitychange',() => { if (document.hidden) pause('hidden'); available(); });

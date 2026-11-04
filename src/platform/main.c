@@ -33,7 +33,7 @@ typedef struct {
     SDL_FingerID move_finger,look_finger;
     bool move_touch,look_touch;
     int variation, exit_code;
-    bool running, smoke, tour, pilot, lifecycle, expedition_replay, dragging, audio_ready;
+    bool running, smoke, tour, pilot, lifecycle, expedition_replay, mouse_captured, audio_ready;
     const char *capture;
     char storage_status[180];
 #ifndef __EMSCRIPTEN__
@@ -56,11 +56,33 @@ static void browser_log(void *userdata, int category, SDL_LogPriority priority, 
 }
 #endif
 
+#ifndef __EMSCRIPTEN__
+static bool mouse_playing(void)
+{
+    MeuContext c=meu_sim_context(&app.simulation);return c==MEU_CONTEXT_FOOT || c==MEU_CONTEXT_HELM;
+}
+static void release_mouse(void)
+{
+    if(app.mouse_captured)SDL_SetWindowRelativeMouseMode(app.window,false);
+    app.mouse_captured=false;
+}
+static void capture_mouse(void)
+{
+    if(!app.mouse_captured && mouse_playing()) {
+        app.mouse_captured=SDL_SetWindowRelativeMouseMode(app.window,true);
+        if(!app.mouse_captured)SDL_Log("Mouse capture unavailable: %s",SDL_GetError());
+    }
+}
+#endif
+
 static void sync_input_context(void)
 {
     MeuSimulation *s=&app.simulation;
     if (app.input_epoch_seen==s->input_epoch) return;
-    app.input_epoch_seen=s->input_epoch; app.dragging=false;
+    app.input_epoch_seen=s->input_epoch;
+#ifndef __EMSCRIPTEN__
+    if(!mouse_playing())release_mouse();
+#endif
     app.move_touch=app.look_touch=false;
 #ifdef __EMSCRIPTEN__
     char script[160];
@@ -83,7 +105,9 @@ static void sync_preferences(void)
 static void pause_game(void)
 {
     meu_sim_pause(&app.simulation);
-    app.dragging = false;
+#ifndef __EMSCRIPTEN__
+    release_mouse();
+#endif
     if (app.audio) SDL_PauseAudioStreamDevice(app.audio);
     SDL_SetWindowTitle(app.window, "MEU - Paused | Enter: resume | F1: settings");
 #ifdef __EMSCRIPTEN__
@@ -119,7 +143,7 @@ static void start_game(void)
     }
     sync_preferences();
     if (app.audio) app.audio_ready = SDL_ResumeAudioStreamDevice(app.audio);
-    SDL_SetWindowTitle(app.window, "MEU - Exploration | F1: settings | WASD: move | drag / arrows: look | Esc: pause");
+    SDL_SetWindowTitle(app.window, "MEU - Exploration | F1: settings | WASD: move | click: capture mouse | Esc: release and pause");
 #ifdef __EMSCRIPTEN__
     emscripten_run_script("if (window.MEU) window.MEU.started();");
 #endif
@@ -405,12 +429,11 @@ static void event(const SDL_Event *input)
         }
         else if (!input->key.repeat) meu_sim_action(&app.simulation,key_action(input->key.scancode),down);
     }
-    if (input->type == SDL_EVENT_MOUSE_BUTTON_DOWN && input->button.button == SDL_BUTTON_LEFT) {
+    if (input->type == SDL_EVENT_MOUSE_BUTTON_DOWN && input->button.button == SDL_BUTTON_LEFT && input->button.which!=SDL_TOUCH_MOUSEID) {
         if (app.simulation.paused) start_game();
-        else app.dragging = true;
+        capture_mouse();
     }
-    if (input->type == SDL_EVENT_MOUSE_BUTTON_UP) app.dragging = false;
-    if (input->type == SDL_EVENT_MOUSE_MOTION && app.dragging)
+    if (input->type == SDL_EVENT_MOUSE_MOTION && app.mouse_captured && input->motion.which!=SDL_TOUCH_MOUSEID)
         meu_sim_pointer_look(&app.simulation,input->motion.xrel,input->motion.yrel);
     if (input->type==SDL_EVENT_FINGER_DOWN) {
         if (input->tfinger.x<.5f && !app.move_touch) {
@@ -435,6 +458,9 @@ static void event(const SDL_Event *input)
 
 static void cleanup(void)
 {
+#ifndef __EMSCRIPTEN__
+    release_mouse();
+#endif
     SDL_DestroyAudioStream(app.audio);
     if (app.context) meu_renderer_destroy();
     SDL_GL_DestroyContext(app.context);
@@ -542,8 +568,9 @@ static void lifecycle_input(void)
         case 7: case 9: case 11:key=SDL_SCANCODE_SPACE;break;
         case 13:key=SDL_SCANCODE_LEFT;break;
         case 14:key=SDL_SCANCODE_W;break;
+        case 142: case 144:key=SDL_SCANCODE_F2;break;
         case 20:key=SDL_SCANCODE_ESCAPE;break;
-        case 25: case 55: case 80: case 100: case 133:key=SDL_SCANCODE_RETURN;break;
+        case 25: case 55: case 80: case 100: case 133: case 137: case 145:key=SDL_SCANCODE_RETURN;break;
         case 52:key=SDL_SCANCODE_R;break;
         default:break;
     }
@@ -553,17 +580,17 @@ static void lifecycle_input(void)
     if (f==51) {
         SDL_Event e={0};e.type=SDL_EVENT_KEY_DOWN;e.key.scancode=SDL_SCANCODE_W;e.key.repeat=true;SDL_PushEvent(&e);
     }
-    if (f==70 || f==71 || f==90 || f==91) {
-        SDL_Event e={0}; e.type=(f==70)?SDL_EVENT_WINDOW_FOCUS_LOST:
+    if (f==70 || f==71 || f==90 || f==91 || f==135 || f==136) {
+        SDL_Event e={0}; e.type=(f==70 || f==135)?SDL_EVENT_WINDOW_FOCUS_LOST:
             (f==90)?SDL_EVENT_WINDOW_RESIZED:SDL_EVENT_WINDOW_FOCUS_GAINED;
         SDL_PushEvent(&e);
     }
-    if (f==110 || f==112) {
-        SDL_Event e={0};e.type=f==110?SDL_EVENT_MOUSE_BUTTON_DOWN:SDL_EVENT_MOUSE_BUTTON_UP;
+    if (f==110 || f==112 || f==134 || f==140) {
+        SDL_Event e={0};e.type=f==112?SDL_EVENT_MOUSE_BUTTON_UP:SDL_EVENT_MOUSE_BUTTON_DOWN;
         e.button.button=SDL_BUTTON_LEFT;SDL_PushEvent(&e);
     }
-    if (f==111) {
-        SDL_Event e={0};e.type=SDL_EVENT_MOUSE_MOTION;e.motion.xrel=30;e.motion.yrel=20;SDL_PushEvent(&e);
+    if (f==111 || f==114) {
+        SDL_Event e={0};e.type=SDL_EVENT_MOUSE_MOTION;e.motion.xrel=f==111?30:10;e.motion.yrel=f==111?20:-5;SDL_PushEvent(&e);
     }
 }
 static void lifecycle_check(int width,int height)
@@ -577,10 +604,13 @@ static void lifecycle_check(int width,int height)
     }
     if (f==22 || f==54 || f==73 || f==93) bad|=!s->paused || s->held!=0;
     if (f>=51) bad|=fabsf(s->z+9)>.01f || fabsf(s->x)>.001f || !s->grounded;
+    if (f==113 || f==115 || f==135 || f==141)bad|=!app.mouse_captured || !SDL_GetWindowRelativeMouseMode(app.window);
+    if (f==131 || f==136 || f==137 || f==138 || f==143 || f==146)
+        bad|=app.mouse_captured || SDL_GetWindowRelativeMouseMode(app.window);
     if (f==121) bad|=!meu_renderer_capture("test-results/native-resumed.bmp",width,height);
     if (f>=150) {
-        bad|=s->paused || s->settings_open || s->held!=0 || fabsf(s->yaw-.37f)>.005f ||
-            fabsf(s->pitch+.16f)>.005f || fabsf(s->settings.sensitivity-1.1f)>.001f || app.audio_attempts!=1;
+        bad|=s->paused || s->settings_open || s->held!=0 || fabsf(s->yaw-.41f)>.005f ||
+            fabsf(s->pitch+.14f)>.005f || fabsf(s->settings.sensitivity-1.1f)>.001f || app.audio_attempts!=1;
         printf("LIFECYCLE build=%s scene=%s settings=%.2f context=%d result=%s\n",MEU_BUILD_ID,MEU_SCENE_ID,
             s->settings.sensitivity,meu_sim_context(s),bad?"FAIL":"PASS");
         app.running=false;

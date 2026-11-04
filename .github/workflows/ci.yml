@@ -86,7 +86,7 @@ jobs:
       - name: Build without browser test diagnostics
         run: python3 tools/build.py web --release --test
       - name: Shipping-like browser launch and durable save round trip
-        run: npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey"
+        run: npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey|click captures the desktop mouse"
         env:
           MEU_RELEASE: '1'
       - name: Stage public runtime files
@@ -164,7 +164,7 @@ jobs:
           JS
       - run: npx playwright install --with-deps chromium webkit
       - name: Test live page and saved journeys on desktop and phone layouts
-        run: npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey"
+        run: npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey|click captures the desktop mouse"
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:

@@ -35,7 +35,7 @@ npm run bootstrap
 npm run dev:native
 ~~~
 
-Enter or click begins exploration and sound. WASD walks; mouse drag or arrows look; E uses a nearby object; Escape pauses; Enter resumes. F1 opens/closes Settings: Up/Down selects, Left/Right adjusts, Space toggles, R resets. Closing settings leaves the game paused; Enter explicitly resumes. Sensitivity, vertical drag inversion, walking bob, machine sway and volume apply immediately. Both camera effects default off. Save a journey to keep settings; closing settings alone does not save them. The lift is behind the starting position. Walk backward into its centre, press 1 (bridge), 2 (quarters), or 3 (engineering), wait for the gates, then walk forward out. Furniture, windows and walls block movement. Engineering's central ramp leads to the reactor catwalk.
+Enter or click begins exploration and sound. WASD walks; clicking the view captures the mouse; moving it or arrows look; E uses a nearby object; Escape pauses; Enter resumes. F1 opens/closes Settings: Up/Down selects, Left/Right adjusts, Space toggles, R resets. Closing settings leaves the game paused; Enter explicitly resumes. Sensitivity, vertical drag inversion, walking bob, machine sway and volume apply immediately. Both camera effects default off. Save a journey to keep settings; closing settings alone does not save them. The lift is behind the starting position. Walk backward into its centre, press 1 (bridge), 2 (quarters), or 3 (engineering), wait for the gates, then walk forward out. Furniture, windows and walls block movement. Engineering's central ramp leads to the reactor catwalk.
 
 ~~~text
 npm run test:native
@@ -53,7 +53,7 @@ npm run build:web
 npm run serve:web
 ~~~
 
-Open `http://127.0.0.1:4174` in a WebGL 2 browser. Select Begin exploration. Use the movement buttons and drag the look pad, or use desktop controls. Walk backward into the lift and tap a destination. Contextual buttons provide the same actions as E. Portrait and landscape work without pointer lock or fullscreen. Focus loss, backgrounding, or resizing pauses and clears held input; resume explicitly.
+Open `http://127.0.0.1:4174` in a WebGL 2 browser. Select Begin exploration. Use the movement buttons and drag the look pad, or use desktop controls. Walk backward into the lift and tap a destination. Contextual buttons provide the same actions as E. Desktop canvas clicks request pointer lock; Escape releases and pauses. Touch portrait/landscape and browser-denial fallback remain usable without pointer lock or fullscreen. Focus loss, backgrounding, or resizing pauses and clears held input; resume explicitly.
 
 The server binds to this computer by default. To test a physical phone on the same network, use `npm run serve:web -- --host 0.0.0.0` and open this computer's LAN address on port 4174. Physical Android/iPhone interaction, performance and Safari compatibility remain pending; Chromium/WebKit viewport tests do not establish them.
 

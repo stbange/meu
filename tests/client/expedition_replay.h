@@ -23,10 +23,12 @@ static void expedition_face(float x,float y,float z)
 static void expedition_walk(float x,float z)
 {
     if(hypotf(app.simulation.x-x,app.simulation.z-z)<.065f) { expedition_next();return; }
+    if(!app.mouse_captured) { expedition_face(x,app.simulation.y,z);return; }
     expedition_face(x,app.simulation.y,z);tour_key(SDL_SCANCODE_W,true);
 }
 static void expedition_use(float x,float y,float z)
 {
+    if(!app.mouse_captured) { expedition_face(x,y,z);return; }
     expedition_face(x,y,z);expedition_press(SDL_SCANCODE_E);expedition_next();
 }
 static void expedition_digit(SDL_Scancode code) { expedition_press(code);expedition_next(); }

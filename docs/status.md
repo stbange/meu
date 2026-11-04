@@ -22,6 +22,10 @@ M0a–M0e have been implemented at the user's request. The connected 240-metre h
 
 On 4 November 2026 the user requested implementation through M1 without interim reviews and will test after M1. Human acceptance and physical-device performance remain pending; this explicitly waives the M0 review dependency for M1 implementation, not its eventual acceptance.
 
+## M1 playtest corrections
+
+The user's mouse-capture and floor-flicker corrections are implemented in 0.1.1 ([evidence](evidence/mouse-surfaces.md)). Native capture/geometry/sanitizer and complete expedition checks pass. The new browser capture/lifecycle suite and cross-platform verification are in progress. User confirmation remains pending; M2 is untouched.
+
 ## Next action
 
 M1 implementation is ready for the user’s deferred test. See [the complete route and commands](m1-expedition.md) and [M1e evidence/limits](evidence/m1e-expedition.md). The implementation is on `codex/m1-authored-expedition`; it is not merged into main or deployed. The public [web prototype](https://stbange.github.io/meu/) still reflects main, not this branch. Previous M0e publication remains documented separately.

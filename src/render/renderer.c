@@ -56,7 +56,7 @@ GL_PROCEDURES(DECLARE)
 
 static GLuint program, buffer, dynamic_buffer, vertex_array;
 static GLint matrix_uniform, eye_uniform, lighting_uniform;
-static unsigned interior_count, exterior_count;
+static unsigned interior_count, exterior_count, marking_count;
 
 static void bind_mesh(GLuint id)
 {
@@ -125,6 +125,7 @@ bool meu_renderer_init(void)
     lighting_uniform = pGetUniformLocation(program, "lighting");
     meu_vertex_count=0; meu_mesh_interior(); interior_count=meu_vertex_count;
     meu_mesh_exterior(); exterior_count=meu_vertex_count-interior_count;
+    meu_mesh_route_markings(); marking_count=meu_vertex_count-interior_count-exterior_count;
     SDL_Log("Scene: %u interior triangles, %u exterior triangles",interior_count/3,exterior_count/3);
     pGenVertexArrays(1,&vertex_array); pBindVertexArray(vertex_array);
     pGenBuffers(1,&buffer); bind_mesh(buffer);
@@ -163,8 +164,12 @@ bool meu_renderer_draw(const MeuSimulation *state, int width, int height,int sel
     pUniformMatrix4fv(matrix_uniform,1,GL_FALSE,world_mvp);
     pUniform3f(lighting_uniform,1,.0009f,0);
     glDrawArrays(GL_TRIANGLES,(GLint)interior_count,(GLsizei)exterior_count);
+    /* Decorative paint must keep deterministic depth ownership at long range. */
+    glEnable(GL_POLYGON_OFFSET_FILL);glPolygonOffset(-1,-2);
+    glDrawArrays(GL_TRIANGLES,(GLint)(interior_count+exterior_count),(GLsizei)marking_count);
+    glDisable(GL_POLYGON_OFFSET_FILL);
     meu_vertex_count=0;
-    if (state->expedition.installed) meu_mesh_box(-260,-8,-180,180,8,150,.24f,.61f,.57f);
+    if (state->expedition.installed) meu_mesh_world(meu_world_with_bridge(),meu_world_default()->count);
     unsigned bridge_count=meu_vertex_count;
     meu_mesh_lift(state); unsigned lift_count=meu_vertex_count;
 #ifndef __EMSCRIPTEN__
