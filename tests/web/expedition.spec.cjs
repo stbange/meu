@@ -43,7 +43,11 @@ test('uses real desktop or touch airlock controls, walks the conduit, bypasses a
   for(const control of await page.locator('#expedition-options button:visible').all()){
     const b=await control.boundingBox();expect(b.height).toBeGreaterThanOrEqual(48);
   }
+  await page.evaluate(()=>document.addEventListener('pointerdown',event=>{
+    if(event.target.closest?.('#close-expedition'))window.__stationClosed={hidden:document.querySelector('#expedition-panel').hidden,context:document.body.dataset.context};
+  }));
   await tap(button(page,'Close station'),isMobile);
+  expect(await page.evaluate(()=>window.__stationClosed)).toEqual({hidden:true,context:'foot'});
   let session;
   if(isMobile){
     session=await page.context().newCDPSession(page);

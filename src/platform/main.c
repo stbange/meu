@@ -158,7 +158,11 @@ WEB_EXPORT int meu_web_action(int action, int pressed)
 WEB_EXPORT int meu_web_station(int row)
 {
     bool accepted=meu_sim_station_command(&app.simulation,row);
-    sync_input_context(); return accepted;
+    sync_input_context();
+#ifdef __EMSCRIPTEN__
+    emscripten_run_script("if(window.MEU)window.MEU.station();");
+#endif
+    return accepted;
 }
 WEB_EXPORT const char *meu_web_station_text(int row)
 {

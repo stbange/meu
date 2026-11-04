@@ -9,6 +9,8 @@ This M0/M1 playtest correction addresses the user's request to capture the mouse
 - Rendering: the causeway slabs overlap at Y0, and the installed bridge overlaps that same plane. Opaque room/hull boxes also share faces. A bounded box-union mesher subtracts buried/shared rectangles and gives each coplanar region one owner. Cylinders are excluded from rectangular masks. The bridge emits only faces not already owned by base geometry.
 - Route paint is now a flat, depth-biased decal pass instead of thin overlapping boxes. Collision/support records and saved positions are unchanged.
 
+The prior M1 documentation CI exposed another interruption race: production state showed the suited Commander still inside the airlock, no held movement, and no pause. The station panel remained in the DOM until the next six-frame HUD refresh after its C input context had closed. A fresh movement touch could therefore hit the old overlay. Context changes now hide it synchronously; station commands also refresh content immediately. The real-touch route records panel visibility during the close event itself, before a later frame can hide the bug.
+
 ## Local checks
 
 Debian 13/GCC 14.2.0, CMake 3.31.6, Ninja 1.12.1, SDL 3.4.18, Mesa 25.0.7 llvmpipe, same host as M1e. Source `.tools/activate.sh` first.

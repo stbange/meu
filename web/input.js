@@ -111,6 +111,8 @@
       clearInput(); context = id; epoch = generation;
       body.dataset.context = contexts[id]; mode(id);
       if(!playing())releaseMouse();
+      if(id!==6)$('#expedition-panel').hidden=true;
+      else this.station();
       $('#unit-info').hidden = id !== 2;
       $('#journeys-panel').hidden = id !== 5;
       $('#welcome').hidden = id === 5 || settingsOpen;
