@@ -25,7 +25,7 @@ static bool bounded(double value,double minimum,double maximum) { return isfinit
 static MeuSaveResult valid(const MeuSimulation *s)
 {
     if (!meu_power_valid(&s->power) || !meu_expedition_valid(&s->expedition)) return MEU_SAVE_UNSAFE;
-    if (s->world!=meu_world_default()) return MEU_SAVE_WORLD_UNSUPPORTED;
+    if (s->world!=meu_world_default() && s->world!=meu_world_with_bridge()) return MEU_SAVE_WORLD_UNSUPPORTED;
     if (!bounded(s->x,-100,100) || !bounded(s->y,100,250) || !bounded(s->z,-100,100) ||
         !bounded(s->yaw,-3.141594,3.141594) || !bounded(s->pitch,-1.400001,1.400001) ||
         !bounded(s->robot.x,-1000000,1000000) || !bounded(s->robot.z,-1000000,1000000) ||
@@ -63,6 +63,8 @@ MeuSaveResult meu_snapshot_encode(const MeuSimulation *s,uint32_t generation,uin
     put32(data+148,s->expedition.alloy);put32(data+152,s->expedition.conductor);put32(data+156,s->expedition.sealant);
     put32(data+160,(s->expedition.fault?1u:0)|(s->expedition.diagnosed?2u:0));
     put32(data+164,s->expedition.job);put32(data+168,s->expedition.job_ticks);
+    put32(data+172,(s->expedition.bulk?1u:0)|(s->expedition.coupler?2u:0)|(s->expedition.tested?4u:0)|
+        (s->expedition.adapter?8u:0)|(s->expedition.installed?16u:0));
     put32(data+252,checksum(data,252)); memcpy(out,data,sizeof(data)); return MEU_SAVE_OK;
 }
 MeuSaveResult meu_snapshot_decode(const uint8_t *data,size_t size,MeuSimulation *out,uint32_t *generation)
@@ -89,13 +91,17 @@ MeuSaveResult meu_snapshot_decode(const uint8_t *data,size_t size,MeuSimulation 
     if (schema==2) {
         uint32_t bits=get32(data+144);
         if (bits&~31u) return MEU_SAVE_MALFORMED;
-        for (int i=172;i<252;++i) if (data[i]) return MEU_SAVE_MALFORMED;
+        for (int i=176;i<252;++i) if (data[i]) return MEU_SAVE_MALFORMED;
         uint32_t progress=get32(data+160);if(progress&~3u) return MEU_SAVE_MALFORMED;
-        candidate.expedition=(MeuExpedition){get32(data+148),get32(data+152),get32(data+156),
-            (progress&1)!=0,(progress&2)!=0,get32(data+164),get32(data+168)};
+        candidate.expedition=(MeuExpedition){.alloy=get32(data+148),.conductor=get32(data+152),.sealant=get32(data+156),
+            .fault=(progress&1)!=0,.diagnosed=(progress&2)!=0,.job=get32(data+164),.job_ticks=get32(data+168)};
+        uint32_t discovery=get32(data+172);if(discovery&~31u)return MEU_SAVE_MALFORMED;
+        candidate.expedition.bulk=(discovery&1)!=0;candidate.expedition.coupler=(discovery&2)!=0;
+        candidate.expedition.tested=(discovery&4)!=0;candidate.expedition.adapter=(discovery&8)!=0;candidate.expedition.installed=(discovery&16)!=0;
         candidate.power=(MeuPower){get32(data+128),get32(data+132),get32(data+136),get32(data+140),
             (bits&1)!=0,(bits&2)!=0,(bits&4)!=0,(bits&8)!=0,(bits&16)!=0};
     }
+    candidate.world=candidate.expedition.installed?meu_world_with_bridge():meu_world_default();
     candidate.started=true;
     MeuSaveResult result=valid(&candidate);
     if (result!=MEU_SAVE_OK) return result;

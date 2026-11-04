@@ -8,6 +8,8 @@ bool meu_expedition_valid(const MeuExpedition *e)
 {
     return e->alloy<=100 && e->conductor<=100 && e->sealant<=100 && e->job<=1 && e->job_ticks<=600 &&
         (e->fault || !e->diagnosed) && (e->job || !e->job_ticks) &&
+        (!e->installed || (e->coupler && e->tested && e->adapter)) &&
+        (!e->adapter || (e->coupler && e->tested)) && (!e->tested || e->coupler) &&
         (!e->job || (e->fault && e->diagnosed && e->alloy<=99 && e->conductor<=98));
 }
 const char *meu_helper_status(const MeuExpedition *e,const MeuPower *p)
@@ -48,4 +50,47 @@ void meu_expedition_tick(MeuExpedition *e,MeuPower *p)
             e->job=0;e->job_ticks=0;e->fault=false;e->diagnosed=false;p->overload=false;
         }
     }
+}
+
+const char *meu_salvage_command(MeuExpedition *e,MeuPower *p,int action,bool at_site,bool *accepted)
+{
+    *accepted=false;
+    if (action==0) {
+        if (!at_site) return "Manipulator out of reach: park at the tower socket.";
+        if (e->fault) return "Salvage arm slow: diagnose and repair its shared distribution buffer.";
+        if (e->bulk) return "Cradle already recovered. No duplicate salvage.";
+        if (e->alloy>96 || e->conductor>96 || e->sealant>98) return "Cradle capacity exceeded. No stock or energy changed.";
+        if (!meu_power_spend(p,150,100)) return "Manipulator needs 150 kJ and 100 heat capacity.";
+        e->alloy+=4;e->conductor+=4;e->sealant+=2;e->bulk=true;*accepted=true;
+        return "Bulk stock recovered: 4 alloy, 4 conductor, 2 sealant. Phase coupler needs precise suit work.";
+    }
+    if (action==1) {
+        if (!e->coupler) return "No phase coupler in the cradle. Recover it from the sheltered service conduit.";
+        if (e->tested) return "Bench record already complete. No energy spent.";
+        if (e->fault) return "Repair the distribution buffer before controlled testing.";
+        if (!meu_power_spend(p,100,120)) return "Test bench needs 100 kJ and 120 heat capacity.";
+        e->tested=true;*accepted=true;return "Test: rejects surge peaks. Adapter costs 3 alloy, 3 conductor, 1 sealant, 300 kJ.";
+    }
+    if (action==2) {
+        if (!e->tested) return "Test the unfamiliar coupler before adapting it.";
+        if (e->adapter) return "Adapter already fabricated. No duplicate costs.";
+        if (e->alloy<3 || e->conductor<3 || e->sealant<1) return "Need 3 alloy, 3 conductor, 1 sealant; common stock is available via manipulator.";
+        if (e->fault || e->job) return "Workshop unavailable until the known repair finishes.";
+        if (p->cooling_priority) return "Select fabrication priority at the power console before fabrication.";
+        if (!meu_power_spend(p,300,400)) return "Fabrication needs 300 kJ and 400 heat capacity.";
+        e->alloy-=3;e->conductor-=3;--e->sealant;e->adapter=true;*accepted=true;
+        return "Adapter fabricated. Install in the one grid socket; steady supply trades output for stability.";
+    }
+    if (action==3) {
+        if (!e->adapter || e->installed) return "Need one prepared adapter and an empty installation socket.";
+        if (e->fault || p->grid) return "Repair the buffer and disconnect the grid before installation.";
+        if (!meu_power_spend(p,50,50)) return "Installation needs 50 kJ and 50 heat capacity.";
+        e->installed=true;*accepted=true;return "Grid stabilizer installed: 220 kJ/s, 12 heat/s; high pulses rejected. West service bridge now powered.";
+    }
+    if (action==4) {
+        if (!e->installed) return "Socket is already empty.";
+        if (p->grid) return "Disconnect the grid before removing the stabilizer.";
+        e->installed=false;*accepted=true;return "Stabilizer removed intact. West bridge access requires reinstalling it.";
+    }
+    return "Unknown workshop action.";
 }

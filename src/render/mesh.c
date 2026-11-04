@@ -86,6 +86,7 @@ void meu_mesh_interior(void)
     meu_mesh_text("REACTOR A", -10.2f,127,-20.55f,.09f,1,.16f,.26f,.26f);
     meu_mesh_text("REACTOR B", 5.8f,127,-20.55f,.09f,1,.16f,.26f,.26f);
     meu_mesh_text("EXPEDITION",-6.9f,197.0f,-10.98f,.025f,1,.83f,.80f,.58f);
+    meu_mesh_text("WORKSHOP",6.1f,112.9f,-10.49f,.024f,1,.83f,.80f,.58f);
     meu_mesh_text("POWER",-9.8f,113.0f,-9.0f,.025f,1,.83f,.80f,.58f);
     meu_mesh_text("UNIT DIMENSIONS",3.48f,197.05f,-9.63f,.009f,1,.83f,.80f,.58f);
     for (int i=0;i<3;++i) {

@@ -133,7 +133,7 @@
     },
     hud(room, height, aboard, moving, current, target, use, info, liftReady) {
       const names = ['Bridge','Living quarters','Engineering hall','Service lift'];
-      const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm','Expedition chart','Power and infrastructure'];
+      const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm','Expedition chart','Power and infrastructure','Salvage cradle and test bench'];
       $('#room').textContent = names[room];
       $('#altitude').textContent = (room === 3 ? 'Lift ' : 'Deck ') + Math.round(height) + ' m · Unit height 240 m';
       $('#navigation').hidden = room !== 0; $('#lift-panel').hidden = !aboard;

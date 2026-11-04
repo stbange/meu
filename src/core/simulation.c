@@ -104,12 +104,12 @@ bool meu_sim_request_lift(MeuSimulation *s,int deck)
 }
 MeuUse meu_sim_use_target(const MeuSimulation *s)
 {
-    if (s->station) return (MeuUse)(MEU_USE_NAVIGATION+s->station-1);
+    if (s->station) return MEU_USE_NONE;
     if (s->travel.helm) return MEU_USE_HELM;
     if (s->info_open) return MEU_USE_PLACARD;
-    float positions[9][3]={{3.85f,197.3f,-9.7f},{6.55f,157.4f,-7.25f},{0,114.5f,-26.5f},
-        {-1.65f,197.25f,-3.25f},{-1.65f,157.25f,-3.25f},{-1.65f,113.25f,-3.25f},{0,197.2f,-14.5f},{-6,197.3f,-11.4f},{-9,113.3f,-9.3f}};
-    for (int i=0;i<9;++i) {
+    float positions[10][3]={{3.85f,197.3f,-9.7f},{6.55f,157.4f,-7.25f},{0,114.5f,-26.5f},
+        {-1.65f,197.25f,-3.25f},{-1.65f,157.25f,-3.25f},{-1.65f,113.25f,-3.25f},{0,197.2f,-14.5f},{-6,197.3f,-11.4f},{-9,113.3f,-9.3f},{7,113.3f,-10.5f}};
+    for (int i=0;i<10;++i) {
         if (i==6 && (!s->travel.parked || s->motion_fixture)) continue;
         float dx=positions[i][0]-s->x,dy=positions[i][1]-s->y,dz=positions[i][2]-s->z;
         float distance=sqrtf(dx*dx+dy*dy+dz*dz);
@@ -121,8 +121,8 @@ MeuUse meu_sim_use_target(const MeuSimulation *s)
 }
 const char *meu_sim_use_name(MeuUse use)
 {
-    static const char *names[]={"", "Read unit dimensions", "Toggle reading lamp", "Toggle inspection lights", "Call service lift", "Take bridge helm", "Expedition chart", "Power and infrastructure"};
-    return names[use>=0 && use<=MEU_USE_POWER ? use : 0];
+    static const char *names[]={"", "Read unit dimensions", "Toggle reading lamp", "Toggle inspection lights", "Call service lift", "Take bridge helm", "Expedition chart", "Power and infrastructure", "Salvage cradle and test bench"};
+    return names[use>=0 && use<=MEU_USE_WORKSHOP ? use : 0];
 }
 bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
 {
@@ -149,6 +149,8 @@ bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
         if (!pressed) return true;
         if (s->station) return meu_sim_station_command(s,-1);
         switch (meu_sim_use_target(s)) {
+            case MEU_USE_WORKSHOP:
+                s->station=4;meu_sim_clear_input(s);break;
             case MEU_USE_NAVIGATION: case MEU_USE_POWER:
                 s->station=meu_sim_use_target(s)-MEU_USE_NAVIGATION+1;
                 meu_sim_clear_input(s); break;
@@ -238,6 +240,8 @@ static void tick(MeuSimulation *s)
 {
     const float dt=(float)MEU_TICK_SECONDS;
     previous(s); lift_tick(s);
+    if (s->world==meu_world_default() || s->world==meu_world_with_bridge())
+        s->world=s->expedition.installed?meu_world_with_bridge():meu_world_default();
     float forward=(float)(held(s,MEU_FORWARD)-held(s,MEU_BACKWARD));
     float right=(float)(held(s,MEU_RIGHT)-held(s,MEU_LEFT));
     float length=sqrtf(forward*forward+right*right);
@@ -253,7 +257,7 @@ static void tick(MeuSimulation *s)
     if (s->power.energy<MEU_RETURN_MARGIN || s->power.grid || s->power.collectors) meu_travel_stop(&s->travel);
     if (!s->motion_fixture)
         meu_travel_tick(&s->travel,&s->robot,s->world,(int)forward,(int)right,held(s,MEU_BRAKE)!=0);
-    meu_power_tick(&s->power,!s->travel.parked,false);
+    meu_power_tick(&s->power,!s->travel.parked,s->expedition.installed);
     meu_expedition_tick(&s->expedition,&s->power);
     ++s->ticks; s->visited|=UINT32_C(1)<<meu_sim_room(s);
     /* Test-only motion driver: the future steering system supplies this same pose. */
@@ -291,8 +295,8 @@ void meu_sim_render_state(const MeuSimulation *s,MeuSimulation *r)
 
 const char *meu_sim_station_title(const MeuSimulation *s)
 {
-    const char *titles[]={"", "Tower expedition chart", "Engineering power console", "Maintenance helper"};
-    return titles[s->station>=0 && s->station<=3?s->station:0];
+    const char *titles[]={"", "Tower expedition chart", "Engineering power console", "Maintenance helper", "Salvage cradle and test bench"};
+    return titles[s->station>=0 && s->station<=4?s->station:0];
 }
 void meu_sim_station_status(const MeuSimulation *s,char *line,unsigned size)
 {
@@ -304,6 +308,16 @@ void meu_sim_station_line(const MeuSimulation *s,int row,char *line,unsigned siz
     if (s->station==1) {
         const char *lines[]={"Tower socket: pilot north to Z -120..-175; park", "Expedition estimate: 3000 kJ + 2000 uncertainty", "Keep 4000 kJ return margin; solar recovery available", "Engineering console: beside the helper on deck 3"};
         snprintf(line,size,"%s",row>=0 && row<4?lines[row]:"");
+    } else if (s->station==4) {
+        switch(row) {
+            case 0:snprintf(line,size,"Manipulator: recover 4 alloy + 4 conductor + 2 sealant (150 kJ)");break;
+            case 1:snprintf(line,size,"Controlled coupler test (100 kJ, +120 heat)");break;
+            case 2:snprintf(line,size,"Adapter: alloy %u/3 conductor %u/3 sealant %u/1 (300 kJ)",s->expedition.alloy,s->expedition.conductor,s->expedition.sealant);break;
+            case 3:snprintf(line,size,"Install stabilizer: 1 slot, 220 kJ/s, +12 heat/s (50 kJ)");break;
+            case 4:snprintf(line,size,"Remove stabilizer intact (disconnect grid first)");break;
+            case 5:snprintf(line,size,"Socket: %s | coupler: %s",s->expedition.installed?"installed":"empty",s->expedition.tested?"tested":s->expedition.coupler?"unfamiliar":"not recovered");break;
+            default:if(size)line[0]=0;break;
+        }
     } else if (s->station==3) {
         switch(row) {
             case 0:snprintf(line,size,"Inspect symptoms: %s",s->expedition.fault?"dim displays, slow arm":"systems nominal");break;
@@ -329,7 +343,13 @@ bool meu_sim_station_command(MeuSimulation *s,int row)
     if (!s->station || s->paused) return false;
     if (row==-1) { s->station=0; meu_sim_clear_input(s); return true; }
     const char *message="Read the chart, then approach the tower at the helm."; bool accepted=false;
-    if (s->station==3) {
+    if (s->station==4) {
+        if (row==4 && (fabs(s->robot.x)>15 || s->robot.z > -120 || s->robot.z < -175)) {
+            snprintf(s->message,sizeof(s->message),"Return to the main tower socket before retracting the powered bridge.");return false;
+        }
+        message=meu_salvage_command(&s->expedition,&s->power,row,
+            s->travel.parked && s->robot.z<=-120 && s->robot.z>=-175 && fabs(s->robot.x)<=15,&accepted);
+    } else if (s->station==3) {
         if(row==4) { s->station=2;accepted=true;message="Power console."; }
         else message=meu_maintenance_command(&s->expedition,&s->power,row,&accepted);
     } else if (s->station==2) {

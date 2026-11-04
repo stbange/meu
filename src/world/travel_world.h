@@ -11,6 +11,7 @@ typedef struct {
 typedef struct { const MeuWorldBox *boxes; size_t count; } MeuWorld;
 typedef enum { MEU_ROUTE_CLEAR, MEU_ROUTE_STRUCTURE, MEU_ROUTE_SUPPORT, MEU_ROUTE_INVALID } MeuRoute;
 const MeuWorld *meu_world_default(void);
+const MeuWorld *meu_world_with_bridge(void);
 /* Entire feet and all hull bands, with extra clearance in metres. */
 MeuRoute meu_world_validate(const MeuWorld *world,MeuRobotPose pose,double clearance);
 MeuRoute meu_world_sweep(const MeuWorld *world,MeuRobotPose from,MeuRobotPose to);

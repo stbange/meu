@@ -108,6 +108,9 @@ static void build(void)
     box(-.9f,114.26f,-26.75f,1.8f,.04f,.5f,.83f,.65f,.28f,0);
     box(-13,132,-22,26,1.2f,1.4f,.56f,.47f,.29f,0);
     box(-.4f,121,-22,.8f,11,.8f,.44f,.47f,.42f,0);
+    /* Human-scale salvage/test bench, clear of the reactor access lane. */
+    box(6,112,-11.5f,2,1.1f,1,.30f,.39f,.38f,MEU_SOLID);
+    box(6.1f,113.12f,-11.4f,1.8f,.04f,.8f,.23f,.72f,.65f,0);
     /* A docked maintenance robot, visibly mechanical, with no human crew. */
     box(-10,112,-10,1.5f,.6f,2,.18f,.24f,.27f,MEU_SOLID);
     box(-9.8f,112.6f,-9.7f,1.1f,.65f,1.3f,.70f,.52f,.23f,MEU_SOLID);

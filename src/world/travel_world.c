@@ -134,3 +134,15 @@ const char *meu_route_name(MeuRoute reason)
     static const char *names[]={"Route clear","Structure in stopping path","Unsupported ground ahead","Travel unavailable"};
     return names[reason>=0 && reason<=MEU_ROUTE_INVALID?reason:MEU_ROUTE_INVALID];
 }
+
+const MeuWorld *meu_world_with_bridge(void)
+{
+    static MeuWorldBox extended[161];static MeuWorld world;
+    if (!world.count) {
+        const MeuWorld *base=meu_world_default();
+        for(size_t i=0;i<base->count;++i)extended[i]=base->boxes[i];
+        extended[base->count]=(MeuWorldBox){-260,-8,-180,180,8,150,.24f,.61f,.57f,true};
+        world=(MeuWorld){extended,base->count+1};
+    }
+    return &world;
+}
