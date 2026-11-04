@@ -26,7 +26,7 @@ async function helpTour(page,mobile,info){
   await tap(button(page,'Previous help topic'),mobile);await expect(page.locator('#help-tip')).toContainText('BEFORE');
   const article=page.locator('#help-article');
   if(await article.evaluate(node=>node.scrollHeight>node.clientHeight+1)){
-    await article.hover();await page.mouse.wheel(0,1000);
+    await article.press('End');
     await expect.poll(()=>article.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);
   }
   await page.locator('#help-topic').selectOption('0');await expect(page.locator('#help-heading')).toHaveText("Let's start on the bridge");
