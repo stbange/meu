@@ -183,7 +183,7 @@ body[data-context="station"] #expedition-objective { visibility:hidden; }
 #coordinates { text-align:center; font-size:12px; color:#c9dac2; font-variant-numeric:tabular-nums; }
 body[data-paused="true"] #mission-hud,body[data-context="station"] #mission-hud { visibility:hidden; }
 @media(max-width:900px) and (min-height:431px) {
-  #mission-hud { width:calc(100% - 24px - var(--safe-left) - var(--safe-right)); }
+  #mission-hud { top:max(120px,calc(var(--safe-top) + 108px)); width:calc(100% - 24px - var(--safe-left) - var(--safe-right)); }
   body[data-room="0"] #mission-hud { top:max(200px,calc(var(--safe-top) + 188px)); }
   body[data-room="0"][data-helm="true"] #mission-hud { top:max(270px,calc(var(--safe-top) + 258px)); }
 }
