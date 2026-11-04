@@ -46,7 +46,7 @@ h1 { font-size:20px; font-weight:500; margin:2px 0 0; }
 #help-title:focus { outline:none; }
 .help-topic-label { display:flex; align-items:center; gap:12px; flex-shrink:0; color:#b4cdbd; font-size:13px; }
 #help-topic { min-height:48px; flex:1; min-width:0; padding:8px; color:#e3eadf; background:#203735; border:1px solid #92b8a780; border-radius:4px; font:inherit; font-size:15px; }
-#help-article { min-height:0; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; padding:4px 8px 4px 0; }
+#help-article { min-height:0; overflow-y:auto; overflow-anchor:none; scroll-behavior:auto; overscroll-behavior:contain; touch-action:pan-y; padding:4px 8px 4px 0; }
 #help-scroll-hint { flex-shrink:0; margin:4px 0 0; color:#9fc8b6; }
 #help-article h3 { font-size:23px; line-height:1.2; font-weight:550; margin:6px 0 12px; color:#efdfb8; }
 #help-article p { line-height:1.5; }

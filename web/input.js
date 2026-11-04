@@ -128,7 +128,7 @@
       if (id === 2) $('#close-info').focus();
     },
     help() {
-      const panel=$('#help-panel'),opening=panel.hidden;
+      const panel=$('#help-panel'),opening=panel.hidden,article=$('#help-article'),scrollBefore=article.scrollTop;
       panel.hidden=context!==7;$('#help-backdrop').hidden=context!==7;
       if(context!==7)return;
       const text=field=>call('meu_web_help_text',['number'],[field],'string');
@@ -143,9 +143,10 @@
       for(const [field,id] of [[0,'help-heading'],[1,'help-place'],[2,'help-action'],[3,'help-tip']]) {
         const node=$('#'+id),value=text(field);if(node.textContent!==value)node.textContent=value;
       }
-      if(opening || changed)$('#help-article').scrollTop=0;
       const hint=$('#help-scroll-hint');hint.hidden=true;
       hint.hidden=$('#help-article').scrollHeight<=$('#help-article').clientHeight+1;
+      if(opening || changed)article.scrollTo({top:0,left:0,behavior:'instant'});
+      else article.scrollTop=scrollBefore;
       if(opening)$('#help-title').focus();
     },
     station() {

@@ -30,7 +30,7 @@ async function helpTour(page,mobile,info){
     await expect.poll(()=>article.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);
   }
   await page.locator('#help-topic').selectOption('0');await expect(page.locator('#help-heading')).toHaveText("Let's start on the bridge");
-  expect(await article.evaluate(node=>node.scrollTop)).toBe(0);
+  await expect.poll(()=>article.evaluate(node=>node.scrollTop)).toBe(0);
   await page.emulateMedia({reducedMotion:'reduce'});
   expect(await page.locator('#help-panel .pip-flight').evaluate(node=>getComputedStyle(node).animationName)).toBe('none');
   await page.screenshot({path:info.outputPath('pip-help.png')});
