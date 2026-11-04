@@ -33,7 +33,7 @@ static MeuSaveResult valid(const MeuSimulation *s)
         !bounded(s->settings.volume,0,1) || s->ticks>UINT64_C(9007199254740991) ||
         (s->visited&~UINT32_C(15)) || !(s->visited&(UINT32_C(1)<<meu_sim_room(s)))) return MEU_SAVE_UNSAFE;
     if (s->x>14 && (!s->expedition.suit || !s->expedition.scanned || !s->expedition.checkpoint ||
-        s->robot.z > -120 || s->robot.z < -175 || fabs(s->robot.x)>15 || fabs(s->robot.yaw)>=.05)) return MEU_SAVE_UNSAFE;
+        s->robot.z > -120 || s->robot.z < -175 || fabs(s->robot.x)>15 || fabs(remainder(s->robot.yaw,6.283185307179586))>=.05)) return MEU_SAVE_UNSAFE;
     if (!s->travel.parked || s->travel.speed!=0 || s->travel.turn_rate!=0 || s->travel.helm ||
         s->motion_fixture || s->lift_velocity!=0 || meu_sim_lift_moving(s)) return MEU_SAVE_BUSY;
     if (s->lift_current<0 || s->lift_current>2 || s->lift_target!=s->lift_current ||

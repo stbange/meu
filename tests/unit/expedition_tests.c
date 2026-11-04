@@ -88,6 +88,14 @@ int main(void)
     meu_sim_init(&s);meu_sim_start(&s);s.robot.z=-140;s.station=4;s.expedition.repaired=true;
     s.expedition.alloy=100;unsigned charge=s.power.energy;
     CHECK(!meu_sim_station_command(&s,0));CHECK(s.expedition.alloy==100 && s.power.energy==charge && !s.expedition.bulk);
+    /* A full turn is physically the same docking heading, including on reload. */
+    meu_sim_init(&s);meu_sim_start(&s);s.station=5;s.robot.z=-140;s.robot.yaw=6.283185307179586;
+    s.expedition.repaired=true;s.expedition.scanned=true;s.expedition.shelter=true;
+    CHECK(meu_sim_station_command(&s,2));s.x=25;s.z=-10;s.y=112+MEU_EYE_HEIGHT;
+    s.lift_current=s.lift_target=2;s.lift_y=112;s.visited=15;
+    CHECK(meu_snapshot_encode(&s,5,data)==MEU_SAVE_OK);
+    CHECK(meu_snapshot_decode(data,sizeof(data),&loaded,NULL)==MEU_SAVE_OK && loaded.expedition.suit);
+    charge=s.power.energy;
     /* An invalid power state cannot exploit unsigned heat subtraction. */
     s.power.heat=10001;CHECK(!meu_power_spend(&s.power,1,1));CHECK(s.power.energy==charge);
     puts("PASS diagnosis, isolation, helper stock reservation, cancellation, blocking and saved-job resume");return EXIT_SUCCESS;

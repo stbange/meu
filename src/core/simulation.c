@@ -384,7 +384,7 @@ bool meu_sim_station_command(MeuSimulation *s,int row)
     const char *message="Read the chart, then approach the tower at the helm."; bool accepted=false;
     if(s->station==5 || s->station==6) {
         MeuExpedition *e=&s->expedition;
-        bool site=s->travel.parked && s->robot.z<=-120 && s->robot.z>=-175 && fabs(s->robot.x)<=15 && fabs(s->robot.yaw)<.05;
+        bool site=s->travel.parked && s->robot.z<=-120 && s->robot.z>=-175 && fabs(s->robot.x)<=15 && fabs(remainder(s->robot.yaw,6.283185307179586))<.05;
         if(e->catastrophe) {
             if(row==7 && e->checkpoint) {
                 meu_expedition_recover(e,&s->power);s->x=12;s->y=112+MEU_EYE_HEIGHT;s->z=-10;s->yaw=0;s->pitch=0;
