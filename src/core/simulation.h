@@ -2,6 +2,7 @@
 #define MEU_SIMULATION_H
 #include "core/pose.h"
 #include "game/power.h"
+#include "game/expedition.h"
 #include "game/interior.h"
 #include "game/travel.h"
 #include "core/settings.h"
@@ -33,6 +34,7 @@ typedef struct {
     MeuRobotPose robot,previous_robot;
     MeuTravel travel;
     MeuPower power;
+    MeuExpedition expedition;
     int station;
     char message[120];
     const MeuWorld *world;

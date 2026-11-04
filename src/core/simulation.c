@@ -12,7 +12,7 @@ void meu_sim_init(MeuSimulation *s)
 {
     memset(s,0,sizeof(*s)); s->y=196+MEU_EYE_HEIGHT; s->z=-8; s->pitch=-.08f;
     s->lift_y=196; s->lift_door=1; s->paused=true; s->grounded=true;
-    s->world=meu_world_default(); meu_travel_init(&s->travel); meu_power_init(&s->power);
+    s->world=meu_world_default(); meu_travel_init(&s->travel); meu_power_init(&s->power); meu_expedition_init(&s->expedition);
     meu_settings_default(&s->settings); s->input_epoch=1;
     s->quarters_light=true; s->inspection_light=true; s->visited=1; previous(s);
 }
@@ -254,6 +254,7 @@ static void tick(MeuSimulation *s)
     if (!s->motion_fixture)
         meu_travel_tick(&s->travel,&s->robot,s->world,(int)forward,(int)right,held(s,MEU_BRAKE)!=0);
     meu_power_tick(&s->power,!s->travel.parked,false);
+    meu_expedition_tick(&s->expedition,&s->power);
     ++s->ticks; s->visited|=UINT32_C(1)<<meu_sim_room(s);
     /* Test-only motion driver: the future steering system supplies this same pose. */
     if (s->motion_fixture) {
@@ -290,7 +291,8 @@ void meu_sim_render_state(const MeuSimulation *s,MeuSimulation *r)
 
 const char *meu_sim_station_title(const MeuSimulation *s)
 {
-    return s->station==1?"Tower expedition chart":"Engineering power console";
+    const char *titles[]={"", "Tower expedition chart", "Engineering power console", "Maintenance helper"};
+    return titles[s->station>=0 && s->station<=3?s->station:0];
 }
 void meu_sim_station_status(const MeuSimulation *s,char *line,unsigned size)
 {
@@ -302,12 +304,22 @@ void meu_sim_station_line(const MeuSimulation *s,int row,char *line,unsigned siz
     if (s->station==1) {
         const char *lines[]={"Tower socket: pilot north to Z -120..-175; park", "Expedition estimate: 3000 kJ + 2000 uncertainty", "Keep 4000 kJ return margin; solar recovery available", "Engineering console: beside the helper on deck 3"};
         snprintf(line,size,"%s",row>=0 && row<4?lines[row]:"");
+    } else if (s->station==3) {
+        switch(row) {
+            case 0:snprintf(line,size,"Inspect symptoms: %s",s->expedition.fault?"dim displays, slow arm":"systems nominal");break;
+            case 1:snprintf(line,size,"Queue repair: alloy %u/1, conductor %u/2",s->expedition.alloy,s->expedition.conductor);break;
+            case 2:snprintf(line,size,"Cancel repair and refund reserved parts");break;
+            case 3:snprintf(line,size,"%s",meu_helper_status(&s->expedition,&s->power));break;
+            case 4:snprintf(line,size,"Back to power console");break;
+            default:if(size)line[0]=0;break;
+        }
     } else {
         switch (row) {
             case 0:snprintf(line,size,"%s collectors (parked only)",s->power.collectors?"Stow":"Deploy");break;
             case 1:snprintf(line,size,"%s workshop bus",s->power.isolated?"Reconnect":"Isolate");break;
             case 2:snprintf(line,size,"%s tower grid (pulses every 12 s)",s->power.grid?"Disconnect":"Connect");break;
             case 3:snprintf(line,size,"Priority: %s",s->power.cooling_priority?"cooling":"fabrication");break;
+            case 7:snprintf(line,size,"Inspect maintenance helper");break;
             default:if (size) line[0]=0;break;
         }
     }
@@ -317,7 +329,12 @@ bool meu_sim_station_command(MeuSimulation *s,int row)
     if (!s->station || s->paused) return false;
     if (row==-1) { s->station=0; meu_sim_clear_input(s); return true; }
     const char *message="Read the chart, then approach the tower at the helm."; bool accepted=false;
-    if (s->station==2) {
+    if (s->station==3) {
+        if(row==4) { s->station=2;accepted=true;message="Power console."; }
+        else message=meu_maintenance_command(&s->expedition,&s->power,row,&accepted);
+    } else if (s->station==2) {
+        if(row==7) { s->station=3;accepted=true;message=meu_helper_status(&s->expedition,&s->power); }
+        else
         if (row==0) {
             if (!s->travel.parked) message="Park before deploying collectors.";
             else { s->power.collectors=!s->power.collectors; accepted=true; message="Collector configuration updated. Charging continues during interior tasks."; }
