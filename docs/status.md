@@ -18,8 +18,12 @@ M0a–M0e have been implemented at the user's request. The connected 240-metre h
 | M3 Complete exploration arc | Not started | Not run | Pending |
 | M4 Release preparation | Not started | Not run | Pending |
 
+## Review schedule
+
+On 4 November 2026 the user requested implementation through M1 without interim reviews and will test after M1. Human acceptance and physical-device performance remain pending; this explicitly waives the M0 review dependency for M1 implementation, not its eventual acceptance.
+
 ## Next action
 
 The [MEU web prototype](https://stbange.github.io/meu/) publishes from main after checks pass. All six [M0e publishing jobs](https://github.com/stbange/meu/actions/runs/41703685599) passed. The exact source, runtime and live save verification are in [M0e evidence](evidence/m0e-saves.md) and [GitHub Pages evidence](github-pages.md). Publication does not change pending user acceptance.
 
-Next is M0f integrated verification and focused playtest in the [implementation plan](implementation-plan.md): select actual Windows/Linux and Android/iPhone reference devices, measure the defined performance budgets, review scale/comfort/discoverability and record explicit user feedback. Preserve validated save publication, source recovery, context cleanup and supported travel. Settings are kept when included in an explicit saved journey. Commands are in [build and test](build-and-test.md); [save format and recovery](save-format.md) records storage behavior and compatibility.
+The next implementation is M1a power/infrastructure, followed by M1b–M1e. M0f automated evidence is consolidated in [the continuation record](evidence/m0f-continuation.md). After M1, complete the combined focused playtest in the [implementation plan](implementation-plan.md): select actual Windows/Linux and Android/iPhone reference devices, measure the defined performance budgets, review scale/comfort/discoverability and record explicit user feedback. Preserve validated save publication, source recovery, context cleanup and supported travel. Settings are kept when included in an explicit saved journey. Commands are in [build and test](build-and-test.md); [save format and recovery](save-format.md) records storage behavior and compatibility.
