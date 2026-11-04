@@ -2,6 +2,9 @@ const {test,expect}=require('@playwright/test');
 const {state,ready,button,menu,imported}=require('./save-helpers.cjs');
 const fs=require('node:fs/promises'),path=require('node:path');
 const release=process.env.MEU_RELEASE==='1';
+// Pointer Lock needs a desktop window; other suites retain headless lifecycle
+// emulation (bare Xvfb has no window manager to minimize a real window).
+test.use({headless:false});
 test.beforeEach(async({page})=>{
   page.__mouseErrors=[];
   page.on('pageerror',error=>page.__mouseErrors.push(error.message));

@@ -25,12 +25,36 @@ npx playwright test --list
 
 Results: 15/15 native/core and address/undefined sanitizer groups pass. LeakSanitizer remains unavailable under this host's ptrace. Geometry regressions assert unique coplanar faces, exact union floor area, deterministic duplicate ownership, contained/shared-face removal and the actual base-plus-bridge join. Interior mesh remains within the existing vertex budget. Native smoke, complete interior/pilot/lifecycle/persistence tours and the full SDL-input expedition pass. Lifecycle explicitly checks real SDL relative mode after mouse-button release, continued look without a button, menu release, focus loss, no automatic recapture and fresh-click recapture. SDL mode changes flush queued motion; the expedition replay therefore acquires capture before injecting its look delta. The complete route still saves/reloads successfully (8531 ticks, 20114 kJ, 8 alloy, 6 conductor, 4 sealant).
 
-All seven active OpenSpec changes validate. Playwright configures 84 cases; new desktop tests cover genuine lock, outside-window relative look, Escape, settings/journeys, active station release and denied-lock fallback. Existing touch and browser-save checks remain. Optimized/live-check filters include captured mouse behavior. Source bbc3023 passes Windows/Linux and compiled Wasm checks; the debug browser run passes 63 cases with 19 target-specific skips but exposes two new mouse regressions, so optimized verification remains pending.
+All seven active OpenSpec changes validate. Playwright configures 84 cases; new desktop tests cover genuine lock, outside-window relative look, Escape, settings/journeys, active station release and denied-lock fallback. Existing touch and browser-save checks remain. Optimized/live-check filters include captured mouse behavior. Matching SDK/browser downloads remain policy-blocked locally; the full browser checks use remote CI.
+
+## Remote checks and builds
+
+Verification baseline: `b858dabd6fc41df4d91cde56403a7756d462dd71`, [CI run 41823455628](https://github.com/stbange/meu/actions/runs/41823455628). Runtime 0.1.1, scene `m1-tower-v1`, content 6, schema 2. Corrected browser launch-mode verification is pending.
+
+| Check | Result |
+| --- | --- |
+| Strict OpenSpec validation | 7 active changes pass |
+| Windows native | 15/15 test groups pass |
+| Linux native | 15/15 groups, rendered tours, captured SDL lifecycle, full expedition and separate-process durable save/reload pass |
+| Linux address/undefined sanitizers | 15/15 groups pass |
+| Debug WebAssembly | 14/14 compiled test groups pass |
+| Focused desktop Pointer Lock | 5/5 real-browser cases pass under Xvfb |
+| Full Chromium/WebKit desktop and phone layouts | 62 pass, 19 deliberate skips; 3 backgrounding checks fail because all cases were forced into a real window without a window manager |
+| Optimized WebAssembly/browser checks | Pending |
+
+Development builds from this source:
+
+- [Windows archive](https://github.com/stbange/meu/actions/runs/41823455628/artifacts/13317924490): extract and run `bin/meu.exe`.
+- [Linux archive](https://github.com/stbange/meu/actions/runs/41823455628/artifacts/13317588437).
+
+Remote browser commands now use `xvfb-run -a npm run test:web`, with a focused `tests/web/mouse.spec.cjs --project=desktop` run first. Only Pointer Lock cases request a desktop window; existing background/minimize emulation retains headless mode because bare Xvfb cannot minimize a real window without a window manager. The optimized run sets `MEU_RELEASE=1` and selects the rendering, persisted-settings, saved-journey and captured-mouse cases. No public deployment was requested.
+
+## Browser diagnostics
 
 An isolated diagnostic using the installed Chromium 154.0.8037.57 reproduces an `InvalidStateError` when fallback `setPointerCapture` runs during a pending Pointer Lock request. Fallback capture now waits for denial; the diagnostic confirms genuine locked relative mouse events, including movement beyond the viewport, without a JavaScript error. This diagnostic mocks C calls and does not substitute for the full Wasm/browser tests. New mouse failures retain production state and event diagnostics; CI runs the desktop capture cases before the longer route suite.
 
-The focused 8ed4d82 browser run passes both menus, station release and refused-lock fallback. Its event stream shows the headless browser injecting an equal reverse delta after each requested outside-viewport movement, cancelling the observed final yaw. Pointer Lock verification now uses a headed browser under Xvfb. Relative look also waits for the lock-change confirmation so acquisition movement cannot rotate the Commander before capture is established.
+The focused 8ed4d82 browser run passes both menus, station release and refused-lock fallback. Its headless event stream records an equal reverse delta after each requested outside-viewport movement, cancelling the observed final yaw. The headed/Xvfb b858dab run passes all five mouse cases. Relative look also waits for the lock-change confirmation so acquisition movement cannot rotate the Commander before capture is established. Earlier failed runs remain diagnostic evidence, rather than being recorded as passing verification.
 
 ## Limits
 
-This fixes duplicate opaque render faces, not procedural city generation. The interior union partitions more faces while avoiding hidden surfaces (20504 interior triangles in the current fixture); no real-device performance claim is made. The browser API must be supported/allowed to acquire a lock; touch and denied-lock fallback remain usable. Main and public Pages are unchanged until a separate merge/deployment decision. Neither successful checks nor the requested fixes imply acceptance of all M0/M1 gameplay.
+This correction covers the authored world and interior opaque geometry. The interior union partitions more faces while avoiding hidden surfaces (20504 interior triangles in the current fixture); no real-device performance claim is made. The browser API must be supported/allowed to acquire a lock; touch and denied-lock fallback remain usable. Main and public Pages are unchanged until a separate merge/deployment decision. Neither successful checks nor the requested fixes imply acceptance of all M0/M1 gameplay.
