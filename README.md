@@ -8,7 +8,7 @@ The implementation target is **C17, SDL3, and OpenGL** on Windows and Linux, plu
 
 M1a–M1e now connect a complete authored tower expedition: pilot and park, isolate a pulsing grid, diagnose a fault, assign a repair helper, recover stock, enter a sheltered service conduit in a suit, fit a bypass, recover and adapt its coupler, then power a previously unsupported west route. All play remains first person. See [the M1 route](docs/m1-expedition.md), [status](docs/status.md) and [M1e evidence](docs/evidence/m1e-expedition.md).
 
-The implementation is on `codex/m1-authored-expedition`. At the user's request, this branch is now configured to publish to GitHub Pages after all checks, followed by live verification; see [publication status](docs/evidence/working-branch-pages.md). Human reviews were deferred until M1; M0f device/performance work and combined M0/M1 acceptance remain pending. Windows/Linux and debug/optimized web checks pass in the recorded CI run.
+The implementation is on `codex/m1-authored-expedition`. At the user's request, this branch is now configured to publish to GitHub Pages after all checks, followed by live verification. All build/browser checks pass, but the existing `github-pages` environment blocks this branch; its deployment branch rule still needs updating. See [publication status and the required setting](docs/evidence/working-branch-pages.md). Human reviews were deferred until M1; M0f device/performance work and combined M0/M1 acceptance remain pending.
 
 Version 0.1.1 added click-captured mouse look and removed overlapping floor/wall surfaces; see the [playtest correction record](docs/evidence/mouse-surfaces.md).
 

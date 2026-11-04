@@ -1,6 +1,6 @@
 # Pip onboard help - 4 November 2026
 
-User-requested post-M1 onboarding is implemented and verified: Pip, a hovering guide projection, explains the game and the next actionable step. Runtime 0.1.2; scene/content and save schema remain unchanged. All required development CI jobs pass. M2 and human acceptance remain pending. Work is on `codex/m1-authored-expedition`; main/Pages are unchanged.
+User-requested post-M1 onboarding is implemented and verified: Pip, a hovering guide projection, explains the game and the next actionable step. Runtime 0.1.2; scene/content and save schema remain unchanged. All required development CI jobs pass. M2 and human acceptance remain pending. Work is on `codex/m1-authored-expedition`; the subsequent user-authorized public deployment is tracked in [working-branch Pages evidence](working-branch-pages.md).
 
 ## Shared content and progression
 
@@ -65,4 +65,4 @@ Development builds from this source:
 - [Linux archive](https://github.com/stbange/meu/actions/runs/41849350807/artifacts/13333875039).
 - [Optimized web build and browser reports](https://github.com/stbange/meu/actions/runs/41849350807/artifacts/13336236522): serve `build/web-release/bin` over HTTP. The optimized checks require the diagnostic state export to be absent.
 
-Main/public Pages remain unchanged; deploying the branch is a separate publication action. Human help/comfort review and physical-phone/performance checks remain pending. Keep the OpenSpec change open until acceptance is recorded.
+This runtime verification did not publish the branch or merge main. See [working-branch Pages evidence](working-branch-pages.md) for the subsequent publication request and live-check results. Human help/comfort review and physical-phone/performance checks remain pending. Keep the OpenSpec change open until acceptance is recorded.
