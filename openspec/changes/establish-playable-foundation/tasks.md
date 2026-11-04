@@ -9,11 +9,11 @@
 
 ## Automated verification
 
-- [ ] 7. Run C tests for transforms, travel rejection/stopping, lifecycle input, malformed saves, and snapshot recovery. Retain reports and failing fixtures.
-- [ ] 8. Run rendered movement, collision, lift, and helm scenarios. Verify translation/turn/start/stop motion with no unintended standing drift beyond 2 cm over 60 seconds, and no ejection or floor penetration.
-- [ ] 9. Build and run Windows/Linux foundation checks and the actual WebAssembly browser scenario. Retain versions, logs, screenshots, and input replays. Maps to PORT-01 and PORT-04.
-- [ ] 10. Complete a touch-only bridge-to-engineering route at 360 by 640 and 640 by 360 CSS pixels; rotate, background, resume, and reload a confirmed save. Maps to VIEW-03 and PORT-02/03.
-- [ ] 11. Test unavailable storage, corrupt latest snapshot, unsupported schema, and save interruption. No successful-save status before durable completion. Maps to PORT-03.
+- [x] 7. Run C tests for transforms, travel rejection/stopping, lifecycle input, malformed saves, and snapshot recovery. Retain reports and failing fixtures.
+- [x] 8. Run rendered movement, collision, lift, and helm scenarios. Verify translation/turn/start/stop motion with no unintended standing drift beyond 2 cm over 60 seconds, and no ejection or floor penetration.
+- [x] 9. Build and run Windows/Linux foundation checks and the actual WebAssembly browser scenario. Retain versions, logs, screenshots, and input replays. Maps to PORT-01 and PORT-04.
+- [x] 10. Complete a touch-only bridge-to-engineering route at 360 by 640 and 640 by 360 CSS pixels; rotate, background, resume, and reload a confirmed save. Maps to VIEW-03 and PORT-02/03.
+- [x] 11. Test unavailable storage, corrupt latest snapshot, unsupported schema, and save interruption. No successful-save status before durable completion. Maps to PORT-03.
 - [ ] 12. Select real reference devices, measure the documented performance budgets, and investigate any regression before closing verification.
 
 ## User acceptance
@@ -22,4 +22,4 @@
 - [ ] 14. User reviews steering, interior motion comfort, and readable/useful home spaces.
 - [ ] 15. User reviews real-phone touch usability and the proposed direction for M1.
 
-Tasks 1–6 are implemented. M0e save/settings, native and IndexedDB publication, recovery and export/import evidence is in docs/evidence/m0e-saves.md. M0d controls/lifecycle evidence is in docs/evidence/m0d-controls.md; M0a–M0c retain the platform, connected interior and supported-travel records. Automated coverage for items 7–11 is now present, including fresh-page saved-route reload and failed/interrupted publication; M0f will integrate/review the complete evidence and close those verification items. Reference-device performance and physical Android/iPhone checks remain pending, as do all user acceptance items. Keep the change open until its full verification and explicit review conditions are met. Commit and push completed steps; publishing does not imply acceptance. The [implementation plan](../../../docs/implementation-plan.md) gives each step's scope.
+Tasks 1–6 are implemented. M0e save/settings, native and IndexedDB publication, recovery and export/import evidence is in docs/evidence/m0e-saves.md. M0d controls/lifecycle evidence is in docs/evidence/m0d-controls.md; M0a–M0c retain the platform, connected interior and supported-travel records. Automated coverage for items 7–11 is now present, including fresh-page saved-route reload and failed/interrupted publication; The integrated M1 run (0976f76; docs/evidence/m1e-expedition.md) now verifies and closes automated items 7–11 across Windows/Linux/WebAssembly and desktop/touch browsers. Reference-device performance and physical Android/iPhone checks remain pending, as do all user acceptance items. Keep the change open until its full verification and explicit review conditions are met. Commit and push completed steps; publishing does not imply acceptance. The [implementation plan](../../../docs/implementation-plan.md) gives each step's scope.

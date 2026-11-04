@@ -2,13 +2,15 @@
 
 Implementation branch: `codex/m1-authored-expedition`. The public Pages prototype remains on main until a separate merge/publication decision. M0/M1 human review is pending; this guide does not request interim acceptance.
 
-## Launch on this Linux machine
+## Launch on Linux or Windows
 
 ```bash
 cd /workspace/meu
 source .tools/activate.sh
 npm run dev:native
 ```
+
+Interactive Linux play needs a connected X11/Wayland desktop. The current execution terminal has no `DISPLAY`; native verification uses Xvfb, which is a headless test display. For interactive Windows testing, download the `windows-foundation` artifact from the branch’s successful GitHub Actions run, extract it and run `bin/meu.exe` ([verified Windows archive](https://github.com/stbange/meu/actions/runs/41814573473/artifacts/13313893044)).
 
 For a clean supported Windows setup use `npm ci --ignore-scripts`, `npm run bootstrap`, then `npm run dev:native`. Native station panels use 1–8 for their numbered actions and 0/E to close. Browser builds use the same labelled buttons; keyboard digits also work. Walk with WASD, drag/arrows to look, E to use; the service lift uses 1/2/3. Station panels retain the first-person surroundings and active simulation time. Esc pauses; Enter resumes. F2 opens durable journeys.
 
@@ -21,7 +23,7 @@ For a clean supported Windows setup use `npm ci --ignore-scripts`, `npm run boot
 5. Continue through the opening in the right structural rib to the wrist airlock. Scan the landing: 80 kPa, -10 C, 0.2 mSv/h, low debris. Power its shelter field, then suit up with at least 800 kJ and heat<=6000. Walk right through the airlock along the railings. The unit stays parked. The HUD shows 180-second suit supply, exposure and the return direction.
 6. At the conduit console, fit the parallel bypass before removing the coupler (1 conductor, 1 sealant, 50 kJ). Extract the coupler; return along the rails to cabin X<14, then remove the suit at the airlock console. Removing the source without bypass or disconnecting shelter raises exposure. Catastrophe never relocates you automatically: choose checkpoint recovery explicitly, losing unsecured progress/salvage while preserving the home.
 7. In engineering power, select fabrication priority and stow collectors. Disconnect the grid if still connected. At the workshop, test the coupler (100 kJ), fabricate its adapter (3 alloy, 3 conductor, 1 sealant, 300 kJ), then install the stabilizer (50 kJ). Every panel displays available/required resources and heat costs. Repeated requests do not duplicate stock or charge twice.
-8. Return to bridge and take the helm. Reverse to around Z-90 to clear the tower buttress. Turn left to heading 270 and drive west onto the turquoise powered bridge. Park beyond X-130 to complete the expedition. That position was unsupported before installation. Do not retract the bridge while over it; removal requires returning to the main tower socket.
+8. Return to bridge and take the helm. Reverse to around Z-90 to clear the tower buttress. Turn left to heading 270 (equivalently -90 on the native angular readout) and drive west onto the turquoise powered bridge. Park beyond X-130 to complete the expedition. That position was unsupported before installation. Do not retract the bridge while over it; removal requires returning to the main tower socket.
 9. Release the helm, pause and use F2→F5 to save the completed journey. Loading restores installed access, materials and completion paused. Schema 1 M0 journeys remain importable; new schema 2 journeys include expedition state and previous-generation recovery/export/import.
 
 ## Verification and limitations
@@ -34,4 +36,4 @@ LIBGL_ALWAYS_SOFTWARE=1 SDL_AUDIODRIVER=dummy xvfb-run -a python3 tools/build.py
 
 `npm run test:expedition` is the shorter native test/replay entry point (run under Xvfb when headless). The replay starts clean, uses actual SDL input without teleports or resource grants, completes the expedition, then publishes and reloads a real completed journal. Its saves go under `build/native/expedition-replay`, never the player’s save directory. Native-to-browser fixtures and captures are generated in `test-results/m1-*`.
 
-Emscripten and matching browsers cannot download on this host under the current network policy. Web/Windows behavior must be verified in CI or on another capable host; the added browser scenarios are not claimed as locally executed. Human phone usability, graphics/hardware performance,20–40-minute pacing and combined M0/M1 acceptance remain unmeasured/pending. All resource rates remain provisional.
+Emscripten and matching browsers cannot download on this host under the current network policy. Windows/Linux and debug/optimized web/browser checks pass in [CI](https://github.com/stbange/meu/actions/runs/41814573473); the browser scenarios are not claimed as locally executed. Human phone usability, graphics/hardware performance,20–40-minute pacing and combined M0/M1 acceptance remain unmeasured/pending. All resource rates remain provisional.

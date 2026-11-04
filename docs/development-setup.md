@@ -62,6 +62,6 @@ For the web, use MEU-specific storage and cache names, such as `meu-saves-v1` an
 
 ## Current handoff
 
-M0a–M0e and M1a–M1e are implemented. Read `docs/status.md`, `docs/m1-expedition.md` and `docs/evidence/m1e-expedition.md`. The user deferred human reviews until M1 was implemented. Remaining work is changed-platform verification, physical-device/performance checks and the combined M0/M1 playtest; M2 generation has not started.
+M0a–M0e and M1a–M1e are implemented. Read `docs/status.md`, `docs/m1-expedition.md` and `docs/evidence/m1e-expedition.md`. The user deferred human reviews until M1 was implemented. Windows/Linux/web CI pass. Remaining work is physical-device/performance checks and the combined M0/M1 playtest; M2 generation has not started.
 
 On the Debian cloud computer, MEU is `/workspace/meu`, independent of `/workspace/WanderingCastle`. Source `.tools/activate.sh` before native development. GCC 14.2.0, pinned CMake/Ninja, SDL build dependencies and Xvfb are available without changing global settings. Local SDK/browser downloads are policy-blocked; see the evidence for what ran here. The implementation branch is `codex/m1-authored-expedition`; main/public Pages remain unchanged.
