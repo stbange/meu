@@ -28,7 +28,7 @@ The user's mouse-capture and floor-flicker corrections are implemented in 0.1.1 
 
 ## Onboard help
 
-The user requested in-game explanations and next steps, preferably through a flying robot. Pip is in progress for 0.1.2: shared C guidance and paused help state pass 16 core groups; native/browser presentation and input verification are pending. See [Pip evidence](evidence/onboard-guide.md). User acceptance remains pending.
+The user requested in-game explanations and next steps, preferably through a flying robot. Pip is implemented for 0.1.2 with seven shared topics and journey-based next steps. The native reader, 16 core/sanitizer groups and actual SDL help/capture/focus/save/expedition checks pass. Full cross-platform browser verification is in progress. See [Pip evidence](evidence/onboard-guide.md). User acceptance remains pending.
 
 ## Next action
 

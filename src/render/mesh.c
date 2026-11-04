@@ -1,4 +1,5 @@
 #include "render/mesh.h"
+#include "game/guide.h"
 #include "world/travel_world.h"
 #include <assert.h>
 #include <math.h>
@@ -273,12 +274,92 @@ void meu_mesh_lift(const MeuSimulation *s)
         }
     }
 }
+typedef struct { float x,y,w,h; } HelpFrame;
+static HelpFrame help_frame(int width,int height)
+{
+    float w=fmaxf(160,fminf((float)width-32,820)),h=fmaxf(180,fminf((float)height-32,560));
+    return (HelpFrame){((float)width-w)*.5f,((float)height-h)*.5f,w,h};
+}
+static void guide_drone(float x,float y,float scale)
+{
+    const float parts[][7]={
+        {10,13,36,27,.76f,.80f,.66f},{14,23,28,12,.08f,.18f,.21f},
+        {19,26,6,6,.43f,.91f,.86f},{34,26,6,6,.43f,.91f,.86f},
+        {23,18,10,2,.21f,.36f,.35f},{26,40,4,8,.72f,.65f,.40f},
+        {24,47,8,4,.95f,.76f,.39f},{0,17,10,19,.22f,.40f,.39f},
+        {46,17,10,19,.22f,.40f,.39f},{2,12,6,5,.93f,.72f,.36f},
+        {48,12,6,5,.93f,.72f,.36f},{4,5,2,7,.42f,.82f,.77f},
+        {50,5,2,7,.42f,.82f,.77f},{13,0,30,2,.28f,.47f,.45f}
+    };
+    for(size_t i=0;i<sizeof(parts)/sizeof(parts[0]);i++) {
+        const float *p=parts[i];quad(x+p[0]*scale,y+p[1]*scale,0,p[2]*scale,p[3]*scale,p[4],p[5],p[6]);
+    }
+}
+static float help_paragraph(const char *text,float x,float y,float width,float font,bool draw,float r,float g,float b)
+{
+    int columns=(int)(width/(6*font));if(columns<12)columns=12;if(columns>118)columns=118;
+    while(*text) {
+        while(*text==' ')++text;
+        size_t n=strlen(text);if(n>(size_t)columns)n=(size_t)columns;
+        if(text[n]) {
+            size_t cut=n;while(cut && text[cut]!=' ')--cut;if(cut)n=cut;
+        }
+        if(!n)break;
+        if(draw) { char line[120];memcpy(line,text,n);line[n]=0;meu_mesh_text(line,x,y,0,font,1,r,g,b); }
+        text+=n;y-=11*font;
+    }
+    return y;
+}
+int meu_mesh_help_hit(int width,int height,float x,float y,bool open)
+{
+    y=(float)height-y;
+    if(!open)return x>=(float)width-104 && x<=(float)width-16 && y>=(float)height-94 && y<=(float)height-18?0:-1;
+    HelpFrame f=help_frame(width,height);
+    if(y<f.y+14 || y>f.y+62)return -1;
+    float w=(f.w-48)/3;
+    for(int i=0;i<3;i++)if(x>=f.x+18+(w+6)*(float)i && x<=f.x+18+(w+6)*(float)i+w)return i==2?1:i+2;
+    return -1;
+}
+static void guide_panel(const MeuSimulation *s,int width,int height,int topic)
+{
+    HelpFrame f=help_frame(width,height);float x=f.x+18,top=f.y+f.h;
+    quad(f.x,f.y,0,f.w,f.h,.07f,.13f,.15f);
+    quad(f.x,f.y+f.h-4,0,f.w,4,.45f,.76f,.67f);
+    guide_drone(f.x+f.w-76,top-78,1);
+    float heading=fminf(1.8f,(f.w-110)/190);
+    meu_mesh_text("PIP - FLIGHT GUIDE",x,top-31,0,heading,1,.94f,.80f,.51f);
+    char label[80];snprintf(label,sizeof(label),"%d OF %d - %s",topic+1,MEU_GUIDE_TOPICS,meu_guide_topic(topic));
+    meu_mesh_text(label,x,top-56,0,heading*.76f,1,.54f,.81f,.76f);
+    float y=help_paragraph(meu_guide_text(s,topic,0),x,top-94,f.w-36,heading,true,.93f,.92f,.80f);
+    y=help_paragraph(meu_guide_text(s,topic,1),x,y-5,f.w-36,heading*.72f,true,.74f,.81f,.73f)-16;
+    float font=fminf(1.7f,(f.w-36)/270);
+    while(font>.66f) {
+        float end=help_paragraph(meu_guide_text(s,topic,2),x,y,f.w-36,font,false,0,0,0);
+        end=help_paragraph(meu_guide_text(s,topic,3),x,end-12,f.w-36,font,false,0,0,0);
+        if(end>=f.y+84)break;
+        font-=.08f;
+    }
+    y=help_paragraph(meu_guide_text(s,topic,2),x,y,f.w-36,font,true,.88f,.90f,.81f);
+    help_paragraph(meu_guide_text(s,topic,3),x,y-12,f.w-36,font,true,.68f,.79f,.73f);
+    meu_mesh_text("PAUSED - CLOSE HELP THEN ENTER TO RESUME",x,f.y+72,0,fminf(1.1f,(f.w-36)/250),1,.91f,.78f,.49f);
+    const char *buttons[]={"LEFT PREVIOUS","RIGHT NEXT","H ESC CLOSE"};
+    float w=(f.w-48)/3;
+    for(int i=0;i<3;i++) {
+        float bx=f.x+18+(w+6)*(float)i;
+        quad(bx,f.y+14,0,w,48,.16f,.28f,.28f);
+        meu_mesh_text(buttons[i],bx+7,f.y+32,0,fminf(1.4f,(w-14)/84),1,.85f,.88f,.75f);
+    }
+}
 void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection,const char *storage_status)
 {
     char line[120]; float size=width<700?1.5f:2;
     const float left=22,top=(float)height-35;
     snprintf(line,sizeof(line),"%s - %.0f M",meu_room_name(meu_sim_room(s)),s->y-MEU_EYE_HEIGHT);
     meu_mesh_text(line,left,top,0,size,1,.86f,.91f,.79f);
+    if(s->help_open) { guide_panel(s,width,height,selection);return; }
+    quad((float)width-104,(float)height-94,0,88,76,.08f,.15f,.16f);
+    guide_drone((float)width-88,(float)height-79+2*sinf((float)(s->ticks%600)/60.0f),.85f);
+    meu_mesh_text("H HELP",(float)width-94,(float)height-90,0,1,1,.89f,.80f,.53f);
     if (s->journeys_open) {
         float x=fmaxf(20,((float)width-760)*.5f),y=fmaxf(50,((float)height-440)*.5f);
         quad(x,y,0,fminf((float)width-40,760),440,.08f,.14f,.15f);
@@ -325,7 +406,7 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection,cons
         meu_mesh_text(s->message,x+16,y+35,0,font*.8f,1,.94f,.76f,.43f);
         meu_mesh_text("0 OR E CLOSE - GAME TIME CONTINUES",x+16,y+13,0,font*.8f,1,.73f,.81f,.72f);
     } else if (s->paused) {
-        meu_mesh_text("ENTER EXPLORE - F1 SETTINGS - F2 JOURNEYS",left,top-25,0,size,1,.94f,.76f,.43f);
+        meu_mesh_text("ENTER EXPLORE - H HELP - F1 SETTINGS - F2 JOURNEYS",left,top-25,0,size,1,.94f,.76f,.43f);
     } else if (s->travel.helm) {
         snprintf(line,sizeof(line),"HELM %.1f M/S - HEADING %.0f - X %.0f Z %.0f",s->travel.speed,s->robot.yaw*57.295779513,s->robot.x,s->robot.z);
         meu_mesh_text(line,left,top-25,0,size,1,.94f,.76f,.43f);

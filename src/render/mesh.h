@@ -15,4 +15,6 @@ void meu_mesh_exterior(void);
 void meu_mesh_route_markings(void);
 void meu_mesh_lift(const MeuSimulation *state);
 void meu_mesh_hud(const MeuSimulation *state,int width,int height,int selection,const char *storage_status);
+/* Native pointer coordinates are pixels from the top-left; -1 means no control. */
+int meu_mesh_help_hit(int width,int height,float x,float y,bool open);
 #endif

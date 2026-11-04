@@ -9,7 +9,7 @@
   let ready = false, storageReady=false, storageBusy=false, failed = false, context = 3, epoch = 0, looking = null;
   let settingsOpen = false, pauseReason = 'menu', layout = '';
   let mouseLocked=false,lockPending=false,lockAllowed=false,mouseReleaseRequested=false,lockRequest=0;
-  const contexts = ['foot','helm','panel','paused','settings','journeys','station'];
+  const contexts = ['foot','helm','panel','paused','settings','journeys','station','help'];
   const call = (name, types = [], args = [], result = null) => Module.ccall(name,result,types,args);
   const playing = () => ready && (context === 0 || context === 1);
   const owner = id => [...pointers.values()].some(p => p.action === id) || [...keys].some(key => keyMap[key] === id);
@@ -60,6 +60,7 @@
     pauseButton.disabled = !ready || failed;
     settingsButton.disabled = !ready || !storageReady || storageBusy || failed;
     $('#journeys').disabled = !ready || !storageReady || storageBusy || failed;
+    $('#help').disabled = !ready || !storageReady || storageBusy || failed;
   }
   function pause(reason = 'menu') {
     pauseReason = reason;
@@ -67,7 +68,7 @@
     available();
   }
   function start() {
-    if (!ready || !storageReady || storageBusy || failed || settingsOpen || context===5 || document.hidden || !document.hasFocus()) return;
+    if (!ready || !storageReady || storageBusy || failed || settingsOpen || context===5 || context===7 || document.hidden || !document.hasFocus()) return;
     call('meu_web_start'); canvas.focus();
   }
   function resize() {
@@ -112,7 +113,7 @@
     },
     context(id, generation) {
       if (id === context && generation === epoch) return;
-      const leftJourneys=context===5 && id!==5;
+      const leftJourneys=(context===5 || context===7) && id!==context;
       clearInput(); context = id; epoch = generation;
       body.dataset.context = contexts[id]; mode(id);
       if(!playing())releaseMouse();
@@ -120,10 +121,31 @@
       else this.station();
       $('#unit-info').hidden = id !== 2;
       $('#journeys-panel').hidden = id !== 5;
-      $('#welcome').hidden = id === 5 || settingsOpen;
+      this.help();
+      $('#welcome').hidden = id === 5 || id===7 || settingsOpen;
       if(id===5) $('#journeys-title').focus();
       else if(leftJourneys && id===3) begin.focus();
       if (id === 2) $('#close-info').focus();
+    },
+    help() {
+      const panel=$('#help-panel'),opening=panel.hidden;
+      panel.hidden=context!==7;$('#help-backdrop').hidden=context!==7;
+      if(context!==7)return;
+      const text=field=>call('meu_web_help_text',['number'],[field],'string');
+      const select=$('#help-topic');
+      if(!select.options.length)for(let i=0;i<16;i++) {
+        const label=text(-10-i);if(!label)break;
+        const option=document.createElement('option');option.value=String(i);option.textContent=label;select.append(option);
+      }
+      const topic=String(call('meu_web_help',['number'],[-1],'number')),changed=select.value!==topic;
+      select.value=topic;
+      for(const [field,id] of [[0,'help-heading'],[1,'help-place'],[2,'help-action'],[3,'help-tip']]) {
+        const node=$('#'+id),value=text(field);if(node.textContent!==value)node.textContent=value;
+      }
+      if(opening || changed)$('#help-article').scrollTop=0;
+      const hint=$('#help-scroll-hint');hint.hidden=true;
+      hint.hidden=$('#help-article').scrollHeight<=$('#help-article').clientHeight+1;
+      if(opening)$('#help-title').focus();
     },
     station() {
       $('#expedition-objective').textContent=call('meu_web_station_text',['number'],[-4],'string');
@@ -147,13 +169,13 @@
       const changed = settingsOpen !== !!open;
       settingsOpen = !!open;
       $('#settings-panel').hidden = !settingsOpen;
-      $('#welcome').hidden = settingsOpen || context===5;
+      $('#welcome').hidden = settingsOpen || context===5 || context===7;
       settingsButton.setAttribute('aria-expanded',String(settingsOpen));
       $('#sensitivity').value = sensitivity;
       $('#sensitivity-value').textContent = sensitivity.toFixed(2) + '×';
       $('#invert-y').checked = !!invert; $('#walk-bob').checked = !!bob; $('#machine-sway').checked = !!sway;
       $('#volume').value = volume; $('#volume-value').textContent = Math.round(volume*100) + '%';
-      if (changed) (settingsOpen ? $('#settings-title') : begin).focus();
+      if (changed) (settingsOpen ? $('#settings-title') : context===7?$('#help-title'):begin).focus();
     },
     hud(room, height, aboard, moving, current, target, use, info, liftReady) {
       const names = ['Bridge','Living quarters','Engineering hall','Service lift'];
@@ -204,6 +226,11 @@
     }
   };
   press($('#close-expedition'),()=>call('meu_web_station',['number'],[-1]));
+  press($('#help'),()=>call('meu_web_help',['number'],[context===7?1:0]));
+  press($('#close-help'),()=>call('meu_web_help',['number'],[1]));
+  press($('#help-previous'),()=>call('meu_web_help',['number'],[2]));
+  press($('#help-next'),()=>call('meu_web_help',['number'],[3]));
+  $('#help-topic').addEventListener('change',()=>{if(context===7)call('meu_web_help',['number'],[4+Number($('#help-topic').value)]);});
   press(begin,start);
   press(pauseButton,() => pause());
   press(settingsButton,() => { if (ready && !storageBusy) call('meu_web_settings',['number'],[settingsOpen ? 1 : 0]); });
@@ -227,7 +254,10 @@
     call('meu_web_setting',['number','number'],[Number(input.dataset.setting),value],'number');
   }));
   window.addEventListener('keydown', event => {
-    if (storageBusy && ['F1','F2','Escape','Enter'].includes(event.code)) {event.preventDefault();return;}
+    if (storageBusy && ['F1','F2','F3','KeyH','Escape','Enter'].includes(event.code)) {event.preventDefault();return;}
+    if(['KeyH','F3'].includes(event.code) && ready && storageReady && !failed) {
+      if(!event.repeat)call('meu_web_help',['number'],[context===7?1:0]);event.preventDefault();return;
+    }
     if(event.code==='F2' && ready && storageReady){
       call('meu_web_journeys',['number'],[context===5?1:0]);event.preventDefault();return;
     }
@@ -235,9 +265,19 @@
       call('meu_web_settings',['number'],[settingsOpen ? 1 : 0]); event.preventDefault(); return;
     }
     if (event.code === 'Escape') {
-      if(context===5)call('meu_web_journeys',['number'],[1]);
+      if(context===7)call('meu_web_help',['number'],[1]);
+      else if(context===5)call('meu_web_journeys',['number'],[1]);
       else if (settingsOpen) call('meu_web_settings',['number'],[1]); else pause();
       event.preventDefault(); return;
+    }
+    if(context===7) {
+      if(event.code==='Tab') {
+        const fields=[...$('#help-panel').querySelectorAll('button,select,[tabindex="0"]')];
+        const first=fields[0],last=fields[fields.length-1],selected=document.activeElement;
+        if(event.shiftKey && (selected===first || selected===$('#help-title'))) {last.focus();event.preventDefault();}
+        else if(!event.shiftKey && selected===last) {first.focus();event.preventDefault();}
+      }
+      return;
     }
     if(context===5){
       if(event.code==='Tab'){

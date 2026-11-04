@@ -40,7 +40,7 @@ test('click captures the desktop mouse, free relative motion looks, Escape clear
   await button(page,'Resume exploration').click();
   expect(await page.evaluate(()=>document.pointerLockElement)).toBeNull();
 });
-for(const [key,title] of [['F1','Close settings'],['F2','Close journeys']]){
+for(const [key,title] of [['F1','Close settings'],['F2','Close journeys'],['KeyH','Close help']]){
   test(`desktop ${key} releases the mouse for menus and requires a fresh capture click`,async({page,isMobile})=>{
     test.skip(isMobile,'Desktop pointer lock lifecycle.');
     await begin(page);await capture(page);await page.keyboard.press(key);

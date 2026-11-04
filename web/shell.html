@@ -12,10 +12,36 @@
   <canvas id="canvas" tabindex="0" aria-label="First-person view inside the exploration unit"></canvas>
   <header>
     <div class="location"><span class="eyebrow">MEU / COMMANDER</span><h1 id="room">Bridge</h1><div id="altitude">Deck 196 m · Unit height 240 m</div></div>
-    <div class="toolbar"><button id="settings" aria-expanded="false" aria-controls="settings-panel" disabled>Settings</button><button id="pause" disabled>Pause</button></div>
+    <div class="toolbar"><button id="help" aria-label="Ask Pip for help" aria-haspopup="dialog" aria-controls="help-panel" disabled>
+      <svg class="pip-flight" viewBox="0 0 72 62" aria-hidden="true"><defs><g id="pip-shape">
+        <ellipse cx="36" cy="57" rx="19" ry="2" fill="#426e68"/>
+        <path d="M10 39v9m52-9v9" stroke="#7dd9c8" stroke-width="3"/>
+        <path d="M36 13V6m-4 0h8" stroke="#e4bd70" stroke-width="3"/>
+        <rect x="16" y="14" width="40" height="30" rx="9" fill="#c2ccb3"/>
+        <rect x="21" y="19" width="30" height="14" rx="5" fill="#132e35"/>
+        <path d="M28 23v6m16-6v6" stroke="#83e5d3" stroke-width="4" stroke-linecap="round"/>
+        <path d="M31 37q5 4 10 0" fill="none" stroke="#4a6c60" stroke-width="2"/>
+        <rect x="3" y="23" width="11" height="18" rx="4" fill="#54837b"/>
+        <rect x="58" y="23" width="11" height="18" rx="4" fill="#54837b"/>
+        <path d="M6 42h6m48 0h6" stroke="#e4bd70" stroke-width="3"/>
+      </g></defs><use href="#pip-shape"/></svg><small>Help</small>
+    </button><button id="settings" aria-expanded="false" aria-controls="settings-panel" disabled>Settings</button><button id="pause" disabled>Pause</button></div>
   </header>
   <div id="mission-hud"><div id="expedition-readout" aria-live="off"></div><div id="expedition-objective"></div></div>
   <div id="reticle" aria-hidden="true">+</div>
+  <div id="help-backdrop" hidden aria-hidden="true"></div>
+  <section id="help-panel" class="card" role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
+    <div class="help-heading"><svg class="pip-flight" viewBox="0 0 72 62" aria-hidden="true"><use href="#pip-shape"/></svg>
+      <div><span class="eyebrow">YOUR ONBOARD COMPANION</span><h2 id="help-title" tabindex="-1">Pip · Flight guide</h2></div></div>
+    <label class="help-topic-label" for="help-topic">Help topic <select id="help-topic"></select></label>
+    <article id="help-article" aria-labelledby="help-heading" tabindex="0">
+      <p id="help-place" class="help-place"></p><h3 id="help-heading"></h3>
+      <p id="help-action"></p><p id="help-tip"></p>
+    </article>
+    <p id="help-scroll-hint" class="hint" hidden>Scroll the guide to read more ↓</p>
+    <p class="help-paused">Game paused. Close help, then resume when you’re ready.</p>
+    <div class="help-actions"><button id="help-previous" aria-label="Previous help topic">← Previous</button><button id="help-next" aria-label="Next help topic">Next →</button><button id="close-help">Close help</button></div>
+  </section>
   <section id="welcome" class="card" aria-label="Start exploration">
     <span class="eyebrow">MECHANIZED EXPLORATION UNIT</span>
     <h2>Your machine. Your home.</h2>

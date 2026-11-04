@@ -2,10 +2,12 @@
 #include <SDL3/SDL_main.h>
 #include "core/simulation.h"
 #include "core/snapshot.h"
+#include "game/guide.h"
 #ifndef __EMSCRIPTEN__
 #include "platform/file_storage.h"
 #endif
 #include "render/renderer.h"
+#include "render/mesh.h"
 #include "meu_build_info.h"
 #include <math.h>
 #include <stdio.h>
@@ -118,7 +120,7 @@ static void pause_game(void)
 
 static void start_game(void)
 {
-    if (app.simulation.settings_open || app.simulation.journeys_open) return;
+    if (app.simulation.settings_open || app.simulation.journeys_open || app.simulation.help_open) return;
 #ifndef __EMSCRIPTEN__
     if (app.dialog_pending) return;
 #endif
@@ -192,6 +194,32 @@ WEB_EXPORT int meu_web_setting(int id,float value)
 {
     bool accepted=meu_sim_setting(&app.simulation,id,value);
     sync_preferences(); return accepted;
+}
+
+WEB_EXPORT int meu_web_help(int operation)
+{
+    if(operation<0)return app.settings_selection;
+#ifndef __EMSCRIPTEN__
+    if(app.dialog_pending)return app.settings_selection;
+#endif
+    if(operation==0) { pause_game();meu_sim_open_help(&app.simulation);app.settings_selection=0; }
+    else if(operation==1)meu_sim_close_help(&app.simulation);
+    else if(app.simulation.help_open) {
+        if(operation==2)app.settings_selection=(app.settings_selection+MEU_GUIDE_TOPICS-1)%MEU_GUIDE_TOPICS;
+        else if(operation==3)app.settings_selection=(app.settings_selection+1)%MEU_GUIDE_TOPICS;
+        else if(operation>=4 && operation<4+MEU_GUIDE_TOPICS)app.settings_selection=operation-4;
+    }
+    sync_input_context();sync_preferences();
+#ifdef __EMSCRIPTEN__
+    emscripten_run_script("if(window.MEU)window.MEU.help();");
+#endif
+    return app.settings_selection;
+}
+WEB_EXPORT const char *meu_web_help_text(int field)
+{
+    if(field<=-10)return meu_guide_topic(-10-field);
+    if(field==-1)return meu_guide_topic(app.settings_selection);
+    return meu_guide_text(&app.simulation,app.settings_selection,field);
 }
 
 static void restored_game(void)
@@ -403,7 +431,9 @@ static void event(const SDL_Event *input)
     if (input->type == SDL_EVENT_KEY_DOWN || input->type == SDL_EVENT_KEY_UP) {
         bool down = input->type == SDL_EVENT_KEY_DOWN;
         if (app.dialog_pending) return;
-        if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_F2)
+        if(down && !input->key.repeat && (input->key.scancode==SDL_SCANCODE_H || input->key.scancode==SDL_SCANCODE_F3))
+            meu_web_help(app.simulation.help_open?1:0);
+        else if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_F2)
             meu_web_journeys(app.simulation.journeys_open?1:0);
         else if (app.simulation.journeys_open) {
             if (down && !input->key.repeat) {
@@ -422,6 +452,14 @@ static void event(const SDL_Event *input)
                 if (input->key.scancode==SDL_SCANCODE_ESCAPE) meu_web_settings(1);
                 else settings_key(input->key.scancode);
             }
+        } else if(app.simulation.help_open) {
+            if(down && !input->key.repeat) {
+                SDL_Scancode key=input->key.scancode;
+                if(key==SDL_SCANCODE_ESCAPE)meu_web_help(1);
+                else if(key==SDL_SCANCODE_LEFT)meu_web_help(2);
+                else if(key==SDL_SCANCODE_RIGHT)meu_web_help(3);
+                else if(key>=SDL_SCANCODE_1 && key<=SDL_SCANCODE_7)meu_web_help(4+key-SDL_SCANCODE_1);
+            }
         } else if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_RETURN) start_game();
         else if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_ESCAPE) pause_game();
         else if (app.simulation.station) {
@@ -434,12 +472,22 @@ static void event(const SDL_Event *input)
         else if (!input->key.repeat) meu_sim_action(&app.simulation,key_action(input->key.scancode),down);
     }
     if (input->type == SDL_EVENT_MOUSE_BUTTON_DOWN && input->button.button == SDL_BUTTON_LEFT && input->button.which!=SDL_TOUCH_MOUSEID) {
+        if(!app.mouse_captured) {
+            int w,h,pw,ph;SDL_GetWindowSize(app.window,&w,&h);SDL_GetWindowSizeInPixels(app.window,&pw,&ph);
+            int command=w>0 && h>0?meu_mesh_help_hit(pw,ph,input->button.x*(float)pw/(float)w,input->button.y*(float)ph/(float)h,app.simulation.help_open):-1;
+            if(command>=0) { meu_web_help(command);return; }
+            if(app.simulation.help_open)return;
+        }
         if (app.simulation.paused) start_game();
         capture_mouse();
     }
     if (input->type == SDL_EVENT_MOUSE_MOTION && app.mouse_captured && input->motion.which!=SDL_TOUCH_MOUSEID)
         meu_sim_pointer_look(&app.simulation,input->motion.xrel,input->motion.yrel);
     if (input->type==SDL_EVENT_FINGER_DOWN) {
+        int w,h;SDL_GetWindowSizeInPixels(app.window,&w,&h);
+        int command=meu_mesh_help_hit(w,h,input->tfinger.x*(float)w,input->tfinger.y*(float)h,app.simulation.help_open);
+        if(command>=0) { meu_web_help(command);return; }
+        if(app.simulation.help_open)return;
         if (input->tfinger.x<.5f && !app.move_touch) {
             app.move_touch=meu_sim_action(&app.simulation,MEU_FORWARD,true);
             app.move_finger=input->tfinger.fingerID;
@@ -566,6 +614,10 @@ static void lifecycle_input(void)
 {
     unsigned f=app.frames; SDL_Scancode key=SDL_SCANCODE_UNKNOWN;
     switch (f) {
+        case 1: case 2: case 154: case 170:key=SDL_SCANCODE_H;break;
+        case 156:key=SDL_SCANCODE_RIGHT;break;
+        case 162:key=SDL_SCANCODE_ESCAPE;break;
+        case 163: case 172:key=SDL_SCANCODE_RETURN;break;
         case 4: case 50: case 53: case 130: case 132:key=SDL_SCANCODE_F1;break;
         case 5: case 131:key=SDL_SCANCODE_RIGHT;break;
         case 6: case 8: case 10: case 12:key=SDL_SCANCODE_DOWN;break;
@@ -578,19 +630,26 @@ static void lifecycle_input(void)
         case 52:key=SDL_SCANCODE_R;break;
         default:break;
     }
+    if(f==154)tour_key(SDL_SCANCODE_W,true);
     if (key!=SDL_SCANCODE_UNKNOWN) { tour_key(key,true); tour_key(key,false); }
+    if(f==165)tour_key(SDL_SCANCODE_W,false);
+    if(f==166) {
+        int w,h;SDL_GetWindowSize(app.window,&w,&h);(void)h;
+        SDL_Event e={0};e.type=SDL_EVENT_MOUSE_BUTTON_DOWN;e.button.button=SDL_BUTTON_LEFT;
+        e.button.x=(float)w-60;e.button.y=60;SDL_PushEvent(&e);
+    }
     if (f==26) tour_key(SDL_SCANCODE_W,true);
     if (f==60) tour_key(SDL_SCANCODE_RIGHT,true);
     if (f==51) {
         SDL_Event e={0};e.type=SDL_EVENT_KEY_DOWN;e.key.scancode=SDL_SCANCODE_W;e.key.repeat=true;SDL_PushEvent(&e);
     }
-    if (f==70 || f==71 || f==90 || f==91 || f==135 || f==136) {
-        SDL_Event e={0}; e.type=(f==70 || f==135)?SDL_EVENT_WINDOW_FOCUS_LOST:
+    if (f==70 || f==71 || f==90 || f==91 || f==135 || f==136 || f==159 || f==160) {
+        SDL_Event e={0}; e.type=(f==70 || f==135 || f==159)?SDL_EVENT_WINDOW_FOCUS_LOST:
             (f==90)?SDL_EVENT_WINDOW_RESIZED:SDL_EVENT_WINDOW_FOCUS_GAINED;
         SDL_PushEvent(&e);
     }
-    if (f==110 || f==112 || f==134 || f==140) {
-        SDL_Event e={0};e.type=f==112?SDL_EVENT_MOUSE_BUTTON_UP:SDL_EVENT_MOUSE_BUTTON_DOWN;
+    if (f==110 || f==112 || f==134 || f==140 || f==152 || f==153) {
+        SDL_Event e={0};e.type=(f==112 || f==153)?SDL_EVENT_MOUSE_BUTTON_UP:SDL_EVENT_MOUSE_BUTTON_DOWN;
         e.button.button=SDL_BUTTON_LEFT;SDL_PushEvent(&e);
     }
     if (f==111 || f==114) {
@@ -600,7 +659,19 @@ static void lifecycle_input(void)
 static void lifecycle_check(int width,int height)
 {
     MeuSimulation *s=&app.simulation; unsigned f=app.frames;
+    static MeuSimulation help_frozen;
     bool bad=false;
+    if(f==2)bad|=!s->help_open || s->started || app.audio_attempts!=0;
+    if(f==155) {
+        bad|=!s->help_open || !s->paused || s->held || app.mouse_captured || SDL_GetWindowRelativeMouseMode(app.window);
+        help_frozen=*s;
+    }
+    if(f>=156 && f<=159)bad|=memcmp(&help_frozen,s,sizeof(*s))!=0;
+    if(f==158)bad|=app.settings_selection!=1 || !meu_renderer_capture("test-results/native-guide.bmp",width,height);
+    if(f==160 || f==161 || f==167)bad|=!s->help_open || !s->paused || s->held;
+    if(f==163 || f==164 || f==171 || f==173)bad|=s->help_open || s->held || app.mouse_captured || SDL_GetWindowRelativeMouseMode(app.window);
+    if(f==163 || f==171)bad|=!s->paused;
+    if(f==167)bad|=app.settings_selection!=0;
     if (f==16) {
         bad=!s->settings_open || app.audio_attempts!=0 || fabsf(s->settings.sensitivity-1.1f)>.001f ||
             !s->settings.invert_y || !s->settings.walk_bob || !s->settings.machine_sway || fabsf(s->settings.volume-.5f)>.001f;
@@ -612,7 +683,7 @@ static void lifecycle_check(int width,int height)
     if (f==131 || f==136 || f==137 || f==138 || f==143 || f==146)
         bad|=app.mouse_captured || SDL_GetWindowRelativeMouseMode(app.window);
     if (f==121) bad|=!meu_renderer_capture("test-results/native-resumed.bmp",width,height);
-    if (f>=150) {
+    if (f>=180) {
         bad|=s->paused || s->settings_open || s->held!=0 || fabsf(s->yaw-.41f)>.005f ||
             fabsf(s->pitch+.14f)>.005f || fabsf(s->settings.sensitivity-1.1f)>.001f || app.audio_attempts!=1;
         printf("LIFECYCLE build=%s scene=%s settings=%.2f context=%d result=%s\n",MEU_BUILD_ID,MEU_SCENE_ID,
@@ -694,7 +765,7 @@ static void frame(void)
     SDL_GetWindowSizeInPixels(app.window, &width, &height);
 #endif
     MeuSimulation render; meu_sim_render_state(&app.simulation,&render);
-    bool draw=(app.expedition_replay && (app.simulation.station || app.simulation.expedition.completed)) || (!app.tour && !app.pilot && !app.lifecycle && !app.expedition_replay) || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899 || (app.pilot && (app.frames==101 || app.frames==599 || app.frames==1599)) || (app.lifecycle && (app.frames==15 || app.frames==120));
+    bool draw=(app.expedition_replay && (app.simulation.station || app.simulation.expedition.completed)) || (!app.tour && !app.pilot && !app.lifecycle && !app.expedition_replay) || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899 || (app.pilot && (app.frames==101 || app.frames==599 || app.frames==1599)) || (app.lifecycle && (app.frames==15 || app.frames==120 || app.frames==157));
     if (draw && !meu_renderer_draw(&render, width, height,app.settings_selection,app.storage_status)) {
         SDL_Log("OpenGL frame failed"); app.exit_code = EXIT_FAILURE; app.running = false;
     }

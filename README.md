@@ -12,6 +12,8 @@ The implementation is on `codex/m1-authored-expedition`; main/public Pages are u
 
 Version 0.1.1 adds click-captured mouse look and removes overlapping floor/wall surfaces. Current build downloads and verification are in the [playtest correction record](docs/evidence/mouse-surfaces.md).
 
+Version 0.1.2 adds **Pip**, a hovering onboard guide. Click/tap Help or press H/F3 for game explanations and a next step based on your journey. Help pauses play; close it and resume when ready. See [Pip evidence](docs/evidence/onboard-guide.md) for verification and current builds.
+
 ## Start here
 
 - [Game design draft](docs/game-design-draft.md): player experience, scale, city, repairs, salvage, power, and progression.

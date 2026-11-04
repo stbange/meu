@@ -45,6 +45,9 @@ int main(void)
     command(&s,5,0);CHECK(meu_guide_step(&s)==MEU_GUIDE_SHELTER);
     command(&s,5,1);CHECK(meu_guide_step(&s)==MEU_GUIDE_SUIT);
     command(&s,5,2);CHECK(meu_guide_step(&s)==MEU_GUIDE_CONDUIT);
+    meu_sim_open_help(&s);frozen=s;ticks(&s,180);read_all(&s);
+    CHECK(memcmp(&s,&frozen,sizeof(s))==0);
+    meu_sim_close_help(&s);meu_sim_start(&s);
     s.x=26;CHECK(meu_guide_step(&s)==MEU_GUIDE_BYPASS);
     command(&s,6,0);CHECK(meu_guide_step(&s)==MEU_GUIDE_EXTRACT);
     command(&s,6,1);CHECK(meu_guide_step(&s)==MEU_GUIDE_RETURN);
