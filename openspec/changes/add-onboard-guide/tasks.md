@@ -4,6 +4,6 @@
 - [x] 3. Integrate pause, input cleanup, explicit resume and existing saves (HELP-03).
 ## Verification
 - [x] 4. Run progression/core/sanitizer and real SDL help lifecycle checks.
-- [ ] 5. Run Windows/Linux/WebAssembly and debug/optimized desktop/phone browser checks; retain evidence and build links.
+- [x] 5. Run Windows/Linux/WebAssembly and debug/optimized desktop/phone browser checks; retain evidence and build links.
 ## Acceptance
 - [ ] 6. User confirms the help and next steps are understandable and Pip is useful.

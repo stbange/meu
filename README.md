@@ -10,7 +10,7 @@ M1a–M1e now connect a complete authored tower expedition: pilot and park, isol
 
 The implementation is on `codex/m1-authored-expedition`; main/public Pages are unchanged. Human reviews were deferred at the user’s request until M1. M0f device/performance work and combined M0/M1 acceptance remain pending. Windows/Linux and debug/optimized web checks pass in the recorded CI run.
 
-Version 0.1.1 adds click-captured mouse look and removes overlapping floor/wall surfaces. Current build downloads and verification are in the [playtest correction record](docs/evidence/mouse-surfaces.md).
+Version 0.1.1 added click-captured mouse look and removed overlapping floor/wall surfaces; see the [playtest correction record](docs/evidence/mouse-surfaces.md).
 
 Version 0.1.2 adds **Pip**, a hovering onboard guide. Click/tap Help or press H/F3 for game explanations and a next step based on your journey. Help pauses play; close it and resume when ready. See [Pip evidence](docs/evidence/onboard-guide.md) for verification and current builds.
 

@@ -1,6 +1,6 @@
 # M1e integrated tower expedition — 4 November 2026
 
-For the later 0.1.1 mouse-capture and floor-surface corrections, including current build downloads, see the [playtest correction record](mouse-surfaces.md).
+For current 0.1.2 build downloads and onboard instructions, see the [Pip guide record](onboard-guide.md). The earlier 0.1.1 mouse-capture and floor-surface corrections remain in the [playtest correction record](mouse-surfaces.md).
 
 ## Implementation and identity
 

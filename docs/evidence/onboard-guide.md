@@ -1,6 +1,6 @@
 # Pip onboard help - 4 November 2026
 
-User-requested post-M1 onboarding: a hovering guide projection explains the game and the next actionable step. Runtime 0.1.2; scene/content and save schema remain unchanged. M2 and human acceptance remain pending. Work is on `codex/m1-authored-expedition`; main/Pages are unchanged.
+User-requested post-M1 onboarding is implemented and verified: Pip, a hovering guide projection, explains the game and the next actionable step. Runtime 0.1.2; scene/content and save schema remain unchanged. All required development CI jobs pass. M2 and human acceptance remain pending. Work is on `codex/m1-authored-expedition`; main/Pages are unchanged.
 
 ## Shared content and progression
 
@@ -8,7 +8,7 @@ User-requested post-M1 onboarding: a hovering guide projection explains the game
 
 Help is a transient paused context. It clears held input and helm ownership, blocks start while open, retains frozen resources/job/suit clocks, closes other menus and leaves explicit resume after closing. It is excluded from snapshot bytes.
 
-## Checks so far
+## Local checks
 
 Debian 13, GCC 14.2.0, pinned CMake 3.31.6/Ninja 1.12.1. Source `.tools/activate.sh` first.
 
@@ -17,7 +17,7 @@ python3 tools/build.py core --test
 OPENSPEC_TELEMETRY=0 npm run spec:validate
 ```
 
-All 16 native/core groups and eight active OpenSpec changes pass. The guide test follows production station commands through diagnosis/repair, sheltered bypass recovery, testing, fabrication, installation and completion. It also verifies paused reading is read-only, blocks old actions, preserves snapshot bytes and derives completed guidance after restore. Unit fixture poses do not claim physical navigation; rendered SDL/browser paths remain to be checked.
+All 16 native/core groups and eight active OpenSpec changes pass. The guide test follows production station commands through diagnosis/repair, sheltered bypass recovery, testing, fabrication, installation and completion. It also verifies paused reading is read-only, blocks old actions, preserves snapshot bytes and derives completed guidance after restore. Unit fixture poses do not claim physical navigation; the rendered SDL and browser checks below provide that integration evidence.
 
 ## Reader and input integration
 
@@ -34,10 +34,35 @@ The commands were completed across `.tools/pip-native-full.log`, `.tools/pip-lif
 
 ![Pip explains MEU over the first-person bridge view](pip/native-help.png)
 
-The installed Chromium 154 preview checks layout using mock C calls; it is not claimed as Wasm integration evidence. Playwright lists 98 cases. New real-runtime tests cover game explanations before audio, touch sizes/scrolling, reduced motion, capture release, suit clocks/old movement and imported/saved/restored guidance. CI runs focused mouse and Pip cases before the full suite and includes help in optimized/live checks. Cross-platform verification is pending; matching Emscripten/browser downloads remain restricted locally. No physical-device usability, performance or user acceptance is claimed.
+The installed Chromium 154 preview checks layout using mock C calls; it is not claimed as Wasm integration evidence. Playwright lists 98 cases. New real-runtime tests cover game explanations before audio, touch sizes/scrolling, reduced motion, capture release, suit clocks/old movement and imported/saved/restored guidance. CI runs focused mouse and Pip cases before the full suite and includes help in optimized/live checks. Cross-platform verification passes in the exact-source remote run below; matching Emscripten/browser downloads remain restricted locally. No physical-device usability, performance or user acceptance is claimed.
 
 The first focused UI run, a0a077b, passed all six captured-mouse cases and 10 of 11 Pip cases. Its portrait engineering header wrapped to 102.56 CSS pixels in the CI font environment, overlapping the old 100-pixel mission origin. The portrait mission region now reserves 120 pixels below the header; the test keeps the same no-overlap assertion. Topic changes also reset the reading position, while focus changes retain the current topic/scroll position. The mobile layout diagnostic verifies real wheel scrolling and reset, but remains separate from full Wasm testing.
 
 Run cbfd6c0 passes Windows/Linux, 15 Wasm groups, six captured-mouse cases and all nine Chromium Pip cases. Two WebKit cases stop at an unsupported test-driver operation: mobile WebKit does not expose mouse-wheel injection. The reader test now focuses the scrollable article and sends End, testing accessible keyboard scrolling without changing gameplay state or weakening the scroll/reset assertions. Other phone help interaction remains touch-driven.
 
 The subsequent End-based run passes WebKit, but catches Chrome carrying keyboard scroll animation into a newly selected topic. An instant scroll alone still allowed the old animation to continue in the landscape diagnostic. Topic changes now replace the reading pane, discarding its old native scroll animation while retaining keyboard focus; unchanged topics retain their position. The reset assertion polls for exactly zero. This addresses the actual interruption rather than waiting for scrolling to finish before changing topics.
+
+## Remote verification and builds
+
+Verified runtime/test source: `0bbf7408f88c49f5727f2ed7da0976e30c44217a`, [CI run 41849350807](https://github.com/stbange/meu/actions/runs/41849350807). All required development jobs pass without retries. Runtime 0.1.2, scene `m1-tower-v1`, content 6, schema 2. The final evidence update changes documentation/checklists only.
+
+| Check | Result |
+| --- | --- |
+| Strict OpenSpec | Eight active changes pass |
+| Windows native | 16 test groups pass |
+| Linux native | 16 groups, actual SDL input/rendered tours, guide/capture/focus lifecycle, full expedition and durable journey replay pass |
+| Linux address/undefined sanitizers | 16 groups pass |
+| Debug WebAssembly | 15 groups pass |
+| Focused captured mouse | Six desktop cases pass |
+| Focused Pip interaction | 11 desktop/phone Chromium/WebKit cases pass |
+| Complete browser routes | 77 pass, 21 deliberate target-specific skips (98 configured cases) |
+| Optimized WebAssembly | 15 groups pass |
+| Optimized browser checks including Pip | 16 pass, two deliberate mobile Pointer Lock skips |
+
+Development builds from this source:
+
+- [Windows archive](https://github.com/stbange/meu/actions/runs/41849350807/artifacts/13334046383): extract and run `bin/meu.exe`; H/F3 or the drone opens help.
+- [Linux archive](https://github.com/stbange/meu/actions/runs/41849350807/artifacts/13333875039).
+- [Optimized web build and browser reports](https://github.com/stbange/meu/actions/runs/41849350807/artifacts/13336236522): serve `build/web-release/bin` over HTTP. The optimized checks require the diagnostic state export to be absent.
+
+Main/public Pages remain unchanged; deploying the branch is a separate publication action. Human help/comfort review and physical-phone/performance checks remain pending. Keep the OpenSpec change open until acceptance is recorded.

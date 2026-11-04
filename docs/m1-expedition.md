@@ -10,9 +10,11 @@ source .tools/activate.sh
 npm run dev:native
 ```
 
-Interactive Linux play needs a connected X11/Wayland desktop. The current execution terminal has no `DISPLAY`; native verification uses Xvfb, which is a headless test display. For interactive Windows testing, download the [0.1.1 Windows archive](https://github.com/stbange/meu/actions/runs/41825493264/artifacts/13318324584), extract it and run `bin/meu.exe`. This build includes captured mouse look and the floor-surface corrections; [current evidence and other builds](evidence/mouse-surfaces.md).
+Interactive Linux play needs a connected X11/Wayland desktop. The current execution terminal has no `DISPLAY`; native verification uses Xvfb, which is a headless test display. For interactive Windows testing, use the current Windows archive linked in the [Pip help/build record](evidence/onboard-guide.md), extract it and run `bin/meu.exe`. Version 0.1.2 adds Pip alongside the captured mouse and stable-surface corrections. The earlier [0.1.1 verification record](evidence/mouse-surfaces.md) remains available.
 
 For a clean supported Windows setup use `npm ci --ignore-scripts`, `npm run bootstrap`, then `npm run dev:native`. Native station panels use 1–8 for their numbered actions and 0/E to close. Browser builds use the same labelled buttons; keyboard digits also work. Click the gameplay view to capture the mouse, then move it to look without holding a button. Walk with WASD, E to use; the service lift uses 1/2/3. Arrows and touch look controls remain available. Station panels retain the first-person surroundings and active simulation time, releasing the mouse for their controls. Esc releases and pauses; Enter resumes. Click the view again to recapture. F2 opens durable journeys.
+
+For in-game instructions, click/tap the small flying robot's Help button or press H/F3. Pip explains the game and shows What next? from your current journey. Browse the seven topics with previous/next or the web selector; native also supports Left/Right and 1–7. Help pauses travel, repairs, energy and suit time. Close help and explicitly resume, then click the view again if you want captured mouse look. [Pip evidence and current builds](evidence/onboard-guide.md).
 
 ## Complete the expedition
 
