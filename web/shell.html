@@ -14,7 +14,7 @@
     <div class="location"><span class="eyebrow">MEU / COMMANDER</span><h1 id="room">Bridge</h1><div id="altitude">Deck 196 m · Unit height 240 m</div></div>
     <div class="toolbar"><button id="settings" aria-expanded="false" aria-controls="settings-panel" disabled>Settings</button><button id="pause" disabled>Pause</button></div>
   </header>
-  <div id="expedition-readout" aria-live="off"></div><div id="expedition-objective"></div>
+  <div id="mission-hud"><div id="expedition-readout" aria-live="off"></div><div id="expedition-objective"></div></div>
   <div id="reticle" aria-hidden="true">+</div>
   <section id="welcome" class="card" aria-label="Start exploration">
     <span class="eyebrow">MECHANIZED EXPLORATION UNIT</span>
@@ -65,6 +65,7 @@
   </section>
   <section id="navigation" class="station" aria-label="Robot navigation">
     <div id="telemetry"><span id="speed">0.0 m/s</span><span id="heading">Heading 000°</span><span id="stopping">Stop 0 m</span></div>
+    <div id="coordinates">Position X 0 · Z 0 m</div>
     <p id="travel-status" role="status">Parked · support verified</p>
     <div id="pilot-actions" hidden>
       <button data-action="12" aria-label="Brake robot">Brake<small>Space</small></button>

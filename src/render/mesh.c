@@ -244,7 +244,7 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection,cons
     } else if (s->paused) {
         meu_mesh_text("ENTER EXPLORE - F1 SETTINGS - F2 JOURNEYS",left,top-25,0,size,1,.94f,.76f,.43f);
     } else if (s->travel.helm) {
-        snprintf(line,sizeof(line),"HELM - %.1f M/S - HEADING %.0f",s->travel.speed,s->robot.yaw*57.295779513);
+        snprintf(line,sizeof(line),"HELM %.1f M/S - HEADING %.0f - X %.0f Z %.0f",s->travel.speed,s->robot.yaw*57.295779513,s->robot.x,s->robot.z);
         meu_mesh_text(line,left,top-25,0,size,1,.94f,.76f,.43f);
         const char *status=s->travel.reason?meu_route_name(s->travel.reason):
             s->travel.parked?"PARKED - SUPPORT VERIFIED":s->travel.park_requested?"BRAKING TO PARK":"MANUAL TRAVEL";

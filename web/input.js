@@ -137,6 +137,7 @@
     hud(room, height, aboard, moving, current, target, use, info, liftReady) {
       const names = ['Bridge','Living quarters','Engineering hall','Service lift'];
       const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm','Expedition chart','Power and infrastructure','Salvage cradle and test bench','Wrist airlock','Phase coupler and bypass'];
+      body.dataset.room=String(room);
       $('#room').textContent = names[room];
       $('#altitude').textContent = (room === 3 ? 'Lift ' : 'Deck ') + Math.round(height) + ' m · Unit height 240 m';
       $('#navigation').hidden = room !== 0; $('#lift-panel').hidden = !aboard;
@@ -150,7 +151,8 @@
       $('#use').textContent = uses[use] + ' · E';
       $('#unit-info').hidden = !info;
     },
-    navigation(helm, speed, heading, parked, parking, reason, stopping) {
+    navigation(helm, speed, heading, parked, parking, reason, stopping, x, z) {
+      $('#coordinates').textContent='Position X '+Math.round(x)+' · Z '+Math.round(z)+' m';
       $('#speed').textContent = speed.toFixed(1) + ' m/s';
       $('#heading').textContent = 'Heading ' + String(Math.round((heading % 360 + 360) % 360)).padStart(3,'0') + '°';
       $('#stopping').textContent = 'Stop ' + stopping.toFixed(1) + ' m';

@@ -673,10 +673,10 @@ static void frame(void)
             app.simulation.lift_current,app.simulation.lift_target,meu_sim_use_target(&app.simulation),app.simulation.info_open,meu_sim_lift_ready(&app.simulation));
         emscripten_run_script(hud);
         emscripten_run_script("if(window.MEU)window.MEU.station();");
-        snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.navigation(%d,%.2f,%.1f,%d,%d,%d,%.1f);",
+        snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.navigation(%d,%.2f,%.1f,%d,%d,%d,%.1f,%.1f,%.1f);",
             app.simulation.travel.helm,app.simulation.travel.speed,app.simulation.robot.yaw*57.295779513,
             app.simulation.travel.parked,app.simulation.travel.park_requested,app.simulation.travel.reason,
-            meu_travel_stop_distance(app.simulation.travel.speed));
+            meu_travel_stop_distance(app.simulation.travel.speed),app.simulation.robot.x,app.simulation.robot.z);
         emscripten_run_script(hud);
     }
 #endif

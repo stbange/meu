@@ -52,3 +52,16 @@ test('tests and adapts recovered technology through native-parity station button
   await menu(page,isMobile);await save(page,isMobile,1);await page.reload();
   await expect(page.locator('body')).toHaveAttribute('data-ready','true');expect((await state(page)).installed).toBe(true);
 });
+
+test('shows usable helm coordinates without mission/navigation overlap',async({page,isMobile})=>{
+  test.skip(release,'Uses the native completed-journey fixture.');
+  await fixture(page,isMobile,'bridge');
+  await tap(button(page,'Take bridge helm · E'),isMobile);
+  await expect(page.locator('#coordinates')).toContainText('X -163');
+  await expect(page.locator('#coordinates')).toContainText('Z -90');
+  await expect(page.locator('body')).toHaveAttribute('data-helm','true');
+  const mission=await page.locator('#mission-hud').boundingBox(),navigation=await page.locator('#navigation').boundingBox();
+  expect(mission.x>=navigation.x+navigation.width || mission.x+mission.width<=navigation.x ||
+    mission.y>=navigation.y+navigation.height || mission.y+mission.height<=navigation.y).toBe(true);
+  expect(mission.x).toBeGreaterThanOrEqual(0);expect(mission.y+mission.height).toBeLessThanOrEqual(page.viewportSize().height);
+});
