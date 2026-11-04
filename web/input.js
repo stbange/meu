@@ -128,7 +128,8 @@
       if (id === 2) $('#close-info').focus();
     },
     help() {
-      const panel=$('#help-panel'),opening=panel.hidden,article=$('#help-article'),scrollBefore=article.scrollTop;
+      const panel=$('#help-panel'),opening=panel.hidden;
+      let article=$('#help-article');const scrollBefore=article.scrollTop;
       panel.hidden=context!==7;$('#help-backdrop').hidden=context!==7;
       if(context!==7)return;
       const text=field=>call('meu_web_help_text',['number'],[field],'string');
@@ -138,6 +139,13 @@
         const option=document.createElement('option');option.value=String(i);option.textContent=label;select.append(option);
       }
       const topic=String(call('meu_web_help',['number'],[-1],'number')),changed=panel.dataset.topic!==topic;
+      if(opening || changed) {
+        // Native keyboard/touch scrolling can outlive a scrollTop assignment.
+        // A new reading pane cannot inherit the previous topic's animation.
+        const focused=document.activeElement===article,replacement=article.cloneNode(true);
+        article.replaceWith(replacement);article=replacement;
+        if(focused)article.focus({preventScroll:true});
+      }
       panel.dataset.topic=topic;
       select.value=topic;
       for(const [field,id] of [[0,'help-heading'],[1,'help-place'],[2,'help-action'],[3,'help-tip']]) {
