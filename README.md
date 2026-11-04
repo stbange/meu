@@ -10,6 +10,8 @@ M1a–M1e now connect a complete authored tower expedition: pilot and park, isol
 
 The implementation is on `codex/m1-authored-expedition`; main/public Pages are unchanged. Human reviews were deferred at the user’s request until M1. M0f device/performance work and combined M0/M1 acceptance remain pending. Windows/Linux and debug/optimized web checks pass in the recorded CI run.
 
+Version 0.1.1 adds click-captured mouse look and removes overlapping floor/wall surfaces. Current build downloads and verification are in the [playtest correction record](docs/evidence/mouse-surfaces.md).
+
 ## Start here
 
 - [Game design draft](docs/game-design-draft.md): player experience, scale, city, repairs, salvage, power, and progression.

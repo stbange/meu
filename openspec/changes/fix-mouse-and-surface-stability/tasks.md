@@ -4,6 +4,6 @@
 - [x] 3. Remove covered/coplanar opaque faces and stabilize route-paint depth (VIEW-04).
 ## Verification
 - [x] 4. Add and run native geometry/sanitizer and captured SDL lifecycle/expedition checks.
-- [ ] 5. Run Windows/Linux/WebAssembly and debug/optimized browser checks; retain evidence.
+- [x] 5. Run Windows/Linux/WebAssembly and debug/optimized browser checks; retain evidence.
 ## Acceptance
 - [ ] 6. User confirms captured mouse behavior and absence of observed floor flicker.

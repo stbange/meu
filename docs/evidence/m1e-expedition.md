@@ -1,5 +1,7 @@
 # M1e integrated tower expedition — 4 November 2026
 
+For the later 0.1.1 mouse-capture and floor-surface corrections, including current build downloads, see the [playtest correction record](mouse-surfaces.md).
+
 ## Implementation and identity
 
 M1a–M1e are implemented on `codex/m1-authored-expedition`. Final tested runtime/test source: `0976f7618e604244bbbce53ebb813b82a7785953`; this final evidence update changes documentation and verification checkboxes only. Runtime identity: version 0.1.0, scene `m1-tower-v1`, content 6, schema 2. Numerical rates and the proposed 20–40-minute human loop remain provisional. Human acceptance is deferred at the user's request until after M1, not marked complete. Main/public Pages have not been changed.
