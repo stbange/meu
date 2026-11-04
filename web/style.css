@@ -131,3 +131,7 @@ body[data-context="panel"] #controls,body[data-context="panel"] #use,body[data-c
 #expedition-options { display:grid; gap:6px; }
 #expedition-options button { min-height:48px; text-align:left; font-size:14px; }
 body[data-context="station"] #controls,body[data-context="station"] #reticle,body[data-context="station"] #use { visibility:hidden; }
+
+#expedition-readout { position:fixed; z-index:3; left:max(12px,var(--safe-left)); top:max(100px,calc(var(--safe-top) + 88px)); max-width:calc(100vw - 24px); font-size:12px; color:#ead4a3; text-shadow:0 1px 4px #000; pointer-events:none; }
+@media(max-height:420px) { #expedition-readout { top:58px; font-size:11px; } }
+body[data-context="station"] #expedition-readout { visibility:hidden; }

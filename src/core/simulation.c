@@ -30,7 +30,7 @@ void meu_sim_start(MeuSimulation *s)
 {
     if (s->settings_open || s->journeys_open) return;
     meu_sim_clear_input(s);
-    s->started=true; s->paused=false; s->held=0; s->accumulator=0; previous(s);
+    s->started=true; s->paused=false; if(s->expedition.catastrophe)s->station=5; s->held=0; s->accumulator=0; previous(s);
 }
 void meu_sim_release_helm(MeuSimulation *s)
 {
@@ -107,9 +107,9 @@ MeuUse meu_sim_use_target(const MeuSimulation *s)
     if (s->station) return MEU_USE_NONE;
     if (s->travel.helm) return MEU_USE_HELM;
     if (s->info_open) return MEU_USE_PLACARD;
-    float positions[10][3]={{3.85f,197.3f,-9.7f},{6.55f,157.4f,-7.25f},{0,114.5f,-26.5f},
-        {-1.65f,197.25f,-3.25f},{-1.65f,157.25f,-3.25f},{-1.65f,113.25f,-3.25f},{0,197.2f,-14.5f},{-6,197.3f,-11.4f},{-9,113.3f,-9.3f},{7,113.3f,-10.5f}};
-    for (int i=0;i<10;++i) {
+    float positions[12][3]={{3.85f,197.3f,-9.7f},{6.55f,157.4f,-7.25f},{0,114.5f,-26.5f},
+        {-1.65f,197.25f,-3.25f},{-1.65f,157.25f,-3.25f},{-1.65f,113.25f,-3.25f},{0,197.2f,-14.5f},{-6,197.3f,-11.4f},{-9,113.3f,-9.3f},{7,113.3f,-10.5f},{13.5f,113.3f,-10},{27.8f,113.3f,-10}};
+    for (int i=0;i<12;++i) {
         if (i==6 && (!s->travel.parked || s->motion_fixture)) continue;
         float dx=positions[i][0]-s->x,dy=positions[i][1]-s->y,dz=positions[i][2]-s->z;
         float distance=sqrtf(dx*dx+dy*dy+dz*dz);
@@ -121,13 +121,13 @@ MeuUse meu_sim_use_target(const MeuSimulation *s)
 }
 const char *meu_sim_use_name(MeuUse use)
 {
-    static const char *names[]={"", "Read unit dimensions", "Toggle reading lamp", "Toggle inspection lights", "Call service lift", "Take bridge helm", "Expedition chart", "Power and infrastructure", "Salvage cradle and test bench"};
-    return names[use>=0 && use<=MEU_USE_WORKSHOP ? use : 0];
+    static const char *names[]={"", "Read unit dimensions", "Toggle reading lamp", "Toggle inspection lights", "Call service lift", "Take bridge helm", "Expedition chart", "Power and infrastructure", "Salvage cradle and test bench", "Wrist airlock", "Phase coupler and bypass"};
+    return names[use>=0 && use<=MEU_USE_COUPLER ? use : 0];
 }
 bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
 {
     if (action<0 || action>=MEU_ACTION_COUNT) return false;
-    if (pressed && (!s->started || s->paused)) return false;
+    if (pressed && (!s->started || s->paused || s->expedition.catastrophe)) return false;
     if ((s->info_open || s->station) && action!=MEU_INTERACT) {
         if (!pressed) s->held&=~(UINT32_C(1)<<action);
         return !pressed;
@@ -149,6 +149,8 @@ bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
         if (!pressed) return true;
         if (s->station) return meu_sim_station_command(s,-1);
         switch (meu_sim_use_target(s)) {
+            case MEU_USE_AIRLOCK:case MEU_USE_COUPLER:
+                s->station=meu_sim_use_target(s)==MEU_USE_AIRLOCK?5:6;meu_sim_clear_input(s);break;
             case MEU_USE_WORKSHOP:
                 s->station=4;meu_sim_clear_input(s);break;
             case MEU_USE_NAVIGATION: case MEU_USE_POWER:
@@ -187,6 +189,7 @@ void meu_sim_look(MeuSimulation *s,float yaw,float pitch)
 }
 static bool support(const MeuSimulation *s,float x,float z,float *floor)
 {
+    if (x>13.7f && s->y<120 && !s->expedition.suit) return false;
     float feet=s->y-MEU_EYE_HEIGHT;
     if (!meu_interior_floor(x,z,feet,s->lift_y,floor)) return false;
     static const float offsets[4][2]={{.27f,0},{-.27f,0},{0,.27f},{0,-.27f}};
@@ -204,6 +207,7 @@ bool meu_sim_valid_position(const MeuSimulation *s)
 }
 void meu_sim_move(MeuSimulation *s,float dx,float dz)
 {
+    if (s->expedition.catastrophe) return;
     if (!isfinite(dx) || !isfinite(dz) || fabsf(dx)>100 || fabsf(dz)>100) return;
     int steps=(int)ceilf(fmaxf(fabsf(dx),fabsf(dz))/.06f); if (steps<1) steps=1;
     dx/=(float)steps; dz/=(float)steps;
@@ -254,11 +258,23 @@ static void tick(MeuSimulation *s)
     float distance=hypotf(s->x-old_x,s->z-old_z);
     s->walk_phase=remainderf(s->walk_phase+distance*5.5f,6.2831853f);
     s->walk_amount=clampf(s->walk_amount+(distance>.0001f?1:-1)*dt*8,0,1);
-    if (s->power.energy<MEU_RETURN_MARGIN || s->power.grid || s->power.collectors) meu_travel_stop(&s->travel);
+    if (s->power.energy<MEU_RETURN_MARGIN || s->power.grid || s->power.collectors || s->expedition.suit) meu_travel_stop(&s->travel);
     if (!s->motion_fixture)
         meu_travel_tick(&s->travel,&s->robot,s->world,(int)forward,(int)right,held(s,MEU_BRAKE)!=0);
     meu_power_tick(&s->power,!s->travel.parked,s->expedition.installed);
     meu_expedition_tick(&s->expedition,&s->power);
+    if (s->expedition.suit && s->x>14 && !s->expedition.catastrophe) {
+        MeuExpedition *e=&s->expedition;
+        if(e->suit_ticks) --e->suit_ticks;
+        if (!e->shelter || (!e->bypass && e->coupler) || s->power.energy<2 || s->power.heat>6000) {
+            if(e->exposure<600) ++e->exposure;
+        } else if(e->exposure) --e->exposure;
+        if(s->power.phase==0 && s->power.energy>=2) s->power.energy-=2;
+        if(!e->suit_ticks || e->exposure==600) {
+            e->catastrophe=true;s->station=5;meu_sim_clear_input(s);
+            snprintf(s->message,sizeof(s->message),"Suit limit exceeded. Choose explicit checkpoint recovery; unsecured progress will be lost.");
+        }
+    }
     ++s->ticks; s->visited|=UINT32_C(1)<<meu_sim_room(s);
     /* Test-only motion driver: the future steering system supplies this same pose. */
     if (s->motion_fixture) {
@@ -295,17 +311,37 @@ void meu_sim_render_state(const MeuSimulation *s,MeuSimulation *r)
 
 const char *meu_sim_station_title(const MeuSimulation *s)
 {
-    const char *titles[]={"", "Tower expedition chart", "Engineering power console", "Maintenance helper", "Salvage cradle and test bench"};
-    return titles[s->station>=0 && s->station<=4?s->station:0];
+    const char *titles[]={"", "Tower expedition chart", "Engineering power console", "Maintenance helper", "Salvage cradle and test bench", "Wrist airlock", "Phase coupler and bypass"};
+    return titles[s->station>=0 && s->station<=6?s->station:0];
 }
 void meu_sim_station_status(const MeuSimulation *s,char *line,unsigned size)
 {
-    snprintf(line,size,"Energy %u/%u kJ | heat %u/10000 | sun %u%% | reserve %u kJ",
+    if(s->expedition.suit) {
+        snprintf(line,size,"Suit %us | exposure %u/600 | %s | return: cabin X<14",
+            s->expedition.suit_ticks/60,s->expedition.exposure,
+            s->expedition.shelter && (s->expedition.bypass || !s->expedition.coupler)?"field protected":"FIELD FAILING");
+    } else snprintf(line,size,"Energy %u/%u kJ | heat %u/10000 | sun %u%% | life reserve %u kJ",
         s->power.energy,MEU_ENERGY_CAPACITY,s->power.heat,meu_power_sun(&s->power)/10,MEU_LIFE_RESERVE);
 }
 void meu_sim_station_line(const MeuSimulation *s,int row,char *line,unsigned size)
 {
-    if (s->station==1) {
+    if (s->station==5 || s->station==6) {
+        const MeuExpedition *e=&s->expedition;
+        if(s->station==5) {
+            switch(row) {
+                case 0:snprintf(line,size,"Scan pressure/temp/radiation/debris/field (30 kJ)");break;
+                case 1:snprintf(line,size,"%s shelter field (200 kJ to activate)",e->shelter?"Disconnect":"Power");break;
+                case 2:snprintf(line,size,"Suit up: parked, scanned landing, repair complete, 800 kJ margin");break;
+                case 3:snprintf(line,size,"Return to cabin / remove suit (inside airlock only)");break;
+                case 4:snprintf(line,size,"Suit %us | exposure %u/600 | return: follow rails to cabin X<14",e->suit_ticks/60,e->exposure);break;
+                case 7:snprintf(line,size,"Recover secure checkpoint (catastrophic failure only; lose unsecured salvage)");break;
+                default:if(size)line[0]=0;break;
+            }
+        } else {
+            const char *lines[]={"Install shelter bypass: 1 conductor, 1 sealant, 50 kJ", "Extract phase coupler (warning: without bypass shelter fails)", "Inspect: coupler supplies field; bypass preserves safe return"};
+            snprintf(line,size,"%s",row>=0 && row<3?lines[row]:"");
+        }
+    } else if (s->station==1) {
         const char *lines[]={"Tower socket: pilot north to Z -120..-175; park", "Expedition estimate: 3000 kJ + 2000 uncertainty", "Keep 4000 kJ return margin; solar recovery available", "Engineering console: beside the helper on deck 3"};
         snprintf(line,size,"%s",row>=0 && row<4?lines[row]:"");
     } else if (s->station==4) {
@@ -341,9 +377,55 @@ void meu_sim_station_line(const MeuSimulation *s,int row,char *line,unsigned siz
 bool meu_sim_station_command(MeuSimulation *s,int row)
 {
     if (!s->station || s->paused) return false;
+    if (row==-1 && s->expedition.catastrophe) return false;
     if (row==-1) { s->station=0; meu_sim_clear_input(s); return true; }
     const char *message="Read the chart, then approach the tower at the helm."; bool accepted=false;
-    if (s->station==4) {
+    if(s->station==5 || s->station==6) {
+        MeuExpedition *e=&s->expedition;
+        bool site=s->travel.parked && s->robot.z<=-120 && s->robot.z>=-175 && fabs(s->robot.x)<=15 && fabs(s->robot.yaw)<.05;
+        if(e->catastrophe) {
+            if(row==7 && e->checkpoint) {
+                meu_expedition_recover(e,&s->power);s->x=12;s->y=112+MEU_EYE_HEIGHT;s->z=-10;s->yaw=0;s->pitch=0;
+                s->previous_x=s->x;s->previous_y=s->y;s->previous_z=s->z;
+                message="Secure checkpoint restored. Unsecured salvage/progress lost; home preserved.";accepted=true;
+            } else message="Choose checkpoint recovery explicitly to continue.";
+        } else if(s->station==5) {
+            if(row==0) {
+                if(!site)message="Scan blocked: park aligned at tower socket, heading 000, X +/-15, Z -120..-175.";
+                else if(!meu_power_spend(&s->power,30,0)) message="Scan needs 30 kJ.";
+                else { e->scanned=true;accepted=true;message="Landing in reach. Pressure 80 kPa; -10 C; radiation 0.2 mSv/h; debris low. Field must stay powered."; }
+            } else if(row==1) {
+                if(e->shelter) { e->shelter=false;accepted=true;message="Shelter disconnected. Outside exposure rises; retreat immediately."; }
+                else if(!site || !e->scanned)message="Scan a reachable parked landing before powering shelter.";
+                else if(e->fault || e->job)message="Repair the distribution buffer before powering the recess.";
+                else if(e->coupler && !e->bypass)message="Shelter source removed. Fit bypass or recover the checkpoint.";
+                else if(!meu_power_spend(&s->power,200,100))message="Shelter activation needs 200 kJ and 100 heat capacity.";
+                else { e->shelter=true;accepted=true;message="Service recess sheltered. Suit limit 180 active seconds; return along the rails."; }
+            } else if(row==2) {
+                if(e->suit)message="Suit already active; no checkpoint overwritten.";
+                else if(!site)message="Egress blocked: park aligned with the reachable landing.";
+                else if(!e->scanned)message="Egress blocked: scan pressure, temperature, radiation and landing clearance.";
+                else if(e->fault || e->job)message="Egress blocked: finish the known repair and clear helper access.";
+                else if(!e->shelter || (e->coupler && !e->bypass))message="Egress blocked: shelter field unavailable.";
+                else if(s->power.energy<800 || s->power.heat>6000)message="Egress blocked: need 800 kJ return margin and heat <=6000.";
+                else { meu_expedition_checkpoint(e,&s->power);e->suit=true;e->suit_ticks=10800;e->exposure=0;accepted=true;
+                    message="Suit ready. Walk through the wrist airlock to the conduit. Unit remains parked."; }
+            } else if(row==3) {
+                if(s->x>=14)message="Return along the railings through the airlock before removing the suit.";
+                else if(!e->suit)message="Already in the cabin.";
+                else { e->suit=false;e->checkpoint=false;e->suit_ticks=0;e->exposure=0;accepted=true;message="Cabin secure. Coupler retained; take it to the workshop."; }
+            }
+        } else if(!e->suit || s->x<24)message="Precise work requires the suit and reaching the service conduit.";
+        else if(row==0) {
+            if(e->bypass)message="Bypass already fitted. No duplicate costs.";
+            else if(e->conductor<1 || e->sealant<1)message="Bypass needs 1 conductor and 1 sealant.";
+            else if(!meu_power_spend(&s->power,50,20))message="Bypass needs 50 kJ and 20 heat capacity.";
+            else { --e->conductor;--e->sealant;e->bypass=true;accepted=true;message="Bypass fitted. Shelter stays powered when the coupler is removed."; }
+        } else if(row==1) {
+            if(e->coupler)message="Coupler already recovered. Return to the cabin.";
+            else { e->coupler=true;accepted=true;message=e->bypass?"Coupler recovered; bypass maintains shelter. Return along rails.":"Coupler recovered without bypass: field failing! Return now or choose checkpoint after suit failure."; }
+        } else message="The coupler powers shelter. A parallel bypass preserves the return route.";
+    } else if (s->station==4) {
         if (row==4 && (fabs(s->robot.x)>15 || s->robot.z > -120 || s->robot.z < -175)) {
             snprintf(s->message,sizeof(s->message),"Return to the main tower socket before retracting the powered bridge.");return false;
         }

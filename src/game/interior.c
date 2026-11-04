@@ -28,7 +28,11 @@ static void shell(int deck,float half,float front,float ceiling,float r,float g,
     float y = meu_deck_height(deck), depth = -4-front;
     box(-half,y-.35f,front,half*2,.35f,depth,r,g,b,MEU_FLOOR|MEU_SOLID);
     box(-half-.3f,y,front,.3f,ceiling,depth,.24f,.30f,.32f,MEU_SOLID);
-    box(half,y,front,.3f,ceiling,depth,.24f,.30f,.32f,MEU_SOLID);
+    if(deck==2) {
+        box(half,y,front,.3f,ceiling,-12-front,.24f,.30f,.32f,MEU_SOLID);
+        box(half,y,-8,.3f,ceiling,4,.24f,.30f,.32f,MEU_SOLID);
+        box(half,y+2.8f,-12,.3f,ceiling-2.8f,4,.24f,.30f,.32f,MEU_SOLID);
+    } else box(half,y,front,.3f,ceiling,depth,.24f,.30f,.32f,MEU_SOLID);
     box(-half,y+ceiling,front,half*2,.3f,depth,.15f,.20f,.23f,MEU_SOLID);
     box(-half,y,-4,half-2,ceiling,.35f,.25f,.31f,.32f,MEU_SOLID);
     box(2,y,-4,half-2,ceiling,.35f,.25f,.31f,.32f,MEU_SOLID);
@@ -108,6 +112,16 @@ static void build(void)
     box(-.9f,114.26f,-26.75f,1.8f,.04f,.5f,.83f,.65f,.28f,0);
     box(-13,132,-22,26,1.2f,1.4f,.56f,.47f,.29f,0);
     box(-.4f,121,-22,.8f,11,.8f,.44f,.47f,.42f,0);
+    /* Wrist airlock and docked sheltered service conduit. At 112 m the
+       railings, monumental fastener and machinery preserve human scale. */
+    box(14,111.65f,-12,16,.35f,4,.30f,.38f,.38f,MEU_SOLID|MEU_FLOOR);
+    box(14,112,-12,16,1.1f,.12f,.67f,.57f,.33f,MEU_SOLID);
+    box(14,112,-8.12f,16,1.1f,.12f,.67f,.57f,.33f,MEU_SOLID);
+    box(29.8f,112,-12,.2f,3.5f,4,.27f,.39f,.38f,MEU_SOLID);
+    box(20,115.4f,-12,10,.2f,4,.32f,.41f,.39f,MEU_SOLID);
+    box(20,112,-12,.2f,3.4f,.3f,.44f,.53f,.46f,MEU_SOLID);
+    box(28,112,-11.3f,1.1f,1.2f,2.4f,.62f,.49f,.26f,MEU_SOLID);
+    cylinder(24,112,-14,1.2f,8,.45f,.52f,.45f);
     /* Human-scale salvage/test bench, clear of the reactor access lane. */
     box(6,112,-11.5f,2,1.1f,1,.30f,.39f,.38f,MEU_SOLID);
     box(6.1f,113.12f,-11.4f,1.8f,.04f,.8f,.23f,.72f,.65f,0);

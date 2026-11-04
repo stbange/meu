@@ -86,6 +86,8 @@ void meu_mesh_interior(void)
     meu_mesh_text("REACTOR A", -10.2f,127,-20.55f,.09f,1,.16f,.26f,.26f);
     meu_mesh_text("REACTOR B", 5.8f,127,-20.55f,.09f,1,.16f,.26f,.26f);
     meu_mesh_text("EXPEDITION",-6.9f,197.0f,-10.98f,.025f,1,.83f,.80f,.58f);
+    meu_mesh_text("AIRLOCK",11.4f,114.3f,-11.8f,.035f,1,.83f,.80f,.58f);
+    meu_mesh_text("PHASE COUPLER",25.8f,113.8f,-11.7f,.025f,1,.83f,.80f,.58f);
     meu_mesh_text("WORKSHOP",6.1f,112.9f,-10.49f,.024f,1,.83f,.80f,.58f);
     meu_mesh_text("POWER",-9.8f,113.0f,-9.0f,.025f,1,.83f,.80f,.58f);
     meu_mesh_text("UNIT DIMENSIONS",3.48f,197.05f,-9.63f,.009f,1,.83f,.80f,.58f);
@@ -99,7 +101,10 @@ void meu_mesh_interior(void)
     /* The visible machine has feet at 0 m and a crown at 240 m.
        Its forward hull is stepped below every occupied window. */
     meu_mesh_box(-24,100,-18,9,83,42,.27f,.34f,.35f);
-    meu_mesh_box(15,100,-18,9,83,42,.27f,.34f,.35f);
+    meu_mesh_box(15,100,-18,9,83,6,.27f,.34f,.35f);
+    meu_mesh_box(15,100,-8,9,83,32,.27f,.34f,.35f);
+    meu_mesh_box(15,100,-12,9,12,4,.27f,.34f,.35f);
+    meu_mesh_box(15,114.8f,-12,9,68.2f,4,.27f,.34f,.35f);
     meu_mesh_box(-15,100,5,30,83,19,.27f,.34f,.35f);
     meu_mesh_box(-15,100,-18,30,8,23,.27f,.34f,.35f);
     meu_mesh_box(-17,184,5,34,56,20,.31f,.38f,.38f);
@@ -251,6 +256,10 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection,cons
     } else {
         MeuUse use=meu_sim_use_target(s);
         if (use) { snprintf(line,sizeof(line),"E - %s",meu_sim_use_name(use)); meu_mesh_text(line,left,top-25,0,size,1,.94f,.76f,.43f); }
+    }
+    if(s->expedition.suit && !s->station) {
+        char suit[160];meu_sim_station_status(s,suit,sizeof(suit));
+        meu_mesh_text(suit,left,top-78,0,size*.8f,1,.94f,.76f,.43f);
     }
     if (s->info_open) {
         meu_mesh_text("UNIT HEIGHT 240 M - BRIDGE 196 M",left,top-55,0,size,1,.94f,.82f,.57f);

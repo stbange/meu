@@ -45,5 +45,29 @@ int main(void)
     s.robot.x=-170;CHECK(!meu_sim_station_command(&s,4));s.robot.x=0;
     CHECK(meu_sim_station_command(&s,4));CHECK(s.expedition.adapter && !s.expedition.installed);
     CHECK(meu_sim_station_command(&s,3));
+    meu_sim_init(&s);meu_sim_start(&s);s.station=5;
+    CHECK(!meu_sim_station_command(&s,2));s.robot.z=-140;
+    CHECK(!meu_sim_station_command(&s,2));CHECK(meu_sim_station_command(&s,0));
+    CHECK(!meu_sim_station_command(&s,2));CHECK(meu_sim_station_command(&s,1));
+    s.power.heat=6500;CHECK(!meu_sim_station_command(&s,2));s.power.heat=0;
+    s.power.energy=100;CHECK(!meu_sim_station_command(&s,2));s.power.energy=18000;
+    CHECK(meu_sim_station_command(&s,2));CHECK(s.expedition.suit && s.expedition.checkpoint);
+    /* Fixture places the Commander at the engineering airlock; the crossing
+       itself uses the normal movement/collision implementation. */
+    s.x=12;s.z=-10;s.y=112+MEU_EYE_HEIGHT;s.lift_y=112;s.lift_current=s.lift_target=2;s.visited=15;
+    meu_sim_move(&s,13,0);CHECK(s.x>24 && s.grounded);
+    s.station=6;CHECK(meu_sim_station_command(&s,0));CHECK(meu_sim_station_command(&s,1));ticks(&s,120);
+    CHECK(s.expedition.coupler && s.expedition.bypass && s.expedition.exposure==0);
+    meu_sim_pause(&s);CHECK(meu_snapshot_encode(&s,3,data)==MEU_SAVE_OK);
+    CHECK(meu_snapshot_decode(data,sizeof(data),&loaded,NULL)==MEU_SAVE_OK && loaded.expedition.suit && loaded.expedition.coupler);
+    meu_sim_start(&loaded);meu_sim_move(&loaded,-13,0);CHECK(loaded.x<14);loaded.station=5;
+    CHECK(meu_sim_station_command(&loaded,3));CHECK(!loaded.expedition.suit && loaded.expedition.coupler);
+    /* Unsafe extraction is permitted with a warning, never a silent teleport. */
+    meu_sim_start(&s);s.station=6;s.expedition.bypass=false;ticks(&s,600);
+    CHECK(s.expedition.catastrophe && s.x>24 && s.station==5);
+    CHECK(!meu_sim_station_command(&s,-1));CHECK(meu_sim_station_command(&s,7));
+    CHECK(s.x==12 && !s.expedition.coupler && !s.expedition.suit && !s.expedition.catastrophe);
+    CHECK(s.expedition.alloy==8 && s.expedition.conductor==8 && s.expedition.sealant==4);
+    CHECK(meu_sim_valid_position(&s));
     puts("PASS diagnosis, isolation, helper stock reservation, cancellation, blocking and saved-job resume");return EXIT_SUCCESS;
 }

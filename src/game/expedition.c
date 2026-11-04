@@ -6,7 +6,17 @@ void meu_expedition_init(MeuExpedition *e)
 }
 bool meu_expedition_valid(const MeuExpedition *e)
 {
-    return e->alloy<=100 && e->conductor<=100 && e->sealant<=100 && e->job<=1 && e->job_ticks<=600 &&
+    if(e->checkpoint) {
+        MeuExpedition checkpoint={0};
+        checkpoint.alloy=e->checkpoint_alloy;checkpoint.conductor=e->checkpoint_conductor;checkpoint.sealant=e->checkpoint_sealant;
+        meu_expedition_set_flags(&checkpoint,e->checkpoint_flags);
+        if(!meu_expedition_valid(&checkpoint))return false;
+    }
+    return e->suit_ticks<=10800 && e->exposure<=600 &&
+        (!e->catastrophe || (e->suit && e->checkpoint)) && (!e->suit || (e->checkpoint && e->scanned)) &&
+        (!e->checkpoint || (e->checkpoint_alloy<=100 && e->checkpoint_conductor<=100 && e->checkpoint_sealant<=100 &&
+            !(e->checkpoint_flags&~255u) && meu_power_valid(&e->checkpoint_power))) &&
+        e->alloy<=100 && e->conductor<=100 && e->sealant<=100 && e->job<=1 && e->job_ticks<=600 &&
         (e->fault || !e->diagnosed) && (e->job || !e->job_ticks) &&
         (!e->installed || (e->coupler && e->tested && e->adapter)) &&
         (!e->adapter || (e->coupler && e->tested)) && (!e->tested || e->coupler) &&
@@ -93,4 +103,29 @@ const char *meu_salvage_command(MeuExpedition *e,MeuPower *p,int action,bool at_
         e->installed=false;*accepted=true;return "Stabilizer removed intact. West bridge access requires reinstalling it.";
     }
     return "Unknown workshop action.";
+}
+
+uint32_t meu_expedition_flags(const MeuExpedition *e)
+{
+    return (e->bulk?1u:0)|(e->coupler?2u:0)|(e->tested?4u:0)|(e->adapter?8u:0)|(e->installed?16u:0)|
+        (e->scanned?32u:0)|(e->shelter?64u:0)|(e->bypass?128u:0)|(e->suit?256u:0)|
+        (e->catastrophe?512u:0)|(e->checkpoint?1024u:0);
+}
+void meu_expedition_set_flags(MeuExpedition *e,uint32_t f)
+{
+    e->bulk=(f&1)!=0;e->coupler=(f&2)!=0;e->tested=(f&4)!=0;e->adapter=(f&8)!=0;e->installed=(f&16)!=0;
+    e->scanned=(f&32)!=0;e->shelter=(f&64)!=0;e->bypass=(f&128)!=0;e->suit=(f&256)!=0;
+    e->catastrophe=(f&512)!=0;e->checkpoint=(f&1024)!=0;
+}
+void meu_expedition_checkpoint(MeuExpedition *e,const MeuPower *p)
+{
+    e->checkpoint_alloy=e->alloy;e->checkpoint_conductor=e->conductor;e->checkpoint_sealant=e->sealant;
+    e->checkpoint_flags=meu_expedition_flags(e)&255u;e->checkpoint_power=*p;e->checkpoint=true;
+}
+void meu_expedition_recover(MeuExpedition *e,MeuPower *p)
+{
+    e->alloy=e->checkpoint_alloy;e->conductor=e->checkpoint_conductor;e->sealant=e->checkpoint_sealant;
+    meu_expedition_set_flags(e,e->checkpoint_flags);*p=e->checkpoint_power;
+    e->fault=false;e->diagnosed=false;
+    e->suit_ticks=0;e->exposure=0;e->job=0;e->job_ticks=0;
 }

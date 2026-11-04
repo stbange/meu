@@ -105,6 +105,7 @@
       if (id === 2) $('#close-info').focus();
     },
     station() {
+      $('#expedition-readout').textContent=call('meu_web_station_text',['number'],[-1],'string');
       const panel=$('#expedition-panel'); panel.hidden=context!==6;
       if(context!==6)return;
       const text=row=>call('meu_web_station_text',['number'],[row],'string');
@@ -133,7 +134,7 @@
     },
     hud(room, height, aboard, moving, current, target, use, info, liftReady) {
       const names = ['Bridge','Living quarters','Engineering hall','Service lift'];
-      const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm','Expedition chart','Power and infrastructure','Salvage cradle and test bench'];
+      const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm','Expedition chart','Power and infrastructure','Salvage cradle and test bench','Wrist airlock','Phase coupler and bypass'];
       $('#room').textContent = names[room];
       $('#altitude').textContent = (room === 3 ? 'Lift ' : 'Deck ') + Math.round(height) + ' m · Unit height 240 m';
       $('#navigation').hidden = room !== 0; $('#lift-panel').hidden = !aboard;
