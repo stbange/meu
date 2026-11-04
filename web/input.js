@@ -137,7 +137,8 @@
         const label=text(-10-i);if(!label)break;
         const option=document.createElement('option');option.value=String(i);option.textContent=label;select.append(option);
       }
-      const topic=String(call('meu_web_help',['number'],[-1],'number')),changed=select.value!==topic;
+      const topic=String(call('meu_web_help',['number'],[-1],'number')),changed=panel.dataset.topic!==topic;
+      panel.dataset.topic=topic;
       select.value=topic;
       for(const [field,id] of [[0,'help-heading'],[1,'help-place'],[2,'help-action'],[3,'help-tip']]) {
         const node=$('#'+id),value=text(field);if(node.textContent!==value)node.textContent=value;

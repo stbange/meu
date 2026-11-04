@@ -24,7 +24,13 @@ async function helpTour(page,mobile,info){
   await page.locator('#help-topic').selectOption('6');await expect(page.locator('#help-heading')).toHaveText('Keep a durable journey');
   await expect(page.locator('#help-tip')).toContainText('Import replaces');
   await tap(button(page,'Previous help topic'),mobile);await expect(page.locator('#help-tip')).toContainText('BEFORE');
+  const article=page.locator('#help-article');
+  if(await article.evaluate(node=>node.scrollHeight>node.clientHeight+1)){
+    await article.hover();await page.mouse.wheel(0,1000);
+    await expect.poll(()=>article.evaluate(node=>node.scrollTop)).toBeGreaterThan(0);
+  }
   await page.locator('#help-topic').selectOption('0');await expect(page.locator('#help-heading')).toHaveText("Let's start on the bridge");
+  expect(await article.evaluate(node=>node.scrollTop)).toBe(0);
   await page.emulateMedia({reducedMotion:'reduce'});
   expect(await page.locator('#help-panel .pip-flight').evaluate(node=>getComputedStyle(node).animationName)).toBe('none');
   await page.screenshot({path:info.outputPath('pip-help.png')});
