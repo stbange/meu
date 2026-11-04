@@ -14,7 +14,7 @@
     <div class="location"><span class="eyebrow">MEU / COMMANDER</span><h1 id="room">Bridge</h1><div id="altitude">Deck 196 m · Unit height 240 m</div></div>
     <div class="toolbar"><button id="settings" aria-expanded="false" aria-controls="settings-panel" disabled>Settings</button><button id="pause" disabled>Pause</button></div>
   </header>
-  <div id="expedition-readout" aria-live="off"></div>
+  <div id="expedition-readout" aria-live="off"></div><div id="expedition-objective"></div>
   <div id="reticle" aria-hidden="true">+</div>
   <section id="welcome" class="card" aria-label="Start exploration">
     <span class="eyebrow">MECHANIZED EXPLORATION UNIT</span>
@@ -27,7 +27,7 @@
     <p class="hint">Use the arrows to walk and drag LOOK to turn your view. The central console is the helm; the lift is behind you.<br>Keyboard: WASD · E use · Space brake · P park · F1 settings · F2 saved journeys.</p>
   </section>
   <section id="expedition-panel" class="card" aria-label="Expedition station" hidden>
-    <h2 id="expedition-title"></h2><p id="expedition-status"></p>
+    <h2 id="expedition-title" tabindex="-1"></h2><p id="expedition-status"></p>
     <div id="expedition-options"></div><p id="expedition-message" role="status"></p>
     <button id="close-expedition">Close station</button>
   </section>

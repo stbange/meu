@@ -12,7 +12,7 @@ test('renders the C/OpenGL room and supports touch settings in WebKit',async ({ 
   if (!release) {
     const s=await page.evaluate(()=>window.MEU.readState());
     expect(s.audioAttempts).toBe(0); expect(s.paused).toBe(true);
-    expect(s.scene).toBe('m0e-saves-v1');
+    expect(s.scene).toBe('m1-tower-v1');
     if (process.env.GITHUB_SHA) expect(s.build).toContain(process.env.GITHUB_SHA);
   }
   await page.locator('label[for="walk-bob"]').tap();

@@ -105,11 +105,13 @@
       if (id === 2) $('#close-info').focus();
     },
     station() {
+      $('#expedition-objective').textContent=call('meu_web_station_text',['number'],[-4],'string');
       $('#expedition-readout').textContent=call('meu_web_station_text',['number'],[-1],'string');
-      const panel=$('#expedition-panel'); panel.hidden=context!==6;
+      const panel=$('#expedition-panel'),wasHidden=panel.hidden; panel.hidden=context!==6;
       if(context!==6)return;
       const text=row=>call('meu_web_station_text',['number'],[row],'string');
       $('#expedition-title').textContent=text(-3);
+      if(wasHidden)$('#expedition-title').focus();
       $('#expedition-status').textContent=text(-1);
       $('#expedition-message').textContent=text(-2);
       const host=$('#expedition-options');
@@ -232,6 +234,11 @@
         if (event.shiftKey && (selected === first || selected === $('#settings-title'))) { last.focus(); event.preventDefault(); }
         else if (!event.shiftKey && selected === last) { first.focus(); event.preventDefault(); }
       }
+      return;
+    }
+    if(context===6){
+      if(!event.repeat && /^Digit[1-8]$/.test(event.code)){call('meu_web_station',['number'],[Number(event.code.slice(-1))-1]);event.preventDefault();}
+      else if(!event.repeat && ['KeyE','Digit0'].includes(event.code)){call('meu_web_station',['number'],[-1]);event.preventDefault();}
       return;
     }
     if ((event.code === 'Enter' || event.code === 'Space') && event.target.closest?.('button')) return;

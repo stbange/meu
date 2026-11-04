@@ -104,12 +104,13 @@ MeuSaveResult meu_snapshot_decode(const uint8_t *data,size_t size,MeuSimulation 
         uint32_t progress=get32(data+160);if(progress&~3u) return MEU_SAVE_MALFORMED;
         candidate.expedition=(MeuExpedition){.alloy=get32(data+148),.conductor=get32(data+152),.sealant=get32(data+156),
             .fault=(progress&1)!=0,.diagnosed=(progress&2)!=0,.job=get32(data+164),.job_ticks=get32(data+168)};
-        uint32_t discovery=get32(data+172);if(discovery&~2047u)return MEU_SAVE_MALFORMED;
+        uint32_t discovery=get32(data+172);if(discovery&~8191u)return MEU_SAVE_MALFORMED;
         meu_expedition_set_flags(&candidate.expedition,discovery);
         candidate.expedition.suit_ticks=get32(data+176);candidate.expedition.exposure=get32(data+180);
         candidate.expedition.checkpoint_alloy=get32(data+184);candidate.expedition.checkpoint_conductor=get32(data+188);
         candidate.expedition.checkpoint_sealant=get32(data+192);candidate.expedition.checkpoint_flags=get32(data+196);
         uint32_t cpbits=get32(data+216);if(cpbits&~31u)return MEU_SAVE_MALFORMED;
+        if(!candidate.expedition.checkpoint) for(int i=184;i<220;++i)if(data[i])return MEU_SAVE_MALFORMED;
         candidate.expedition.checkpoint_power=(MeuPower){get32(data+200),get32(data+204),get32(data+208),get32(data+212),
             (cpbits&1)!=0,(cpbits&2)!=0,(cpbits&4)!=0,(cpbits&8)!=0,(cpbits&16)!=0};
         candidate.power=(MeuPower){get32(data+128),get32(data+132),get32(data+136),get32(data+140),

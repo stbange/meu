@@ -21,6 +21,7 @@ def main():
     parser.add_argument("--pilot", action="store_true", help="render an SDL bridge-piloting and collision replay")
     parser.add_argument("--lifecycle", action="store_true", help="render the settings/focus/resize/resume SDL replay")
     parser.add_argument("--persistence", action="store_true", help="run separate native write/load/export/import processes")
+    parser.add_argument("--expedition", action="store_true", help="complete the authored M1 route through actual SDL input")
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--release", action="store_true", help="omit the read-only browser test bridge")
     parser.add_argument("--sanitizers", action="store_true", help="native ASan/UBSan (Linux)")
@@ -76,7 +77,7 @@ def main():
     subprocess.run([str(cmake), "--build", str(build), "--parallel", "4"], cwd=ROOT, env=env, check=True)
     if args.test:
         subprocess.run([str(ctest), "--test-dir", str(build), "--output-on-failure"], cwd=ROOT, env=env, check=True)
-    if args.smoke or args.tour or args.pilot or args.lifecycle or args.persistence or args.run:
+    if args.smoke or args.tour or args.pilot or args.lifecycle or args.persistence or args.expedition or args.run:
         if args.target != "native":
             raise SystemExit("--smoke/--tour/--pilot/--lifecycle/--persistence/--run are native-only; serve the web build with tools/serve.py.")
         captures = ROOT / "test-results"
@@ -86,6 +87,10 @@ def main():
             subprocess.run([executable,"--smoke-test","--capture",str(captures/"native-room.bmp")],cwd=ROOT,env=env,check=True,timeout=30)
         for enabled,flag in ((args.tour,"--tour-test"),(args.pilot,"--pilot-test"),(args.lifecycle,"--lifecycle-test")):
             if enabled: subprocess.run([executable,flag],cwd=ROOT,env=env,check=True,timeout=90)
+        if args.expedition:
+            directory=(build / "expedition-replay").resolve()
+            directory.mkdir(exist_ok=True)
+            subprocess.run([executable,"--expedition-test","--save-dir",str(directory)],cwd=ROOT,env=env,check=True,timeout=120)
         if args.persistence:
             directory = (build / "persistence-replay").resolve()
             if not directory.is_relative_to(build.resolve()):

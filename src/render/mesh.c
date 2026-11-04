@@ -257,6 +257,9 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection,cons
         MeuUse use=meu_sim_use_target(s);
         if (use) { snprintf(line,sizeof(line),"E - %s",meu_sim_use_name(use)); meu_mesh_text(line,left,top-25,0,size,1,.94f,.76f,.43f); }
     }
+    if(!s->station && !s->paused) {
+        meu_mesh_text(meu_sim_objective(s),left,top-105,0,size*.65f,1,.86f,.88f,.70f);
+    }
     if(s->expedition.suit && !s->station) {
         char suit[160];meu_sim_station_status(s,suit,sizeof(suit));
         meu_mesh_text(suit,left,top-78,0,size*.8f,1,.94f,.76f,.43f);

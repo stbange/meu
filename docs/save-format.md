@@ -30,7 +30,11 @@ Schema 2 records are exactly 256 bytes. Legacy schema 1 records of 128 bytes rem
 | 104–123 | Reserved zero bytes |
 | 124–127 | CRC-32 over bytes 0–123 |
 | 128–147 | u32 main energy, heat, daylight clock, subsecond phase, power flags |
-| 148–251 | reserved for expedition systems; zero until defined |
+| 148–159 | u32 alloy, conductor, sealant |
+| 160–171 | maintenance flags, helper job, helper active ticks |
+| 172–183 | discovery/suit/checkpoint/completion flags, suit ticks, exposure |
+| 184–219 | checkpoint stock, flags and power state; canonical zero without checkpoint |
+| 220–251 | reserved; zero |
 | 252–255 | CRC-32 over bytes 0–251 |
 
 The checksum detects accidental damage. Geometry and semantic checks remain independent: reject unsupported schema/world, non-finite or out-of-range values, inconsistent room/lift metadata, reserved flags, solid intersections, unsupported player footing and invalid robot hull/foot support. A staged decode touches neither output nor live state on failure. The schema-2 reference `tests/fixtures/save-v2.meu` is checked byte-for-byte; `save-v1.meu` is retained for legacy migration in native and WebAssembly tests. It has generation 7 and tick 12345.
@@ -56,3 +60,7 @@ One strict-durability IndexedDB read/write transaction reads the old generations
 A valid latest record restores into pause on startup. If latest is damaged or missing, the player chooses Recover previous. Recovery itself never rewrites the stored source. An explicit later save preserves the most recent damaged data before repairing latest. Import does not publish or change local generations; it remains possible when IndexedDB is unavailable. Export reports download start rather than claiming a durable local save. Browser profile/origin storage is separate from native saves and other browsers; exporting provides a separate copy.
 
 Storage completion is the platform confirmation boundary, not a claim that browser data cannot be cleared or evicted. There is no cloud account, background save or network synchronization. Tests cover quota/denial, put success before transaction completion, page interruption, corrupt/latest recovery, oversized damaged records, incompatible imports and two-tab publication through real IndexedDB operations.
+
+## M1 state and compatibility
+
+Discovery bits0–4 identify bulk recovery, coupler, test, adapter and installation; bits5–10 identify scan, shelter, bypass, suit, catastrophe and checkpoint; bits11/12 identify expedition completion and successful repair. Helpers retain reserved parts/progress. Installed saves select the extended west support world before position validation. Outside saves require suit/checkpoint/site alignment and valid footing. Checkpoint recovery restores stock, discoveries and power only on explicit choice after failure; source journals are unchanged until a new save is durably published. No offline resource consumption occurs.

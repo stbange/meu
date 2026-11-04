@@ -1,0 +1,54 @@
+const {test,expect}=require('@playwright/test');
+const fs=require('node:fs/promises');
+const path=require('node:path');
+const {state,button,tap,ready,menu,save,imported}=require('./save-helpers.cjs');
+const release=process.env.MEU_RELEASE==='1';
+async function fixture(page,mobile,name){
+  await ready(page);await menu(page,mobile);
+  await imported(page,mobile,await fs.readFile(path.join(__dirname,'../fixtures/m1-'+name+'.meu')));
+  await expect(page.locator('body')).toHaveAttribute('data-save-state','imported');
+  await tap(button(page,'Close journeys'),mobile);await tap(button(page,'Resume exploration'),mobile);
+}
+async function station(page,mobile,name){await tap(button(page,name+' · E'),mobile);await expect(page.locator('#expedition-panel')).toBeVisible();}
+async function option(page,mobile,pattern){const choice=page.locator('#expedition-options button').filter({hasText:pattern});await expect(choice).toHaveCount(1);await tap(choice,mobile);}
+
+test('uses real desktop or touch airlock controls, walks the conduit, bypasses and persists the recovered coupler',async({page,isMobile},info)=>{
+  test.skip(release,'Observes read-only production-loop diagnostics.');test.setTimeout(60000);
+  await fixture(page,isMobile,'airlock');
+  await station(page,isMobile,'Wrist airlock');
+  await option(page,isMobile,/Suit up:/);await expect(page.locator('#expedition-message')).toContainText('scan');
+  await option(page,isMobile,/Scan pressure/);await expect(page.locator('#expedition-message')).toContainText('80 kPa');
+  await option(page,isMobile,/Power shelter/);await option(page,isMobile,/Suit up:/);
+  expect((await state(page)).suit).toBe(true);
+  for(const control of await page.locator('#expedition-options button:visible').all()){
+    const b=await control.boundingBox();expect(b.height).toBeGreaterThanOrEqual(48);
+  }
+  await tap(button(page,'Close station'),isMobile);
+  let session;
+  if(isMobile){
+    session=await page.context().newCDPSession(page);
+    const b=await button(page,'Move forward').boundingBox();
+    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2,id:1}]});
+  }else await page.keyboard.down('KeyW');
+  try{await expect.poll(async()=>{const s=await state(page);return s.x>24 && s.use===10;},{timeout:10000,intervals:[30,50]}).toBe(true);}
+  finally{if(isMobile)await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});else await page.keyboard.up('KeyW');}
+  await station(page,isMobile,'Phase coupler and bypass');
+  await option(page,isMobile,/Install shelter bypass/);await option(page,isMobile,/Extract phase coupler/);
+  expect((await state(page)).coupler).toBe(true);expect((await state(page)).bypass).toBe(true);
+  await page.screenshot({path:info.outputPath('m1-conduit.png')});
+  await menu(page,isMobile);await save(page,isMobile,1);const saved=await state(page);
+  await page.reload();await expect(page.locator('body')).toHaveAttribute('data-ready','true');
+  const loaded=await state(page);expect(loaded.paused).toBe(true);expect(loaded.suit).toBe(true);
+  expect(loaded.coupler).toBe(true);expect(loaded.bypass).toBe(true);expect(loaded.suitTicks).toBe(saved.suitTicks);
+  expect(loaded.x).toBeCloseTo(saved.x,4);expect(loaded.robotZ).toBeCloseTo(-140,2);
+});
+
+test('tests and adapts recovered technology through native-parity station buttons and persists installed access',async({page,isMobile})=>{
+  test.skip(release,'Observes read-only production-loop diagnostics.');
+  await fixture(page,isMobile,'workshop');await station(page,isMobile,'Salvage cradle and test bench');
+  await option(page,isMobile,/Controlled coupler test/);await option(page,isMobile,/Adapter: alloy/);
+  await option(page,isMobile,/Install stabilizer:/);expect((await state(page)).installed).toBe(true);
+  await option(page,isMobile,/Install stabilizer:/);await expect(page.locator('#expedition-message')).toContainText('empty installation socket');
+  await menu(page,isMobile);await save(page,isMobile,1);await page.reload();
+  await expect(page.locator('body')).toHaveAttribute('data-ready','true');expect((await state(page)).installed).toBe(true);
+});

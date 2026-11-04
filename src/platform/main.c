@@ -33,7 +33,7 @@ typedef struct {
     SDL_FingerID move_finger,look_finger;
     bool move_touch,look_touch;
     int variation, exit_code;
-    bool running, smoke, tour, pilot, lifecycle, dragging, audio_ready;
+    bool running, smoke, tour, pilot, lifecycle, expedition_replay, dragging, audio_ready;
     const char *capture;
     char storage_status[180];
 #ifndef __EMSCRIPTEN__
@@ -139,6 +139,7 @@ WEB_EXPORT int meu_web_station(int row)
 WEB_EXPORT const char *meu_web_station_text(int row)
 {
     static char text[256];
+    if (row==-4) return meu_sim_objective(&app.simulation);
     if (row==-3) return meu_sim_station_title(&app.simulation);
     if (row==-2) return app.simulation.message;
     if (row==-1) meu_sim_station_status(&app.simulation,text,sizeof(text));
@@ -268,7 +269,7 @@ static void initialize_storage(void)
     }
     if (!meu_file_mkdir(app.storage_directory)) { storage_message(meu_save_message(MEU_SAVE_IO));return; }
     SDL_Log("MEU save directory: %s",app.storage_directory);
-    if (app.persistence_test==1) { storage_message("Persistence replay ready.");return; }
+    if (app.persistence_test==1 || app.expedition_replay) { storage_message("Persistence replay ready.");return; }
     MeuJournal journal;
     if (!meu_file_inspect(app.storage_directory,&journal)) storage_message(meu_save_message(MEU_SAVE_IO));
     else if (journal.latest.result==MEU_SAVE_OK) storage_action(1,NULL);
@@ -308,6 +309,14 @@ WEB_EXPORT const char *meu_state_json(void)
         meu_sim_context(&app.simulation),app.simulation.input_epoch,app.simulation.settings_open?"true":"false",
         app.simulation.settings.sensitivity,app.simulation.settings.invert_y?"true":"false",
         app.simulation.settings.walk_bob?"true":"false",app.simulation.settings.machine_sway?"true":"false",app.simulation.settings.volume,app.audio?SDL_GetAudioStreamGain(app.audio):-1);
+    size_t used=strlen(result);
+    if(used && used<sizeof(result)-600) {
+        MeuSimulation *s=&app.simulation;MeuExpedition *e=&s->expedition;
+        snprintf(result+used-1,sizeof(result)-used+1,",\"energy\":%u,\"heat\":%u,\"station\":%d,\"fault\":%s,\"job\":%u,\"jobTicks\":%u,\"bulk\":%s,\"coupler\":%s,\"bypass\":%s,\"suit\":%s,\"suitTicks\":%u,\"exposure\":%u,\"installed\":%s,\"completed\":%s}",
+            s->power.energy,s->power.heat,s->station,e->fault?"true":"false",e->job,e->job_ticks,e->bulk?"true":"false",
+            e->coupler?"true":"false",e->bypass?"true":"false",e->suit?"true":"false",e->suit_ticks,e->exposure,
+            e->installed?"true":"false",e->completed?"true":"false");
+    }
     return result;
 }
 #endif
@@ -581,7 +590,7 @@ static void lifecycle_check(int width,int height)
 static void persistence_input(void)
 {
     unsigned f=app.frames;SDL_Scancode key=SDL_SCANCODE_UNKNOWN;
-    if (app.persistence_test==1) {
+    if (app.persistence_test==1 || app.expedition_replay) {
         switch(f) {
             case 0:key=SDL_SCANCODE_RETURN;break;
             case 62:case 72:key=SDL_SCANCODE_F1;break;
@@ -627,11 +636,13 @@ static void persistence_check(int width,int height)
     }
     if (bad) {SDL_Log("PERSISTENCE failed frame=%u z=%.4f status=%s",f,s->z,app.storage_status);app.exit_code=1;app.running=false;}
 }
+#include "../../tests/client/expedition_replay.h"
 #endif
 
 static void frame(void)
 {
 #ifndef __EMSCRIPTEN__
+    if (app.expedition_replay) expedition_input();
     if (app.tour) tour_input();
     if (app.pilot) pilot_input();
     if (app.lifecycle) lifecycle_input();
@@ -640,7 +651,7 @@ static void frame(void)
     SDL_Event input;
     while (SDL_PollEvent(&input)) { event(&input); sync_input_context(); }
     double now = (double)SDL_GetTicksNS() / 1e9;
-    meu_sim_advance(&app.simulation, (app.tour || app.pilot || app.lifecycle || app.persistence_test) ? MEU_TICK_SECONDS : now - app.previous_time);
+    meu_sim_advance(&app.simulation, (app.tour || app.pilot || app.lifecycle || app.persistence_test || app.expedition_replay) ? MEU_TICK_SECONDS : now - app.previous_time);
     app.previous_time = now;
     int width = 0, height = 0;
 #ifdef __EMSCRIPTEN__
@@ -649,7 +660,7 @@ static void frame(void)
     SDL_GetWindowSizeInPixels(app.window, &width, &height);
 #endif
     MeuSimulation render; meu_sim_render_state(&app.simulation,&render);
-    bool draw=(!app.tour && !app.pilot && !app.lifecycle) || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899 || (app.pilot && (app.frames==101 || app.frames==599 || app.frames==1599)) || (app.lifecycle && (app.frames==15 || app.frames==120));
+    bool draw=(app.expedition_replay && (app.simulation.station || app.simulation.expedition.completed)) || (!app.tour && !app.pilot && !app.lifecycle && !app.expedition_replay) || app.frames%30==0 || app.frames==2 || app.frames==4381 || app.frames==5200 || app.frames==3899 || (app.pilot && (app.frames==101 || app.frames==599 || app.frames==1599)) || (app.lifecycle && (app.frames==15 || app.frames==120));
     if (draw && !meu_renderer_draw(&render, width, height,app.settings_selection,app.storage_status)) {
         SDL_Log("OpenGL frame failed"); app.exit_code = EXIT_FAILURE; app.running = false;
     }
@@ -688,6 +699,7 @@ static void frame(void)
         }
     }
 #ifndef __EMSCRIPTEN__
+    if (draw && app.expedition_replay) expedition_artifacts(width,height);
     if (app.tour) tour_check(width,height);
     if (app.pilot) pilot_check(width,height);
     if (app.lifecycle) lifecycle_check(width,height);
@@ -717,6 +729,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--pilot-test")) app.pilot=true;
         else if (!strcmp(argv[i], "--tour-test")) { app.tour=true; app.simulation.motion_fixture=true; }
 #ifndef __EMSCRIPTEN__
+        else if (!strcmp(argv[i], "--expedition-test")) app.expedition_replay=true;
         else if (!strcmp(argv[i], "--persistence-test") && i+1<argc) {
             const char *mode=argv[++i];app.persistence_test=!strcmp(mode,"write")?1:!strcmp(mode,"read")?2:0;
             if (!app.persistence_test) return EXIT_FAILURE;
@@ -744,7 +757,7 @@ int main(int argc, char **argv)
     if (!app.context || !meu_renderer_init()) {
         SDL_Log("Client initialization failed: %s", SDL_GetError()); cleanup(); return EXIT_FAILURE;
     }
-    SDL_GL_SetSwapInterval((app.tour || app.pilot || app.lifecycle || app.persistence_test)?0:1);
+    SDL_GL_SetSwapInterval((app.tour || app.pilot || app.lifecycle || app.persistence_test || app.expedition_replay)?0:1);
     SDL_Log("MEU build=%s scene=%s content=%d", MEU_BUILD_ID, MEU_SCENE_ID, MEU_CONTENT_VERSION);
     app.previous_time = (double)SDL_GetTicksNS() / 1e9;
     if (app.smoke) meu_sim_start(&app.simulation);
@@ -755,7 +768,7 @@ int main(int argc, char **argv)
 #else
     app.file_event=SDL_RegisterEvents(1);
     initialize_storage();
-    while (app.running) { frame(); if (!app.tour && !app.pilot && !app.lifecycle && !app.persistence_test) SDL_Delay(1); }
+    while (app.running) { frame(); if (!app.tour && !app.pilot && !app.lifecycle && !app.persistence_test && !app.expedition_replay) SDL_Delay(1); }
     cleanup();
 #endif
     return app.exit_code;

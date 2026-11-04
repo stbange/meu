@@ -65,6 +65,7 @@ const char *meu_sim_use_name(MeuUse use);
 int meu_sim_room(const MeuSimulation *state);
 void meu_sim_move(MeuSimulation *state,float dx,float dz);
 bool meu_sim_station_command(MeuSimulation *state,int row);
+const char *meu_sim_objective(const MeuSimulation *state);
 const char *meu_sim_station_title(const MeuSimulation *state);
 void meu_sim_station_line(const MeuSimulation *state,int row,char *line,unsigned size);
 void meu_sim_station_status(const MeuSimulation *state,char *line,unsigned size);

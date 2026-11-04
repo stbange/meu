@@ -15,7 +15,7 @@ unsigned meu_power_sun(const MeuPower *p)
 }
 bool meu_power_spend(MeuPower *p,unsigned energy,unsigned heat)
 {
-    if (energy>p->energy || heat>10000-p->heat) return false;
+    if (!meu_power_valid(p) || energy>p->energy || heat>10000-p->heat) return false;
     p->energy-=energy; p->heat+=heat; return true;
 }
 void meu_power_tick(MeuPower *p,bool moving,bool stabilized)

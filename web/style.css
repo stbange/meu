@@ -135,3 +135,7 @@ body[data-context="station"] #controls,body[data-context="station"] #reticle,bod
 #expedition-readout { position:fixed; z-index:3; left:max(12px,var(--safe-left)); top:max(100px,calc(var(--safe-top) + 88px)); max-width:calc(100vw - 24px); font-size:12px; color:#ead4a3; text-shadow:0 1px 4px #000; pointer-events:none; }
 @media(max-height:420px) { #expedition-readout { top:58px; font-size:11px; } }
 body[data-context="station"] #expedition-readout { visibility:hidden; }
+
+#expedition-objective { position:fixed; z-index:3; left:max(12px,var(--safe-left)); top:max(133px,calc(var(--safe-top) + 121px)); width:min(540px,calc(100vw - 24px)); font-size:12px; color:#d4dec8; text-shadow:0 1px 4px #000; pointer-events:none; }
+body[data-context="station"] #expedition-objective { visibility:hidden; }
+@media(max-height:420px) { #expedition-objective { top:78px; font-size:11px; width:50vw; } }

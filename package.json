@@ -11,6 +11,7 @@
     "bootstrap:web": "node tools/run-python.cjs tools/bootstrap.py --web",
     "build:native": "node tools/run-python.cjs tools/build.py native",
     "test:native": "node tools/run-python.cjs tools/build.py native --test",
+    "test:expedition": "node tools/run-python.cjs tools/build.py native --test --expedition",
     "smoke:native": "node tools/run-python.cjs tools/build.py native --test --smoke",
     "dev:native": "node tools/run-python.cjs tools/build.py native --run",
     "build:web": "node tools/run-python.cjs tools/build.py web --test",

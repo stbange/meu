@@ -109,6 +109,16 @@ int main(int argc,char **argv)
         random=random*1664525u+1013904223u;put32(bad+offset,random);seal(bad);
         (void)meu_snapshot_decode(bad,MEU_SAVE_BYTES,NULL,NULL);
     }
+    /* Resealed hostile expedition payloads must pass semantic checks too. */
+    const struct {int offset;uint32_t value;} invalid_expedition[]={
+        {128,30001},{132,10001},{136,600},{140,60},{144,32},{148,101},{152,101},{156,101},
+        {160,4},{164,2},{168,601},{172,8192},{176,10801},{180,601},{172,256},{172,512},{172,2048},
+        {172,1280},{196,1024},{216,32},{220,1}
+    };
+    for(size_t i=0;i<sizeof(invalid_expedition)/sizeof(invalid_expedition[0]);++i) {
+        memcpy(bad,data,sizeof(data));put32(bad+invalid_expedition[i].offset,invalid_expedition[i].value);seal(bad);
+        CHECK(meu_snapshot_decode(bad,MEU_SAVE_BYTES,NULL,NULL)!=MEU_SAVE_OK);
+    }
     printf("PASS %d snapshot assertions and 5000 hostile payloads build=%s scene=%s\n",checks,MEU_BUILD_ID,MEU_SCENE_ID);
     return EXIT_SUCCESS;
 }

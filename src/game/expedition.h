@@ -7,7 +7,7 @@ typedef struct {
     uint32_t alloy,conductor,sealant;
     bool fault,diagnosed;
     uint32_t job,job_ticks;
-    bool bulk,coupler,tested,adapter,installed;
+    bool bulk,coupler,tested,adapter,installed,repaired,completed;
     bool scanned,shelter,bypass,suit,catastrophe,checkpoint;
     uint32_t suit_ticks,exposure;
     uint32_t checkpoint_alloy,checkpoint_conductor,checkpoint_sealant,checkpoint_flags;

@@ -275,6 +275,7 @@ static void tick(MeuSimulation *s)
             snprintf(s->message,sizeof(s->message),"Suit limit exceeded. Choose explicit checkpoint recovery; unsecured progress will be lost.");
         }
     }
+    if(s->expedition.installed && s->robot.x < -130 && s->travel.parked) s->expedition.completed=true;
     ++s->ticks; s->visited|=UINT32_C(1)<<meu_sim_room(s);
     /* Test-only motion driver: the future steering system supplies this same pose. */
     if (s->motion_fixture) {
@@ -342,7 +343,8 @@ void meu_sim_station_line(const MeuSimulation *s,int row,char *line,unsigned siz
             snprintf(line,size,"%s",row>=0 && row<3?lines[row]:"");
         }
     } else if (s->station==1) {
-        const char *lines[]={"Tower socket: pilot north to Z -120..-175; park", "Expedition estimate: 3000 kJ + 2000 uncertainty", "Keep 4000 kJ return margin; solar recovery available", "Engineering console: beside the helper on deck 3"};
+        if(row==0) { snprintf(line,size,"%s",meu_sim_objective(s));return; }
+        const char *lines[]={"Tower socket: pilot north to Z -120..-175; park", "Expedition estimate: 3000 kJ + 2000 uncertainty", "Keep 4000 kJ return margin; solar recovery available", "Engineering: power/helper LEFT, workshop/airlock RIGHT"};
         snprintf(line,size,"%s",row>=0 && row<4?lines[row]:"");
     } else if (s->station==4) {
         switch(row) {
@@ -359,7 +361,7 @@ void meu_sim_station_line(const MeuSimulation *s,int row,char *line,unsigned siz
             case 0:snprintf(line,size,"Inspect symptoms: %s",s->expedition.fault?"dim displays, slow arm":"systems nominal");break;
             case 1:snprintf(line,size,"Queue repair: alloy %u/1, conductor %u/2",s->expedition.alloy,s->expedition.conductor);break;
             case 2:snprintf(line,size,"Cancel repair and refund reserved parts");break;
-            case 3:snprintf(line,size,"%s",meu_helper_status(&s->expedition,&s->power));break;
+            case 3:snprintf(line,size,"Helper %u/600: %s",s->expedition.job_ticks,meu_helper_status(&s->expedition,&s->power));break;
             case 4:snprintf(line,size,"Back to power console");break;
             default:if(size)line[0]=0;break;
         }
@@ -367,7 +369,7 @@ void meu_sim_station_line(const MeuSimulation *s,int row,char *line,unsigned siz
         switch (row) {
             case 0:snprintf(line,size,"%s collectors (parked only)",s->power.collectors?"Stow":"Deploy");break;
             case 1:snprintf(line,size,"%s workshop bus",s->power.isolated?"Reconnect":"Isolate");break;
-            case 2:snprintf(line,size,"%s tower grid (pulses every 12 s)",s->power.grid?"Disconnect":"Connect");break;
+            case 2:snprintf(line,size,"%s tower grid: phase %u/12, surge at 0..2",s->power.grid?"Disconnect":"Connect",s->power.clock%12);break;
             case 3:snprintf(line,size,"Priority: %s",s->power.cooling_priority?"cooling":"fabrication");break;
             case 7:snprintf(line,size,"Inspect maintenance helper");break;
             default:if (size) line[0]=0;break;
@@ -405,7 +407,7 @@ bool meu_sim_station_command(MeuSimulation *s,int row)
                 if(e->suit)message="Suit already active; no checkpoint overwritten.";
                 else if(!site)message="Egress blocked: park aligned with the reachable landing.";
                 else if(!e->scanned)message="Egress blocked: scan pressure, temperature, radiation and landing clearance.";
-                else if(e->fault || e->job)message="Egress blocked: finish the known repair and clear helper access.";
+                else if(e->fault || e->job || !e->repaired)message="Egress blocked: finish the known repair and clear helper access.";
                 else if(!e->shelter || (e->coupler && !e->bypass))message="Egress blocked: shelter field unavailable.";
                 else if(s->power.energy<800 || s->power.heat>6000)message="Egress blocked: need 800 kJ return margin and heat <=6000.";
                 else { meu_expedition_checkpoint(e,&s->power);e->suit=true;e->suit_ticks=10800;e->exposure=0;accepted=true;
@@ -451,4 +453,23 @@ bool meu_sim_station_command(MeuSimulation *s,int row)
         } else if (row==3) { s->power.cooling_priority=!s->power.cooling_priority;accepted=true;message="Power priority updated."; }
     }
     snprintf(s->message,sizeof(s->message),"%s",message); return accepted;
+}
+
+const char *meu_sim_objective(const MeuSimulation *s)
+{
+    const MeuExpedition *e=&s->expedition;
+    if(e->completed)return "Expedition complete. Park and save your journey; west route unlocked. Explore or return home.";
+    if(e->catastrophe)return "Suit failure. Choose checkpoint recovery at the airlock panel; unsecured progress will be lost.";
+    if(s->robot.z > -120 && !e->bulk)return "Scout tower: helm north to Z -140, park. Engineering: isolate and connect the pulsing grid.";
+    if(!e->repaired)return e->fault?"Engineering: inspect helper symptoms, diagnose and queue buffer repair; keep workshop bus isolated.":
+        "Engineering power: deploy collectors, isolate workshop bus, connect tower grid; observe its 12-second pulse.";
+    if(!e->bulk)return "Engineering workshop on RIGHT: use repaired manipulator to recover the bulk-stock cradle.";
+    if(!e->scanned || !e->shelter)return "Wrist airlock at engineering RIGHT wall: scan the landing and power its shelter field.";
+    if(!e->coupler)return e->suit?"Follow rails into conduit. Fit bypass BEFORE extracting coupler, then return to cabin.":
+        "Airlock: suit up, walk right through the aperture, follow rails to the phase coupler.";
+    if(e->suit)return "Return along rails through the airlock (X<14); remove suit at the airlock console.";
+    if(!e->tested)return "Workshop: test the unfamiliar coupler at the controlled bench.";
+    if(!e->adapter)return "Power console: fabrication priority. Workshop: fabricate adapter (3 alloy, 3 conductor, 1 sealant).";
+    if(!e->installed)return "Disconnect grid. Workshop: install stabilizer in its socket to power the west service bridge.";
+    return "Stow collectors, disconnect grid. Helm: reverse to Z -90; turn LEFT to 270, drive west past X -130, park.";
 }

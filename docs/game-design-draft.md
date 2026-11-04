@@ -1,6 +1,6 @@
 # Mechanized Exploration Unit Game Design Draft
 
-Draft 1, 3 November 2026. User review is pending. M0a provides a platform prototype; the game mechanics below remain the intended design. Development follows the [implementation plan](implementation-plan.md), with actual progress in [status](status.md).
+Draft 1, 3 November 2026. User review is pending. M0a–M0e and M1a–M1e now implement the authored prototype; later mechanics and tuning below remain the intended design. Development follows the [implementation plan](implementation-plan.md), with actual progress in [status](status.md).
 
 ## The experience
 
@@ -225,7 +225,7 @@ Every implementation change adds tests for its own observable behavior. Build an
 | M3 A complete exploration arc | Five or six districts, several distinct technologies, home restoration, archive objective and ending | End-to-end campaign scenarios and user review of progression and novelty |
 | M4 Release preparation | Supported Windows/Linux packages and a polished mobile web build | Device matrix, performance/soak evidence, accessibility and save recovery checks, release acceptance |
 
-M0 should prove the risky experience before a large content investment. M1 should prove that a discovery changes how the player plays. M2 should prove that generation produces meaningfully different expeditions. M0a is implemented; the rest of M0 and all later milestones remain pending.
+M0 should prove the risky experience before a large content investment. M1 should prove that a discovery changes how the player plays. M2 should prove that generation produces meaningfully different expeditions. M0a–M0e and M1a–M1e are implemented. M0f device/performance checks and combined user acceptance remain pending; M2–M4 are not started.
 
 ## Scope discipline
 

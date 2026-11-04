@@ -1,5 +1,7 @@
 # Build and Test MEU
 
+M1a–M1e are implemented on `codex/m1-authored-expedition`. See [the full expedition route](m1-expedition.md) and [M1e evidence](evidence/m1e-expedition.md). Run `python tools/build.py native --test --expedition` for the full SDL-input route. On the current Linux host first source `.tools/activate.sh` for project-local development libraries.
+
 M0e adds durable local journeys, saved settings, snapshot recovery and portable export/import to the connected 240 m home and supported bridge travel. The bridge is at 196 m, living quarters at 156 m, engineering at 112 m, with a service lift connecting them. Approach the central bridge console and use E or the touch prompt to take the helm. W/S drives, A/D turns, Space brakes, P parks and E releases control. Looking is independent of steering. Releasing drive brakes; releasing the helm requests a parked stop. The exterior is an authored scale fixture; seeded city generation and repair gameplay come later.
 
 ## Reference versions

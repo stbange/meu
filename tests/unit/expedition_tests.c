@@ -45,7 +45,7 @@ int main(void)
     s.robot.x=-170;CHECK(!meu_sim_station_command(&s,4));s.robot.x=0;
     CHECK(meu_sim_station_command(&s,4));CHECK(s.expedition.adapter && !s.expedition.installed);
     CHECK(meu_sim_station_command(&s,3));
-    meu_sim_init(&s);meu_sim_start(&s);s.station=5;
+    meu_sim_init(&s);s.expedition.repaired=true;meu_sim_start(&s);s.station=5;
     CHECK(!meu_sim_station_command(&s,2));s.robot.z=-140;
     CHECK(!meu_sim_station_command(&s,2));CHECK(meu_sim_station_command(&s,0));
     CHECK(!meu_sim_station_command(&s,2));CHECK(meu_sim_station_command(&s,1));
@@ -69,5 +69,26 @@ int main(void)
     CHECK(s.x==12 && !s.expedition.coupler && !s.expedition.suit && !s.expedition.catastrophe);
     CHECK(s.expedition.alloy==8 && s.expedition.conductor==8 && s.expedition.sealant==4);
     CHECK(meu_sim_valid_position(&s));
+    /* Every egress gate rejects before checkpoint or inventory mutation. */
+    for(int invalid=0;invalid<8;++invalid) {
+        meu_sim_init(&s);meu_sim_start(&s);s.station=5;s.robot.z=-140;
+        s.expedition.repaired=true;s.expedition.scanned=true;s.expedition.shelter=true;
+        if(invalid==0)s.travel.parked=false;
+        if(invalid==1)s.robot.yaw=.2;
+        if(invalid==2)s.expedition.scanned=false;
+        if(invalid==3)s.expedition.fault=true;
+        if(invalid==4)s.expedition.shelter=false;
+        if(invalid==5)s.power.energy=799;
+        if(invalid==6)s.power.heat=6001;
+        if(invalid==7)s.expedition.repaired=false;
+        unsigned stock=s.expedition.alloy,charge=s.power.energy;
+        CHECK(!meu_sim_station_command(&s,2));CHECK(!s.expedition.suit && !s.expedition.checkpoint);
+        CHECK(s.expedition.alloy==stock && s.power.energy==charge);
+    }
+    meu_sim_init(&s);meu_sim_start(&s);s.robot.z=-140;s.station=4;s.expedition.repaired=true;
+    s.expedition.alloy=100;unsigned charge=s.power.energy;
+    CHECK(!meu_sim_station_command(&s,0));CHECK(s.expedition.alloy==100 && s.power.energy==charge && !s.expedition.bulk);
+    /* An invalid power state cannot exploit unsigned heat subtraction. */
+    s.power.heat=10001;CHECK(!meu_power_spend(&s.power,1,1));CHECK(s.power.energy==charge);
     puts("PASS diagnosis, isolation, helper stock reservation, cancellation, blocking and saved-job resume");return EXIT_SUCCESS;
 }

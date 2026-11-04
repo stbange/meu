@@ -6,7 +6,9 @@ The implementation target is **C17, SDL3, and OpenGL** on Windows and Linux, plu
 
 ## Current status
 
-M0e adds durable local journeys with saved settings, previous-snapshot recovery and portable export/import to the connected 240-metre home. Explore, pilot and park, then pause and open Saved journeys to save. A confirmed journey restores paused and parked when the game opens again. No gameplay milestone or playtest is user-accepted. See [status](docs/status.md) and [M0e evidence](docs/evidence/m0e-saves.md).
+M1a–M1e now connect a complete authored tower expedition: pilot and park, isolate a pulsing grid, diagnose a fault, assign a repair helper, recover stock, enter a sheltered service conduit in a suit, fit a bypass, recover and adapt its coupler, then power a previously unsupported west route. All play remains first person. See [the M1 route](docs/m1-expedition.md), [status](docs/status.md) and [M1e evidence](docs/evidence/m1e-expedition.md).
+
+The implementation is on `codex/m1-authored-expedition`; main/public Pages are unchanged. Human reviews were deferred at the user’s request until M1. M0f device/performance work and combined M0/M1 acceptance remain pending, as does changed Windows/web verification on a capable host.
 
 ## Start here
 
@@ -17,7 +19,7 @@ M0e adds durable local journeys with saved settings, previous-snapshot recovery 
 - [Build and test](docs/build-and-test.md): pinned tools, launch commands, controls, and checks.
 - [First OpenSpec proposal](openspec/changes/establish-playable-foundation/proposal.md): M0 requirements, design, and unchecked tasks.
 
-The next step is **M0f: integrated verification and focused playtest**, including physical-phone and performance review. The complete M0 experience remains in development.
+The next step is remaining platform/device verification and the deferred combined M0/M1 playtest; M2 generation has not started.
 
 ## Run the prototype
 

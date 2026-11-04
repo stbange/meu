@@ -95,7 +95,11 @@ static void build(void)
         cylinder((float)s*8,112,-24,3.2f,18,.34f,.40f,.39f);
         for (int n = 0; n < 6; ++n)
             cylinder((float)s*8,113+(float)n*3,-24,3.35f,.25f,.58f,.64f,.50f);
-        box((float)s*11-.3f,112,-30,.6f,22,25,.35f,.42f,.42f,MEU_SOLID);
+        if(s>0) {
+            box(10.7f,112,-30,.6f,22,18,.35f,.42f,.42f,MEU_SOLID);
+            box(10.7f,112,-8,.6f,22,3,.35f,.42f,.42f,MEU_SOLID);
+            box(10.7f,114.8f,-12,.6f,19.2f,4,.35f,.42f,.42f,MEU_SOLID);
+        } else box((float)s*11-.3f,112,-30,.6f,22,25,.35f,.42f,.42f,MEU_SOLID);
         box((float)s*4.5f-.3f,112,-29,.6f,20,.7f,.45f,.52f,.48f,MEU_SOLID);
     }
     box(-3.1f,112,-27,6.2f,1.2f,9,.26f,.32f,.33f,MEU_FLOOR|MEU_SOLID);
