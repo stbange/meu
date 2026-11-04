@@ -27,9 +27,14 @@
   function lockMouse() {
     if(!playing() || lockPending || document.pointerLockElement===canvas || !canvas.requestPointerLock)return;
     const request=++lockRequest;lockPending=true;lockAllowed=true;
-    const denied=()=>{if(request===lockRequest){lockPending=false;lockAllowed=false;}};
+    const denied=()=>{if(request===lockRequest){lockPending=false;lockAllowed=false;captureLook();}};
     try { const result=canvas.requestPointerLock();result?.catch(denied); }
     catch {denied();}
+  }
+  function captureLook() {
+    if(!looking || lockPending || document.pointerLockElement)return;
+    try { looking.element.setPointerCapture(looking.id); }
+    catch { looking=null; }
   }
   function clearInput() {
     const old = [...pointers.entries()];
@@ -304,7 +309,9 @@
       }
       if (!playing() || looking || document.pointerLockElement===canvas) return;
       looking = { id:event.pointerId,element,x:event.clientX,y:event.clientY,epoch };
-      element.setPointerCapture(event.pointerId); event.preventDefault();
+      // A pending Pointer Lock can already prohibit pointer capture before
+      // pointerLockElement changes. Acquire fallback capture only after denial.
+      captureLook(); event.preventDefault();
     });
     element.addEventListener('pointermove',event => {
       if (document.pointerLockElement===canvas || !looking || looking.id !== event.pointerId || looking.epoch !== epoch || !playing()) return;
@@ -327,7 +334,7 @@
       if(previous && playing() && !intentional)pause('pointer');
     }
   });
-  document.addEventListener('pointerlockerror',()=>{lockPending=false;lockAllowed=false;});
+  document.addEventListener('pointerlockerror',()=>{lockPending=false;lockAllowed=false;captureLook();});
   document.addEventListener('mousemove',event=>{
     if(document.pointerLockElement===canvas && playing())call('meu_web_look',['number','number'],[event.movementX,event.movementY]);
   });

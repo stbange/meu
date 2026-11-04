@@ -81,6 +81,8 @@ jobs:
       - name: Compile WebAssembly client and run compiled core/scenario tests
         run: python3 tools/build.py web --test
       - run: npx playwright install --with-deps chromium webkit
+      - name: Captured desktop mouse regression
+        run: npm run test:web -- tests/web/mouse.spec.cjs --project=desktop
       - name: Real browser desktop and phone input tests
         run: npm run test:web
       - name: Build without browser test diagnostics
