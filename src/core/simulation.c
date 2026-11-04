@@ -18,6 +18,7 @@ void meu_sim_init(MeuSimulation *s)
 }
 MeuContext meu_sim_context(const MeuSimulation *s)
 {
+    if (s->help_open) return MEU_CONTEXT_HELP;
     if (s->journeys_open) return MEU_CONTEXT_JOURNEYS;
     if (s->settings_open) return MEU_CONTEXT_SETTINGS;
     if (s->paused) return MEU_CONTEXT_PAUSED;
@@ -28,7 +29,7 @@ MeuContext meu_sim_context(const MeuSimulation *s)
 void meu_sim_clear_input(MeuSimulation *s) { s->held=0; ++s->input_epoch; }
 void meu_sim_start(MeuSimulation *s)
 {
-    if (s->settings_open || s->journeys_open) return;
+    if (s->settings_open || s->journeys_open || s->help_open) return;
     meu_sim_clear_input(s);
     s->started=true; s->paused=false; if(s->expedition.catastrophe)s->station=5; s->held=0; s->accumulator=0; previous(s);
 }
@@ -43,7 +44,7 @@ void meu_sim_pause(MeuSimulation *s)
 }
 void meu_sim_open_settings(MeuSimulation *s)
 {
-    meu_sim_pause(s); s->journeys_open=false; s->settings_open=true; meu_sim_clear_input(s);
+    meu_sim_pause(s); s->help_open=false; s->journeys_open=false; s->settings_open=true; meu_sim_clear_input(s);
 }
 void meu_sim_close_settings(MeuSimulation *s)
 {
@@ -51,11 +52,19 @@ void meu_sim_close_settings(MeuSimulation *s)
 }
 void meu_sim_open_journeys(MeuSimulation *s)
 {
-    meu_sim_pause(s); s->settings_open=false; s->journeys_open=true; meu_sim_clear_input(s);
+    meu_sim_pause(s); s->help_open=false; s->settings_open=false; s->journeys_open=true; meu_sim_clear_input(s);
 }
 void meu_sim_close_journeys(MeuSimulation *s)
 {
     s->journeys_open=false; meu_sim_clear_input(s);
+}
+void meu_sim_open_help(MeuSimulation *s)
+{
+    meu_sim_pause(s);s->settings_open=false;s->journeys_open=false;s->help_open=true;meu_sim_clear_input(s);
+}
+void meu_sim_close_help(MeuSimulation *s)
+{
+    s->help_open=false;meu_sim_clear_input(s);
 }
 bool meu_sim_setting(MeuSimulation *s,int id,float value)
 {

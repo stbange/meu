@@ -26,6 +26,10 @@ On 4 November 2026 the user requested implementation through M1 without interim 
 
 The user's mouse-capture and floor-flicker corrections are implemented in 0.1.1 ([evidence and current builds](evidence/mouse-surfaces.md)). Native capture/geometry/sanitizer and complete expedition checks pass. Windows/Linux, debug/optimized WebAssembly and the full desktop/phone browser configuration pass. The browser suite also verifies synchronous station-overlay removal before a fresh movement touch. User confirmation remains pending; M2 is untouched.
 
+## Onboard help
+
+The user requested in-game explanations and next steps, preferably through a flying robot. Pip is in progress for 0.1.2: shared C guidance and paused help state pass 16 core groups; native/browser presentation and input verification are pending. See [Pip evidence](evidence/onboard-guide.md). User acceptance remains pending.
+
 ## Next action
 
 M1 implementation is ready for the user’s deferred test. See [the complete route and commands](m1-expedition.md) and [M1e evidence/limits](evidence/m1e-expedition.md). The implementation is on `codex/m1-authored-expedition`; it is not merged into main or deployed. The public [web prototype](https://stbange.github.io/meu/) still reflects main, not this branch. Previous M0e publication remains documented separately.

@@ -17,7 +17,7 @@ typedef enum {
     MEU_INTERACT, MEU_TO_BRIDGE, MEU_TO_QUARTERS, MEU_TO_ENGINEERING, MEU_BRAKE, MEU_PARK, MEU_ACTION_COUNT
 } MeuAction;
 typedef enum { MEU_USE_NONE, MEU_USE_PLACARD, MEU_USE_LAMP, MEU_USE_INSPECTION, MEU_USE_CALL, MEU_USE_HELM, MEU_USE_NAVIGATION, MEU_USE_POWER, MEU_USE_WORKSHOP, MEU_USE_AIRLOCK, MEU_USE_COUPLER } MeuUse;
-typedef enum { MEU_CONTEXT_FOOT, MEU_CONTEXT_HELM, MEU_CONTEXT_PANEL, MEU_CONTEXT_PAUSED, MEU_CONTEXT_SETTINGS, MEU_CONTEXT_JOURNEYS, MEU_CONTEXT_STATION } MeuContext;
+typedef enum { MEU_CONTEXT_FOOT, MEU_CONTEXT_HELM, MEU_CONTEXT_PANEL, MEU_CONTEXT_PAUSED, MEU_CONTEXT_SETTINGS, MEU_CONTEXT_JOURNEYS, MEU_CONTEXT_STATION, MEU_CONTEXT_HELP } MeuContext;
 typedef struct { float x,y,z,yaw,pitch; } MeuCamera;
 typedef struct {
     /* Authoritative player coordinates always remain in the robot's local frame. */
@@ -26,7 +26,7 @@ typedef struct {
     int lift_target,lift_current;
     uint32_t held,visited,input_epoch;
     MeuSettings settings;
-    bool settings_open,journeys_open;
+    bool settings_open,journeys_open,help_open;
     float walk_phase,walk_amount;
     uint64_t ticks;
     double accumulator,dropped_seconds;
@@ -47,6 +47,8 @@ void meu_sim_open_settings(MeuSimulation *state);
 void meu_sim_close_settings(MeuSimulation *state);
 void meu_sim_open_journeys(MeuSimulation *state);
 void meu_sim_close_journeys(MeuSimulation *state);
+void meu_sim_open_help(MeuSimulation *state);
+void meu_sim_close_help(MeuSimulation *state);
 bool meu_sim_valid_position(const MeuSimulation *state);
 bool meu_sim_setting(MeuSimulation *state,int id,float value);
 void meu_sim_pointer_look(MeuSimulation *state,float dx,float dy);

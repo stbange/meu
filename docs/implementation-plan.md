@@ -120,6 +120,10 @@ Build the sample tower expedition: scout, select a route, approach, isolate the 
 
 **Evidence:** one complete real-client scenario plus variants for low energy, missing parts, unsafe egress, interrupted repair, reload, and recovery. A focused user playtest checks whether the 20–40 minute loop is understandable, repairs feel purposeful, and bringing home technology changes play. Tune the authored loop before M2 expands it.
 
+### Post-M1 onboard help
+
+At the user's request, add Pip, an optional hovering guide projection explaining the game and current next steps. Share authored guidance across native and browser builds, derive advice from actual journey state, retain first-person surroundings and pause safely while reading. Provide mouse/touch and H/F3 access, readable topics, and explicit resume with fresh input. Preserve saved journey compatibility. Owner: [add-onboard-guide](../openspec/changes/add-onboard-guide/proposal.md); evidence: [Pip help](evidence/onboard-guide.md). This onboarding work does not start M2 or mark M1 accepted.
+
 ## M2 A generated small city
 
 Depends on the useful authored interactions in M1. Proposed capabilities: `world-generation`, `world-streaming`, and `world-persistence`. Begin with three district families and a bounded city.
