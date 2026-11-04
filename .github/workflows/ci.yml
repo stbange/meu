@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   specifications:
@@ -95,14 +98,14 @@ jobs:
         env:
           MEU_RELEASE: '1'
       - name: Stage public runtime files
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/m1-authored-expedition')
         run: |
           mkdir -p dist/pages
           cp build/web-release/bin/{index.html,index.js,index.wasm,input.js,storage.js,style.css} dist/pages/
           touch dist/pages/.nojekyll
           printf '%s\n' "$GITHUB_SHA" > dist/pages/revision.txt
       - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/m1-authored-expedition')
         uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: dist/pages
@@ -118,7 +121,7 @@ jobs:
           if-no-files-found: warn
 
   deploy-pages:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/m1-authored-expedition')
     needs: [specifications, windows, linux, web]
     runs-on: ubuntu-24.04
     permissions:
@@ -140,6 +143,7 @@ jobs:
         uses: actions/deploy-pages@v5.0.1
 
   verify-pages:
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/m1-authored-expedition')
     needs: deploy-pages
     runs-on: ubuntu-24.04
     env:

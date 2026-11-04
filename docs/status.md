@@ -32,7 +32,9 @@ The user requested in-game explanations and next steps, preferably through a fly
 
 ## Next action
 
-M1 implementation is ready for the user’s deferred test. See [the complete route and commands](m1-expedition.md) and [M1e evidence/limits](evidence/m1e-expedition.md). The implementation is on `codex/m1-authored-expedition`; it is not merged into main or deployed. The public [web prototype](https://stbange.github.io/meu/) still reflects main, not this branch. Previous M0e publication remains documented separately.
+The user has now explicitly authorized publishing `codex/m1-authored-expedition` to GitHub Pages. Workflow changes allow this branch alongside main after all existing checks, followed by exact-revision and live browser verification. Publication is being verified; see [working-branch Pages evidence](evidence/working-branch-pages.md). No merge into main is needed, and gameplay acceptance remains pending.
+
+M1 implementation is ready for the user’s deferred test. See [the complete route and commands](m1-expedition.md) and [M1e evidence/limits](evidence/m1e-expedition.md). The implementation is on `codex/m1-authored-expedition` and is not merged into main. Previous M0e publication remains documented separately; the public [web prototype](https://stbange.github.io/meu/) will update after working-branch deployment succeeds.
 
 The [verified 0.1.2 source CI run](https://github.com/stbange/meu/actions/runs/41849350807) passes all required development jobs; deployment was skipped. This machine has a working native build but matching Emscripten/Playwright browser downloads are policy-blocked. Finish M0f reference-system and physical Android/iPhone measurements and the combined M0/M1 scale, comfort, controls and expedition review when the user chooses to test. Provisional targets remain 60 fps desktop, 30 fps phone, under 256 MiB Wasm linear memory; none is a real-device result yet.
 

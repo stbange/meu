@@ -4,13 +4,15 @@ Live prototype: [play Mechanized Exploration Unit](https://stbange.github.io/meu
 
 ## Build and publish
 
-The MEU checks and Pages workflow publishes pushes to main after all four foundation jobs pass: specifications, Windows, Linux, and web. Working branches and pull requests run checks without publishing. The workflow can also be started manually for main.
+The MEU checks and Pages workflow publishes successful pushes and manual runs from `main` and the named working branch, `codex/m1-authored-expedition`, after all four required jobs pass: specifications, Windows, Linux, and web. Pull requests and other refs run checks without publishing. On 4 November 2026 the user explicitly authorized publishing the working branch so the current M1/Pip build can be tested online.
+
+The same branch/event allowlist controls runtime staging, Pages artifact upload, deployment and live verification. Runs of the same workflow/ref are serialized through completion, including publication and live checks. An in-flight run is not cancelled by a new push. Both allowed branches publish to this one site; the latest successful deployment is the public build.
 
 The web job builds the optimized C/WebAssembly/WebGL 2 client, runs compiled core/scenario tests, and checks browser launches and durable saved-journey/export/import operation at desktop, portrait-phone, and landscape-phone sizes in Chromium, plus both phone sizes in WebKit. The published package contains only index.html, index.js, index.wasm, input.js, storage.js, style.css, the no-Jekyll marker, and revision.txt. Core-test binaries and test diagnostics are excluded.
 
 The deployment job uses GitHub's Pages artifact service and its github-pages environment. Only that job receives Pages and identity-token write permissions. The website stays at the repository path /meu/; assets use relative URLs.
 
-After deployment, a live verification job checks revision.txt against the source commit and launches the public page and verifies saved journeys in all five browser/layout configurations. Reports and screenshots are retained as the live-pages-checks artifact. A deployment or successful check does not mark gameplay as user-accepted.
+After deployment, a live verification job checks revision.txt against the source commit and tests rendering, settings, durable journeys and Pip help in desktop/phone Chromium and phone WebKit, plus actual desktop mouse capture. Reports and screenshots are retained as the live-pages-checks artifact. A deployment or successful check does not mark gameplay as user-accepted.
 
 ## Play and update
 
@@ -18,17 +20,17 @@ Select Begin exploration. M0d adds complete touch contexts, session settings and
 
 On foot, WASD or touch buttons walk through the bridge, quarters, engineering hall and lift. The lift is behind the start position: walk into its centre, choose 1/2/3 or tap a deck, then walk forward out after arrival. E or a contextual button uses nearby home objects. Settings or F1 opens sensitivity, vertical drag inversion, separate walking bob/machine sway (both initially off) and sound volume. Close settings, then explicitly resume. Focus/background loss and screen changes pause and discard old gestures. Pause and select Saved journeys, or press F2 on native desktop. Save after the unit is parked and the lift has finished; settings are included. A valid latest journey restores paused on the next launch. Recover previous retains damaged source data. Export/Import uses portable .meu files; Import changes the running journey and requires a separate Save to keep it locally.
 
-Future source changes pushed to main rebuild, test, and redeploy automatically. Documentation-only commits do not rebuild the runtime. Use the repository's Pages settings with GitHub Actions as the publishing source.
+Future source changes pushed to `main` or `codex/m1-authored-expedition` rebuild, test, and redeploy automatically. Documentation-only commits under docs/ or README.md do not rebuild the runtime. Use GitHub Actions as the repository's Pages publishing source. If the `github-pages` environment has selected deployment branches, it must allow the named working branch as well as main; reviewer and other protection settings remain applicable.
 
 To run the existing launch checks against the public site, set MEU_RELEASE=1 and MEU_BASE_URL=https://stbange.github.io/meu/, then run:
 
 ~~~text
-npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey"
+xvfb-run -a npm run test:web -- --grep "renders the C/OpenGL room|persists settings|persists a saved journey|click captures the desktop mouse|Pip explains the game"
 ~~~
 
-The base URL must include its final slash. The tests retain that path and do not start a local server when MEU_BASE_URL is supplied.
+The base URL must include its final slash. The tests retain that path and do not start a local server when MEU_BASE_URL is supplied. Xvfb supplies a desktop window for Pointer Lock cases on headless Linux; a normal desktop can run the npm command directly.
 
-## Verified publication
+## Previously verified publication
 
 Published on 3 November 2026 from [M0e source commit b373388](https://github.com/stbange/meu/commit/b3733881d3c7886c4160f51e4629983d6ca22f93). All six [publishing jobs](https://github.com/stbange/meu/actions/runs/41703685599) passed: specifications, Windows, Linux, web, deployment and live verification. Runtime identity is 0.0.5, scene m0e-saves-v1, content version 5; save schema and authored-world compatibility are both version 1.
 

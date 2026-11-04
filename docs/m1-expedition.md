@@ -1,6 +1,6 @@
 # M1 tower expedition
 
-Implementation branch: `codex/m1-authored-expedition`. The public Pages prototype remains on main until a separate merge/publication decision. M0/M1 human review is pending; this guide does not request interim acceptance.
+Implementation branch: `codex/m1-authored-expedition`. The user has authorized publishing this branch directly to Pages after checks; see [publication status](evidence/working-branch-pages.md). M0/M1 human review remains pending; this guide does not request interim acceptance.
 
 ## Launch on Linux or Windows
 
