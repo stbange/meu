@@ -17,7 +17,7 @@ test.afterEach(async({page},info)=>{
   expect(page.__mouseErrors).toEqual([]);
 });
 async function begin(page){await ready(page);await button(page,'Begin exploration').click();}
-async function capture(page){await page.mouse.click(320,320);await expect.poll(()=>page.evaluate(()=>document.pointerLockElement?.id)).toBe('canvas');}
+async function capture(page){await page.mouse.click(320,320);await expect.poll(()=>page.evaluate(()=>document.pointerLockElement?.id)).toBe('canvas');await expect(page.locator('body')).toHaveAttribute('data-mouse-locked','true');}
 
 test('click captures the desktop mouse, free relative motion looks, Escape clears held input',async({page,isMobile})=>{
   test.skip(isMobile,'Phones retain touch look without pointer lock.');

@@ -29,6 +29,8 @@ All seven active OpenSpec changes validate. Playwright configures 84 cases; new 
 
 An isolated diagnostic using the installed Chromium 154.0.8037.57 reproduces an `InvalidStateError` when fallback `setPointerCapture` runs during a pending Pointer Lock request. Fallback capture now waits for denial; the diagnostic confirms genuine locked relative mouse events, including movement beyond the viewport, without a JavaScript error. This diagnostic mocks C calls and does not substitute for the full Wasm/browser tests. New mouse failures retain production state and event diagnostics; CI runs the desktop capture cases before the longer route suite.
 
+The focused 8ed4d82 browser run passes both menus, station release and refused-lock fallback. Its event stream shows the headless browser injecting an equal reverse delta after each requested outside-viewport movement, cancelling the observed final yaw. Pointer Lock verification now uses a headed browser under Xvfb. Relative look also waits for the lock-change confirmation so acquisition movement cannot rotate the Commander before capture is established.
+
 ## Limits
 
 This fixes duplicate opaque render faces, not procedural city generation. The interior union partitions more faces while avoiding hidden surfaces (20504 interior triangles in the current fixture); no real-device performance claim is made. The browser API must be supported/allowed to acquire a lock; touch and denied-lock fallback remain usable. Main and public Pages are unchanged until a separate merge/deployment decision. Neither successful checks nor the requested fixes imply acceptance of all M0/M1 gameplay.

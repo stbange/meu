@@ -336,7 +336,7 @@
   });
   document.addEventListener('pointerlockerror',()=>{lockPending=false;lockAllowed=false;captureLook();});
   document.addEventListener('mousemove',event=>{
-    if(document.pointerLockElement===canvas && playing())call('meu_web_look',['number','number'],[event.movementX,event.movementY]);
+    if(mouseLocked && document.pointerLockElement===canvas && playing())call('meu_web_look',['number','number'],[event.movementX,event.movementY]);
   });
   window.addEventListener('blur',() => pause('focus'));
   window.addEventListener('focus',available);
