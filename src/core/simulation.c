@@ -1,6 +1,7 @@
 #include "core/simulation.h"
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 static float clampf(float v,float a,float b) { return fmaxf(a,fminf(b,v)); }
 static void previous(MeuSimulation *s)
 {
@@ -11,7 +12,7 @@ void meu_sim_init(MeuSimulation *s)
 {
     memset(s,0,sizeof(*s)); s->y=196+MEU_EYE_HEIGHT; s->z=-8; s->pitch=-.08f;
     s->lift_y=196; s->lift_door=1; s->paused=true; s->grounded=true;
-    s->world=meu_world_default(); meu_travel_init(&s->travel);
+    s->world=meu_world_default(); meu_travel_init(&s->travel); meu_power_init(&s->power);
     meu_settings_default(&s->settings); s->input_epoch=1;
     s->quarters_light=true; s->inspection_light=true; s->visited=1; previous(s);
 }
@@ -20,6 +21,7 @@ MeuContext meu_sim_context(const MeuSimulation *s)
     if (s->journeys_open) return MEU_CONTEXT_JOURNEYS;
     if (s->settings_open) return MEU_CONTEXT_SETTINGS;
     if (s->paused) return MEU_CONTEXT_PAUSED;
+    if (s->station) return MEU_CONTEXT_STATION;
     if (s->info_open) return MEU_CONTEXT_PANEL;
     return s->travel.helm?MEU_CONTEXT_HELM:MEU_CONTEXT_FOOT;
 }
@@ -37,7 +39,7 @@ void meu_sim_release_helm(MeuSimulation *s)
 void meu_sim_pause(MeuSimulation *s)
 {
     meu_sim_release_helm(s);
-    s->paused=true; s->info_open=false; s->held=0; s->accumulator=0; previous(s);
+    s->paused=true; s->info_open=false; s->station=0; s->held=0; s->accumulator=0; previous(s);
 }
 void meu_sim_open_settings(MeuSimulation *s)
 {
@@ -102,30 +104,31 @@ bool meu_sim_request_lift(MeuSimulation *s,int deck)
 }
 MeuUse meu_sim_use_target(const MeuSimulation *s)
 {
+    if (s->station) return (MeuUse)(MEU_USE_NAVIGATION+s->station-1);
     if (s->travel.helm) return MEU_USE_HELM;
     if (s->info_open) return MEU_USE_PLACARD;
-    float positions[7][3]={{3.85f,197.3f,-9.7f},{6.55f,157.4f,-7.25f},{0,114.5f,-26.5f},
-        {-1.65f,197.25f,-3.25f},{-1.65f,157.25f,-3.25f},{-1.65f,113.25f,-3.25f},{0,197.2f,-14.5f}};
-    for (int i=0;i<7;++i) {
+    float positions[9][3]={{3.85f,197.3f,-9.7f},{6.55f,157.4f,-7.25f},{0,114.5f,-26.5f},
+        {-1.65f,197.25f,-3.25f},{-1.65f,157.25f,-3.25f},{-1.65f,113.25f,-3.25f},{0,197.2f,-14.5f},{-6,197.3f,-11.4f},{-9,113.3f,-9.3f}};
+    for (int i=0;i<9;++i) {
         if (i==6 && (!s->travel.parked || s->motion_fixture)) continue;
         float dx=positions[i][0]-s->x,dy=positions[i][1]-s->y,dz=positions[i][2]-s->z;
         float distance=sqrtf(dx*dx+dy*dy+dz*dz);
         float facing=(dx*sinf(s->yaw)*cosf(s->pitch)+dy*sinf(s->pitch)-dz*cosf(s->yaw)*cosf(s->pitch))/fmaxf(distance,.001f);
         if (distance<2.8f && facing>.4f && meu_interior_clear_ray(s->x,s->y,s->z,positions[i][0],positions[i][1],positions[i][2]))
-            return i<3 ? (MeuUse)(i+1) : i==6 ? MEU_USE_HELM : MEU_USE_CALL;
+            return i>=7 ? (MeuUse)(MEU_USE_NAVIGATION+i-7) : i<3 ? (MeuUse)(i+1) : i==6 ? MEU_USE_HELM : MEU_USE_CALL;
     }
     return MEU_USE_NONE;
 }
 const char *meu_sim_use_name(MeuUse use)
 {
-    static const char *names[]={"", "Read unit dimensions", "Toggle reading lamp", "Toggle inspection lights", "Call service lift", "Take bridge helm"};
-    return names[use>=0 && use<=MEU_USE_HELM ? use : 0];
+    static const char *names[]={"", "Read unit dimensions", "Toggle reading lamp", "Toggle inspection lights", "Call service lift", "Take bridge helm", "Expedition chart", "Power and infrastructure"};
+    return names[use>=0 && use<=MEU_USE_POWER ? use : 0];
 }
 bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
 {
     if (action<0 || action>=MEU_ACTION_COUNT) return false;
     if (pressed && (!s->started || s->paused)) return false;
-    if (s->info_open && action!=MEU_INTERACT) {
+    if ((s->info_open || s->station) && action!=MEU_INTERACT) {
         if (!pressed) s->held&=~(UINT32_C(1)<<action);
         return !pressed;
     }
@@ -144,7 +147,11 @@ bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
         return !pressed || meu_sim_request_lift(s,action-MEU_TO_BRIDGE);
     if (action==MEU_INTERACT) {
         if (!pressed) return true;
+        if (s->station) return meu_sim_station_command(s,-1);
         switch (meu_sim_use_target(s)) {
+            case MEU_USE_NAVIGATION: case MEU_USE_POWER:
+                s->station=meu_sim_use_target(s)-MEU_USE_NAVIGATION+1;
+                meu_sim_clear_input(s); break;
             case MEU_USE_HELM:
                 if (s->travel.helm) meu_sim_release_helm(s);
                 else { s->travel.helm=true; meu_sim_clear_input(s); s->info_open=false; }
@@ -172,7 +179,7 @@ bool meu_sim_action(MeuSimulation *s,int action,bool pressed)
 }
 void meu_sim_look(MeuSimulation *s,float yaw,float pitch)
 {
-    if (s->paused || s->info_open || !isfinite(yaw) || !isfinite(pitch)) return;
+    if (s->paused || s->info_open || s->station || !isfinite(yaw) || !isfinite(pitch)) return;
     s->yaw=remainderf(s->yaw+clampf(yaw,-6.2831853f,6.2831853f),6.2831853f);
     s->pitch=clampf(s->pitch+pitch,-1.4f,1.4f);
 }
@@ -238,13 +245,15 @@ static void tick(MeuSimulation *s)
     meu_sim_look(s,(float)(held(s,MEU_LOOK_RIGHT)-held(s,MEU_LOOK_LEFT))*1.5f*dt*s->settings.sensitivity,
         (float)(held(s,MEU_LOOK_UP)-held(s,MEU_LOOK_DOWN))*1.5f*dt*s->settings.sensitivity);
     float old_x=s->x,old_z=s->z;
-    if (!s->travel.helm && !s->info_open) meu_sim_move(s,(sinf(s->yaw)*forward+cosf(s->yaw)*right)*MEU_WALK_SPEED*dt,
+    if (!s->travel.helm && !s->info_open && !s->station) meu_sim_move(s,(sinf(s->yaw)*forward+cosf(s->yaw)*right)*MEU_WALK_SPEED*dt,
         (-cosf(s->yaw)*forward+sinf(s->yaw)*right)*MEU_WALK_SPEED*dt);
     float distance=hypotf(s->x-old_x,s->z-old_z);
     s->walk_phase=remainderf(s->walk_phase+distance*5.5f,6.2831853f);
     s->walk_amount=clampf(s->walk_amount+(distance>.0001f?1:-1)*dt*8,0,1);
+    if (s->power.energy<MEU_RETURN_MARGIN || s->power.grid || s->power.collectors) meu_travel_stop(&s->travel);
     if (!s->motion_fixture)
         meu_travel_tick(&s->travel,&s->robot,s->world,(int)forward,(int)right,held(s,MEU_BRAKE)!=0);
+    meu_power_tick(&s->power,!s->travel.parked,false);
     ++s->ticks; s->visited|=UINT32_C(1)<<meu_sim_room(s);
     /* Test-only motion driver: the future steering system supplies this same pose. */
     if (s->motion_fixture) {
@@ -277,4 +286,50 @@ void meu_sim_render_state(const MeuSimulation *s,MeuSimulation *r)
     r->robot.x=s->previous_robot.x+(s->robot.x-s->previous_robot.x)*a;
     r->robot.z=s->previous_robot.z+(s->robot.z-s->previous_robot.z)*a;
     r->robot.yaw=s->previous_robot.yaw+(s->robot.yaw-s->previous_robot.yaw)*a;
+}
+
+const char *meu_sim_station_title(const MeuSimulation *s)
+{
+    return s->station==1?"Tower expedition chart":"Engineering power console";
+}
+void meu_sim_station_status(const MeuSimulation *s,char *line,unsigned size)
+{
+    snprintf(line,size,"Energy %u/%u kJ | heat %u/10000 | sun %u%% | reserve %u kJ",
+        s->power.energy,MEU_ENERGY_CAPACITY,s->power.heat,meu_power_sun(&s->power)/10,MEU_LIFE_RESERVE);
+}
+void meu_sim_station_line(const MeuSimulation *s,int row,char *line,unsigned size)
+{
+    if (s->station==1) {
+        const char *lines[]={"Tower socket: pilot north to Z -120..-175; park", "Expedition estimate: 3000 kJ + 2000 uncertainty", "Keep 4000 kJ return margin; solar recovery available", "Engineering console: beside the helper on deck 3"};
+        snprintf(line,size,"%s",row>=0 && row<4?lines[row]:"");
+    } else {
+        switch (row) {
+            case 0:snprintf(line,size,"%s collectors (parked only)",s->power.collectors?"Stow":"Deploy");break;
+            case 1:snprintf(line,size,"%s workshop bus",s->power.isolated?"Reconnect":"Isolate");break;
+            case 2:snprintf(line,size,"%s tower grid (pulses every 12 s)",s->power.grid?"Disconnect":"Connect");break;
+            case 3:snprintf(line,size,"Priority: %s",s->power.cooling_priority?"cooling":"fabrication");break;
+            default:if (size) line[0]=0;break;
+        }
+    }
+}
+bool meu_sim_station_command(MeuSimulation *s,int row)
+{
+    if (!s->station || s->paused) return false;
+    if (row==-1) { s->station=0; meu_sim_clear_input(s); return true; }
+    const char *message="Read the chart, then approach the tower at the helm."; bool accepted=false;
+    if (s->station==2) {
+        if (row==0) {
+            if (!s->travel.parked) message="Park before deploying collectors.";
+            else { s->power.collectors=!s->power.collectors; accepted=true; message="Collector configuration updated. Charging continues during interior tasks."; }
+        } else if (row==1) {
+            if (s->power.grid) message="Disconnect the grid before reconnecting the workshop bus.";
+            else { s->power.isolated=!s->power.isolated; accepted=true; message="Essential doors and life support remain isolated and available."; }
+        } else if (row==2) {
+            if (s->power.grid) { s->power.grid=false; accepted=true; message="Grid disconnected safely."; }
+            else if (!s->travel.parked || s->robot.z > -120 || s->robot.z < -175 || fabs(s->robot.x)>15) message="Park at tower socket: X +/-15, Z -120..-175.";
+            else if (!s->power.isolated) message="Surge pattern detected: isolate the workshop bus first.";
+            else { s->power.grid=true; accepted=true; message="Grid connected through isolation. Pulses may trip the buffer."; }
+        } else if (row==3) { s->power.cooling_priority=!s->power.cooling_priority;accepted=true;message="Power priority updated."; }
+    }
+    snprintf(s->message,sizeof(s->message),"%s",message); return accepted;
 }

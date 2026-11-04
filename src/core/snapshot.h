@@ -2,9 +2,9 @@
 #define MEU_SNAPSHOT_H
 #include "core/simulation.h"
 #include <stddef.h>
-#define MEU_SAVE_BYTES 128
+#define MEU_SAVE_BYTES 256
 #define MEU_SAVE_HEX_BYTES (MEU_SAVE_BYTES*2+1)
-#define MEU_SAVE_SCHEMA 1
+#define MEU_SAVE_SCHEMA 2
 #define MEU_SAVE_WORLD 1
 typedef enum {
     MEU_SAVE_OK, MEU_SAVE_MALFORMED, MEU_SAVE_SCHEMA_UNSUPPORTED,

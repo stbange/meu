@@ -53,7 +53,7 @@ int main(int argc,char **argv)
     CHECK(memcmp(kept,damaged,sizeof(kept))==0);
     CHECK(meu_file_path(dir,"export.meu",path) && meu_file_export(path,&fresh)==MEU_SAVE_OK);
     s.x=0;CHECK(meu_file_import(path,&s,&generation)==MEU_SAVE_OK && s.x==fresh.x && s.settings.invert_y);
-    memcpy(damaged,confirmed,sizeof(damaged));damaged[8]=2;
+    memcpy(damaged,confirmed,sizeof(damaged));damaged[8]=99;
     CHECK(raw(dir,"future.meu",damaged,sizeof(damaged)) && meu_file_path(dir,"future.meu",path));
     unchanged=s;
     CHECK(meu_file_import(path,&s,&generation)==MEU_SAVE_SCHEMA_UNSUPPORTED && memcmp(&s,&unchanged,sizeof(s))==0);

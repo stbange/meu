@@ -8,7 +8,7 @@
   const keyMap = { KeyW:0, KeyS:1, KeyA:2, KeyD:3, ArrowLeft:4, ArrowRight:5, ArrowUp:6, ArrowDown:7, KeyE:8, Digit1:9, Digit2:10, Digit3:11, Space:12, KeyP:13 };
   let ready = false, storageReady=false, storageBusy=false, failed = false, context = 3, epoch = 0, looking = null;
   let settingsOpen = false, pauseReason = 'menu', layout = '';
-  const contexts = ['foot','helm','panel','paused','settings','journeys'];
+  const contexts = ['foot','helm','panel','paused','settings','journeys','station'];
   const call = (name, types = [], args = [], result = null) => Module.ccall(name,result,types,args);
   const playing = () => ready && (context === 0 || context === 1);
   const owner = id => [...pointers.values()].some(p => p.action === id) || [...keys].some(key => keyMap[key] === id);
@@ -104,6 +104,21 @@
       else if(leftJourneys && id===3) begin.focus();
       if (id === 2) $('#close-info').focus();
     },
+    station() {
+      const panel=$('#expedition-panel'); panel.hidden=context!==6;
+      if(context!==6)return;
+      const text=row=>call('meu_web_station_text',['number'],[row],'string');
+      $('#expedition-title').textContent=text(-3);
+      $('#expedition-status').textContent=text(-1);
+      $('#expedition-message').textContent=text(-2);
+      const host=$('#expedition-options');
+      for(let i=0;i<8;i++){
+        let button=host.children[i];
+        if(!button){button=document.createElement('button');host.append(button);press(button,()=>call('meu_web_station',['number'],[i]));}
+        const label=text(i);button.hidden=!label;
+        if(button.textContent!==label)button.textContent=label;
+      }
+    },
     preferences(open, sensitivity, invert, bob, sway, volume) {
       const changed = settingsOpen !== !!open;
       settingsOpen = !!open;
@@ -118,7 +133,7 @@
     },
     hud(room, height, aboard, moving, current, target, use, info, liftReady) {
       const names = ['Bridge','Living quarters','Engineering hall','Service lift'];
-      const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm'];
+      const uses = ['', 'Read unit dimensions','Toggle reading lamp','Toggle inspection lights','Call service lift','Take bridge helm','Expedition chart','Power and infrastructure'];
       $('#room').textContent = names[room];
       $('#altitude').textContent = (room === 3 ? 'Lift ' : 'Deck ') + Math.round(height) + ' m · Unit height 240 m';
       $('#navigation').hidden = room !== 0; $('#lift-panel').hidden = !aboard;
@@ -162,6 +177,7 @@
       $('#status').textContent = message; begin.textContent = 'Reload to try again'; available();
     }
   };
+  press($('#close-expedition'),()=>call('meu_web_station',['number'],[-1]));
   press(begin,start);
   press(pauseButton,() => pause());
   press(settingsButton,() => { if (ready && !storageBusy) call('meu_web_settings',['number'],[settingsOpen ? 1 : 0]); });

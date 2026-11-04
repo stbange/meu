@@ -85,6 +85,8 @@ void meu_mesh_interior(void)
     meu_mesh_text("ENGINEERING", -4.5f,120,-31.97f,.15f,1,.86f,.74f,.42f);
     meu_mesh_text("REACTOR A", -10.2f,127,-20.55f,.09f,1,.16f,.26f,.26f);
     meu_mesh_text("REACTOR B", 5.8f,127,-20.55f,.09f,1,.16f,.26f,.26f);
+    meu_mesh_text("EXPEDITION",-6.9f,197.0f,-10.98f,.025f,1,.83f,.80f,.58f);
+    meu_mesh_text("POWER",-9.8f,113.0f,-9.0f,.025f,1,.83f,.80f,.58f);
     meu_mesh_text("UNIT DIMENSIONS",3.48f,197.05f,-9.63f,.009f,1,.83f,.80f,.58f);
     for (int i=0;i<3;++i) {
         float y=meu_deck_height(i);
@@ -218,6 +220,21 @@ void meu_mesh_hud(const MeuSimulation *s,int width,int height,int selection,cons
         meu_mesh_text("UP DOWN CHOOSE - LEFT RIGHT ADJUST",x+20,y+57,0,font*.7f,1,.73f,.81f,.72f);
         meu_mesh_text("SPACE TOGGLE - R RESET - F1 CLOSE",x+20,y+34,0,font*.7f,1,.73f,.81f,.72f);
         meu_mesh_text("SESSION SETTINGS - CLOSE THEN ENTER TO RESUME",x+20,y+14,0,font*.55f,1,.73f,.81f,.72f);
+    } else if (s->station && !s->paused) {
+        float w=fminf((float)width-40,960),h=fminf((float)height-90,470);
+        float x=((float)width-w)*.5f,y=((float)height-h)*.5f;
+        float font=fminf(1.8f,(w-32)/620),row=(h-140)/8;
+        quad(x,y,0,w,h,.08f,.14f,.15f);
+        meu_mesh_text(meu_sim_station_title(s),x+16,y+h-28,0,font*1.15f,1,.91f,.81f,.54f);
+        char text[256];meu_sim_station_status(s,text,sizeof(text));
+        meu_mesh_text(text,x+16,y+h-55,0,font*.85f,1,.81f,.87f,.76f);
+        for (int i=0;i<8;++i) {
+            char option[220];meu_sim_station_line(s,i,text,sizeof(text));
+            snprintf(option,sizeof(option),"%d %.*s",i+1,200,text);
+            if (*text) meu_mesh_text(option,x+16,y+h-85-(float)i*row,0,font,1,.82f,.87f,.75f);
+        }
+        meu_mesh_text(s->message,x+16,y+35,0,font*.8f,1,.94f,.76f,.43f);
+        meu_mesh_text("0 OR E CLOSE - GAME TIME CONTINUES",x+16,y+13,0,font*.8f,1,.73f,.81f,.72f);
     } else if (s->paused) {
         meu_mesh_text("ENTER EXPLORE - F1 SETTINGS - F2 JOURNEYS",left,top-25,0,size,1,.94f,.76f,.43f);
     } else if (s->travel.helm) {

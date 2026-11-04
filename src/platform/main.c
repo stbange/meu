@@ -131,6 +131,20 @@ WEB_EXPORT int meu_web_action(int action, int pressed)
     bool accepted=meu_sim_action(&app.simulation,action,pressed!=0);
     sync_input_context(); return accepted;
 }
+WEB_EXPORT int meu_web_station(int row)
+{
+    bool accepted=meu_sim_station_command(&app.simulation,row);
+    sync_input_context(); return accepted;
+}
+WEB_EXPORT const char *meu_web_station_text(int row)
+{
+    static char text[256];
+    if (row==-3) return meu_sim_station_title(&app.simulation);
+    if (row==-2) return app.simulation.message;
+    if (row==-1) meu_sim_station_status(&app.simulation,text,sizeof(text));
+    else meu_sim_station_line(&app.simulation,row,text,sizeof(text));
+    return text;
+}
 WEB_EXPORT void meu_web_look(float x, float y)
 {
     meu_sim_pointer_look(&app.simulation, x, y);
@@ -169,7 +183,7 @@ WEB_EXPORT void meu_web_journeys(int operation)
 #ifdef __EMSCRIPTEN__
 WEB_EXPORT const char *meu_web_snapshot(uint32_t generation)
 {
-    static char response[340]; char hex[MEU_SAVE_HEX_BYTES]={0}; uint8_t data[MEU_SAVE_BYTES];
+    static char response[MEU_SAVE_HEX_BYTES+80]; char hex[MEU_SAVE_HEX_BYTES]={0}; uint8_t data[MEU_SAVE_BYTES];
     MeuSaveResult result=meu_snapshot_encode(&app.simulation,generation,data);
     if (result==MEU_SAVE_OK) meu_snapshot_hex(data,hex);
     snprintf(response,sizeof(response),"{\"result\":%d,\"data\":\"%s\"}",result,hex);
@@ -373,6 +387,13 @@ static void event(const SDL_Event *input)
             }
         } else if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_RETURN) start_game();
         else if (down && !input->key.repeat && input->key.scancode==SDL_SCANCODE_ESCAPE) pause_game();
+        else if (app.simulation.station) {
+            if (down && !input->key.repeat) {
+                SDL_Scancode key=input->key.scancode;
+                if (key==SDL_SCANCODE_E || key==SDL_SCANCODE_0) meu_web_station(-1);
+                else if (key>=SDL_SCANCODE_1 && key<=SDL_SCANCODE_8) meu_web_station(key-SDL_SCANCODE_1);
+            }
+        }
         else if (!input->key.repeat) meu_sim_action(&app.simulation,key_action(input->key.scancode),down);
     }
     if (input->type == SDL_EVENT_MOUSE_BUTTON_DOWN && input->button.button == SDL_BUTTON_LEFT) {
@@ -640,6 +661,7 @@ static void frame(void)
             meu_sim_on_lift(&app.simulation),meu_sim_lift_moving(&app.simulation),
             app.simulation.lift_current,app.simulation.lift_target,meu_sim_use_target(&app.simulation),app.simulation.info_open,meu_sim_lift_ready(&app.simulation));
         emscripten_run_script(hud);
+        emscripten_run_script("if(window.MEU)window.MEU.station();");
         snprintf(hud,sizeof(hud),"if(window.MEU)window.MEU.navigation(%d,%.2f,%.1f,%d,%d,%d,%.1f);",
             app.simulation.travel.helm,app.simulation.travel.speed,app.simulation.robot.yaw*57.295779513,
             app.simulation.travel.parked,app.simulation.travel.park_requested,app.simulation.travel.reason,

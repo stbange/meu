@@ -10,15 +10,15 @@ On native desktop, F2 opens/closes Saved journeys. F5 saves, F9 loads latest, F8
 
 ## Record layout
 
-Exactly 128 bytes. Integers and IEEE 754 binary32/binary64 numbers are encoded explicitly in little-endian order; C struct layout/padding is never written. Format/schema version and authored-world compatibility are separate from the runtime build/content version. World ID 1 names the current authored home/causeway geometry. A future incompatible layout must change the world compatibility policy rather than silently loading into unrelated geometry.
+Schema 2 records are exactly 256 bytes. Legacy schema 1 records of 128 bytes remain readable; migration initializes power to safe defaults and the original source remains unchanged. Integers and IEEE 754 binary32/binary64 numbers are encoded explicitly in little-endian order; C struct layout/padding is never written. Format/schema version and authored-world compatibility are separate from the runtime build/content version. World ID 1 names the current authored home/causeway geometry. A future incompatible layout must change the world compatibility policy rather than silently loading into unrelated geometry.
 
 | Byte offset | Field |
 | --- | --- |
 | 0–7 | Magic: MEUSAVE followed by a zero byte |
-| 8 | u32 format/schema, currently 1 |
-| 12 | u32 authored-world compatibility ID, currently 1 |
+| 8 | u32 format/schema, currently 2 |
+| 12 | u32 authored-world compatibility ID, currently 2 |
 | 16 | Nonzero u32 generation, local to the journal |
-| 20 | u32 record size, 128 |
+| 20 | u32 record size, 256 |
 | 24, 32, 40 | f64 robot world x, z and yaw |
 | 48, 52, 56, 60, 64 | f32 Commander robot-local x, y, z, yaw and pitch |
 | 68 | f32 settled lift height |
@@ -29,8 +29,11 @@ Exactly 128 bytes. Integers and IEEE 754 binary32/binary64 numbers are encoded e
 | 96, 100 | f32 sensitivity and volume |
 | 104–123 | Reserved zero bytes |
 | 124–127 | CRC-32 over bytes 0–123 |
+| 128–147 | u32 main energy, heat, daylight clock, subsecond phase, power flags |
+| 148–251 | reserved for expedition systems; zero until defined |
+| 252–255 | CRC-32 over bytes 0–251 |
 
-The checksum detects accidental damage. Geometry and semantic checks remain independent: reject unsupported schema/world, non-finite or out-of-range values, inconsistent room/lift metadata, reserved flags, solid intersections, unsupported player footing and invalid robot hull/foot support. A staged decode touches neither output nor live state on failure. The reference `tests/fixtures/save-v1.meu` is checked byte-for-byte in native and WebAssembly tests. It has generation 7 and tick 12345.
+The checksum detects accidental damage. Geometry and semantic checks remain independent: reject unsupported schema/world, non-finite or out-of-range values, inconsistent room/lift metadata, reserved flags, solid intersections, unsupported player footing and invalid robot hull/foot support. A staged decode touches neither output nor live state on failure. The schema-2 reference `tests/fixtures/save-v2.meu` is checked byte-for-byte; `save-v1.meu` is retained for legacy migration in native and WebAssembly tests. It has generation 7 and tick 12345.
 
 Only a paused live state can be replaced. A restored journey uses the authored geometry, zero travel speed/turn rate, parked state, cleared helm/held input, reset interpolation/accumulators and explicit resume. Current menu ownership is preserved so import/recovery cannot restart gameplay behind a dialog. Camera bob/sway phase is cosmetic and restarts; physical player coordinates do not change.
 
@@ -46,7 +49,7 @@ File dialogs can complete on another thread. Their callback queues the selected 
 
 ## Browser journal
 
-Database: meu-local-saves, database version 1, object store snapshots. The keys are latest, previous, damaged-latest and damaged-previous. Snapshot values are canonical 256-character hex encodings of the same 128 bytes. The host checks record length before passing a string to WebAssembly; the C decoder also bounds parsing. Stored source data can be retained/exported even if it fails that format.
+Database: meu-local-saves, database version 1, object store snapshots. The keys are latest, previous, damaged-latest and damaged-previous. Snapshot values are canonical 512-character hex encodings of the same 256 bytes (legacy 256-character encodings are accepted). The host checks record length before passing a string to WebAssembly; the C decoder also bounds parsing. Stored source data can be retained/exported even if it fails that format.
 
 One strict-durability IndexedDB read/write transaction reads the old generations, validates/captures the candidate, rotates previous, retains damaged source records and publishes latest. There is no asynchronous gap between generation inspection and queuing writes within that transaction. Concurrent tabs are serialized by IndexedDB. Only `transaction.oncomplete` produces Saved; request/put success does not. Abort/quota/storage denial reports failure and leaves the previously committed transaction intact. Navigation can abort or complete a pending transaction; either outcome must preserve a complete confirmed generation rather than partial journal updates.
 

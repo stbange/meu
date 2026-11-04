@@ -11,7 +11,9 @@ static void seal(uint8_t *data)
 {
     uint32_t crc=UINT32_MAX;
     for (int i=0;i<124;++i) { crc^=data[i]; for (int b=0;b<8;++b) crc=(crc>>1)^((crc&1)?UINT32_C(0xedb88320):0); }
-    put32(data+124,~crc);
+    put32(data+124,~crc);crc=UINT32_MAX;
+    for (int i=0;i<252;++i) { crc^=data[i]; for (int b=0;b<8;++b) crc=(crc>>1)^((crc&1)?UINT32_C(0xedb88320):0); }
+    put32(data+252,~crc);
 }
 int main(int argc,char **argv)
 {
@@ -23,6 +25,12 @@ int main(int argc,char **argv)
     FILE *fixture=fopen(argv[1],"rb"); CHECK(fixture!=NULL);
     CHECK(fread(golden,1,sizeof(golden),fixture)==sizeof(golden) && fgetc(fixture)==EOF); fclose(fixture);
     CHECK(memcmp(data,golden,sizeof(data))==0);
+    uint8_t legacy[128]; char legacy_path[1024];
+    snprintf(legacy_path,sizeof(legacy_path),"%.*ssave-v1.meu",(int)(strlen(argv[1])-strlen("save-v2.meu")),argv[1]);
+    fixture=fopen(legacy_path,"rb"); CHECK(fixture!=NULL);
+    CHECK(fread(legacy,1,sizeof(legacy),fixture)==sizeof(legacy));fclose(fixture);
+    CHECK(meu_snapshot_decode(legacy,sizeof(legacy),&restored,&generation)==MEU_SAVE_OK);
+    CHECK(restored.power.energy==18000 && restored.ticks==12345);
     CHECK(meu_snapshot_decode(data,sizeof(data),&restored,&generation)==MEU_SAVE_OK && generation==7);
     CHECK(restored.paused && restored.started && restored.held==0 && restored.travel.parked && !restored.travel.helm);
     CHECK(restored.x==s.x && restored.y==s.y && restored.z==s.z && restored.ticks==s.ticks);
@@ -70,7 +78,7 @@ int main(int argc,char **argv)
         CHECK(meu_snapshot_decode(bad,MEU_SAVE_BYTES,&restored,NULL)!=MEU_SAVE_OK);
         CHECK(memcmp(&restored,&unchanged,sizeof(restored))==0);
     }
-    memcpy(bad,data,sizeof(data));put32(bad+8,2);seal(bad);
+    memcpy(bad,data,sizeof(data));put32(bad+8,99);seal(bad);
     CHECK(meu_snapshot_decode(bad,MEU_SAVE_BYTES,&restored,NULL)==MEU_SAVE_SCHEMA_UNSUPPORTED);
     memcpy(bad,data,sizeof(data));put32(bad+12,99);seal(bad);
     CHECK(meu_snapshot_decode(bad,MEU_SAVE_BYTES,&restored,NULL)==MEU_SAVE_WORLD_UNSUPPORTED);
